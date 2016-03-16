@@ -1,0 +1,8 @@
+syntax: glob
+
+# temp files
+*~
+
+# learned weights and learner states
+*.caffemodel
+*.solverstate
