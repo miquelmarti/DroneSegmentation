@@ -27,6 +27,7 @@ def get_arguments():
     parser.add_argument('--output', type=str, required=False, default='output', help='Default is output, change it for the name of the output in your network (mostly foundable as the top of the last layer in the model (prototxt))')
 
     parser.add_argument('--labelled', type=str, required=False, default='', help='Path to the folder with labelled data ([...]/)')
+    parser.add_argument('--FCN', type=bool, required=False, default=False, help='If FCN is used, set this argument to true. Because an extra argmax at the output is needed (FCN returns class scores, while SegNet directly returns class index)')
     
     # Mandatory arguments
     parser.add_argument('data_to_segment', type=str, help='Path to the folder ([...]/)')
@@ -85,8 +86,6 @@ def mean_IU(guess,real):
 		
 		if true_positive+false_positive+false_negative>0:
 			IU_value = IU_value + true_positive/float(true_positive+false_positive+false_negative)
-			#print 'TP: ', true_positive, ' FP: ', false_positive, ' FN: ', false_negative
-			#print(true_positive/(true_positive+false_positive+false_negative))
 			number_classes = number_classes+1
 	
 	result = 1/number_classes
@@ -95,6 +94,23 @@ def mean_IU(guess,real):
 
 	return IU_value/number_classes
 
+
+
+def colourSegment(labels, label_colours, input_blob): 
+	#colourSegment function transforms the class labels into a viewable image
+
+        # Resize it for 3 channels, now (3, 360, 480)
+        segmentation_ind_3ch = np.resize(labels,(3,input_blob.data.shape[2],input_blob.data.shape[3]))
+        # Converts it to format H x W x C (was C x H x W)
+        segmentation_ind_3ch = segmentation_ind_3ch.transpose(1,2,0).astype(np.uint8)
+        # Create a new array (all zeros) with the shape of segmentation_ind_3ch
+        _output = np.zeros(segmentation_ind_3ch.shape, dtype=np.uint8)
+
+        # Fill it with colours of classes
+        cv2.LUT(segmentation_ind_3ch,label_colours,_output)
+	_output = _output.astype(float)/255 # Optional, for convention
+
+	return _output
 	
 
 
@@ -114,6 +130,67 @@ if __name__ == '__main__':
     # Display windows
     cv2.namedWindow("Input")
     cv2.namedWindow("Output")
+
+    
+    for filename in os.listdir(args.data_to_segment):
+        # Given an Image, convert to ndarray and preprocess for VGG
+        _input = Image.open(os.path.join(args.data_to_segment, filename))
+        frame = pre_processing(_input, input_blob.data.shape)
+        
+        # Shape for input (data blob is N x C x H x W), set data
+        input_blob.reshape(1, *frame.shape)
+        input_blob.data[...] = frame
+        
+        # Run the network and take argmax for prediction
+        net.forward()        
+        
+        _output = 0
+	guessed_labels = 0
+
+        
+        # If FCN-8
+        if args.FCN:
+	    # Squeeze : matrix size (1, 1, 360, 480) => (360, 480). Take argmax to choose the biggest class score (FCN outputs class scores)
+	    guessed_labels = np.argmax(np.squeeze(output_blob.data), axis=0)
+        
+        # If SegNet
+        else:
+            # Squeeze : matrix size (1, 1, 360, 480) => (360, 480).
+            guessed_labels = np.squeeze(output_blob.data)
+
+
+
+	# Read the colours of the classes
+        label_colours = cv2.imread(args.colours).astype(np.uint8)
+	#Transform the class labels into a segmented image
+       	_output = colourSegment(guessed_labels, label_colours, input_blob)
+        
+	#If specify the ground-truth, calculate mean IU
+	if args.labelled != '':
+		real_label = np.array(Image.open(os.path.join(args.labelled, filename))) #Load labelled image
+		#Calculate and print the mean IU
+		print 'Mean IU : ', mean_IU(np.array(guessed_labels, dtype=np.uint8),np.array(real_label, dtype=np.uint8))
+
+		#Transform the real labels into a showable image
+		show_label = colourSegment(real_label, label_colours, input_blob)
+		cv2.imshow("Labelled", show_label)
+        
+        # Display input and output
+        cv2.imshow("Input", np.array(_input))
+        cv2.imshow("Output", _output)
+        
+        key = cv2.waitKey(3000)
+        if key == 27: # exit on ESC
+            break
+
+    cv2.destroyAllWindows()
+    
+
+
+
+
+
+
     """
     # Given an Image, convert to ndarray and preprocess for VGG
     _input = Image.open(args.data_to_segment)
@@ -148,88 +225,3 @@ if __name__ == '__main__':
     key = cv2.waitKey(1)
     time.sleep(100)
     """
-    
-    for filename in os.listdir(args.data_to_segment):
-        # Given an Image, convert to ndarray and preprocess for VGG
-        _input = Image.open(os.path.join(args.data_to_segment, filename))
-        frame = pre_processing(_input, input_blob.data.shape)
-        
-        # Shape for input (data blob is N x C x H x W), set data
-        input_blob.reshape(1, *frame.shape)
-        input_blob.data[...] = frame
-        
-        # Run the network and take argmax for prediction
-        net.forward()
-        
-        # Get the final output
-        # Remove single dimensional entries (was (1, 1, 360, 480), become (360, 480))
-        #segmentation_ind = np.squeeze(output_blob.data)
-        # Resize it for 3 channels, now (3, 360, 480)
-        #segmentation_ind_3ch = np.resize(segmentation_ind,(3,input_shape[2],input_shape[3]))
-        # Converts it to format H x W x C (was C x H x W)
-        #segmentation_ind = output_blob.data.transpose(0,2,3,1).astype(np.uint8)
-        #print segmentation_ind.shape
-        # Create a new array (all zeros) with the shape of segmentation_ind_3ch
-        #segmentation_rgb = np.zeros(segmentation_ind_3ch.shape, dtype=np.uint8)
-        #_output = output_blob.data[0].argmax(axis=0)
-        #_output = _output.astype(float)/255
-        
-        
-        _output = 0
-
-	guessed_labels = 0
-        
-        # If SegNet
-        if args.colours != '':
-            # Read the colours of the classes
-            label_colours = cv2.imread(args.colours).astype(np.uint8)
-            # Remove single dimensional entries (was (1, 1, 360, 480), become (360, 480))
-            segmentation_ind = np.squeeze(output_blob.data)
-            # Resize it for 3 channels, now (3, 360, 480)
-            segmentation_ind_3ch = np.resize(segmentation_ind,(3,input_blob.data.shape[2],input_blob.data.shape[3]))
-            # Converts it to format H x W x C (was C x H x W)
-            segmentation_ind_3ch = segmentation_ind_3ch.transpose(1,2,0).astype(np.uint8)
-            # Create a new array (all zeros) with the shape of segmentation_ind_3ch
-            _output = np.zeros(segmentation_ind_3ch.shape, dtype=np.uint8)
-
-	    guessed_labels = segmentation_ind
-
-            # Fill it with colours of classes
-            cv2.LUT(segmentation_ind_3ch,label_colours,_output)
-            _output = _output.astype(float)/255 # Optional, for convention
-        
-        # If FCN-8
-        else:
-            _output = output_blob.data[0].argmax(axis=0)
-	    guessed_labels = _output
-            palette_base = [i for i in xrange(0, 256, 255 / 3)]
-            palette = [(palette_base[i], palette_base[j] , palette_base[k]) for i in xrange(4) for j in xrange(4) for k in xrange(4)]
-            _output = np.array(palette, dtype=np.uint8)[_output]
-        
-	#If specify the ground-truth, calculate mean IU
-	if args.labelled != '':
-		real_label = np.array(Image.open(os.path.join(args.labelled, filename))) #Load labelled image
-		#Calculate and print the mean IU
-		print 'Mean IU : ', mean_IU(np.array(guessed_labels, dtype=np.uint8),np.array(real_label, dtype=np.uint8))
-
-		#Tweeking so we can show the labelled image
-		segmentation_ind_3ch = np.resize(real_label,(3,input_blob.data.shape[2],input_blob.data.shape[3]))
-		segmentation_ind_3ch = segmentation_ind_3ch.transpose(1,2,0).astype(np.uint8)
-		show_label = np.zeros(segmentation_ind_3ch.shape, dtype=np.uint8)
-		label_colours = cv2.imread(args.colours).astype(np.uint8)
-		cv2.LUT(segmentation_ind_3ch,label_colours,show_label)
-		show_label = show_label.astype(float)/255
-		cv2.imshow("Labelled", show_label)
-        
-        # Display input and output
-        cv2.imshow("Input", np.array(_input))
-        cv2.imshow("Output", _output)
-        
-        key = cv2.waitKey(1)
-        if key == 27: # exit on ESC
-            break
-
-    cv2.destroyAllWindows()
-    
-
-

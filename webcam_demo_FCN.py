@@ -9,10 +9,10 @@ import sys
 import time
 
 
-sys.path.append('/usr/local/lib/python2.7/site-packages')
+#sys.path.append('/usr/local/lib/python2.7/site-packages')
 # Make sure that caffe is on the python path:
-caffe_root = '/home/shared/FCN-8/'
-sys.path.insert(0, caffe_root + 'python')
+#caffe_root = '/home/shared/caffeFcn/'
+#sys.path.insert(0, caffe_root + 'python')
 import caffe
 
 
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         if args.video is not None:
             cap = cv2.VideoCapture(args.video)
         else:
-            cap = cv2.VideoCapture("/home/johannes/SegNet/CamVid/test2/%03d.png") # Change this to your webcam ID, or file name for your video file
+            cap = cv2.VideoCapture("/home/shared/datasets/CamVid/test2/%03d.png") # Change this to your webcam ID, or file name for your video file
 
 
         if cap.isOpened(): # try to get the first frame
