@@ -167,19 +167,23 @@ if __name__ == '__main__':
         
 	#If specify the ground-truth, calculate mean IU
 	if args.labelled != '':
-		real_label = np.array(Image.open(os.path.join(args.labelled, filename))) #Load labelled image
-		#Calculate and print the mean IU
-		print 'Mean IU : ', mean_IU(np.array(guessed_labels, dtype=np.uint8),np.array(real_label, dtype=np.uint8))
+		path_labels = os.path.join(args.labelled, filename)
+		if os.path.isfile(path_labels):
+			#Load ground-truth
+			real_label = np.array(Image.open(path_labels))
 
-		#Transform the real labels into a showable image
-		show_label = colourSegment(real_label, label_colours, input_blob)
-		cv2.imshow("Labelled", show_label)
+			#Calculate and print the mean IU
+			print 'Mean IU : ', mean_IU(np.array(guessed_labels, dtype=np.uint8),np.array(real_label, dtype=np.uint8))
+
+			#Transform the real labels into a showable image
+			show_label = colourSegment(real_label, label_colours, input_blob)
+			cv2.imshow("Labelled", show_label)
         
         # Display input and output
         cv2.imshow("Input", np.array(_input))
         cv2.imshow("Output", _output)
         
-        key = cv2.waitKey(3000)
+        key = cv2.waitKey(1)
         if key == 27: # exit on ESC
             break
 
