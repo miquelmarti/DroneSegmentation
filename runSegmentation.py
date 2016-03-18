@@ -95,11 +95,11 @@ def mean_IU(guess,real):
 
 
 
-def colourSegment(labels, label_colours, input_blob): 
+def colourSegment(labels, label_colours, input_shape): 
     #colourSegment function transforms the class labels into a viewable image
 
     # Resize it for 3 channels, now (3, 360, 480)
-    segmentation_ind_3ch = np.resize(labels,(3,input_blob.data.shape[2],input_blob.data.shape[3]))
+    segmentation_ind_3ch = np.resize(labels,(3,input_shape[2],input_shape[3]))
     # Converts it to format H x W x C (was C x H x W)
     segmentation_ind_3ch = segmentation_ind_3ch.transpose(1,2,0).astype(np.uint8)
     # Create a new array (all zeros) with the shape of segmentation_ind_3ch
@@ -170,8 +170,9 @@ if __name__ == '__main__':
 
         # Read the colours of the classes
         label_colours = cv2.imread(args.colours).astype(np.uint8)
+        input_shape = input_blob.data.shape
         #Transform the class labels into a segmented image
-        _output = colourSegment(guessed_labels, label_colours, input_blob)
+        _output = colourSegment(guessed_labels, label_colours, input_shape)
 
         #If specify the ground-truth, calculate mean IU
         if args.labels:
@@ -184,7 +185,7 @@ if __name__ == '__main__':
                                         np.array(real_label, dtype=np.uint8))
 
             #Transform the real labels into a showable image
-            show_label = colourSegment(real_label, label_colours, input_blob)
+            show_label = colourSegment(real_label, label_colours, input_shape)
             cv2.imshow("Labelled", show_label)
 
         # Display input and output
