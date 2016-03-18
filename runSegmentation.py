@@ -26,14 +26,14 @@ def get_arguments():
     parser.add_argument('--input', type=str, required=False, default='data', help='Default is data, change it for the name of the input in your network (mostly foundable as the bottom of the first layer in the model (prototxt))')
     parser.add_argument('--output', type=str, required=False, default='output', help='Default is output, change it for the name of the output in your network (mostly foundable as the top of the last layer in the model (prototxt))')
 
-    parser.add_argument('--labelled', type=str, required=False, default='', help='Path to the folder with labelled data ([...]/)')
     parser.add_argument('--FCN', type=bool, required=False, default=False, help='If FCN is used, set this argument to true. Because an extra argmax at the output is needed (FCN returns class scores, while SegNet directly returns class index)')
     
     # Mandatory arguments
-    parser.add_argument('data_to_segment', type=str, help='Path to the folder ([...]/)')
+    parser.add_argument('data_to_segment', type=str, help='a text file containing a list of images to segment')
+    parser.add_argument('--labels', action="store_true", help='if provided, it means the files in the data .txt file are paired into data,label pairs.')
     
     return parser.parse_args()
-
+    
 
 def build_network(args):
     # GPU / CPU mode
@@ -75,43 +75,42 @@ def pre_processing(img, shape):
 
 
 def mean_IU(guess,real):
-	class_ranges = range(min(guess.min(),real.min()),max(guess.max(),real.max())+1)
-	number_classes = 0
-	IU_value = 0.0
-	
-	for ccc in class_ranges:
-		true_positive  = sum(sum((real == ccc) & (guess == ccc)))
-		false_positive = sum(sum((real != ccc) & (guess == ccc)))
-		false_negative = sum(sum((real == ccc) & (guess != ccc)))
-		
-		if true_positive+false_positive+false_negative>0:
-			IU_value = IU_value + true_positive/float(true_positive+false_positive+false_negative)
-			number_classes = number_classes+1
-	
-	result = 1/number_classes
-	result = result*IU_value
+    class_ranges = range(min(guess.min(),real.min()),max(guess.max(),real.max())+1)
+    number_classes = 0
+    IU_value = 0.0
 
+    for ccc in class_ranges:
+        true_positive  = sum(sum((real == ccc) & (guess == ccc)))
+        false_positive = sum(sum((real != ccc) & (guess == ccc)))
+        false_negative = sum(sum((real == ccc) & (guess != ccc)))
 
-	return IU_value/number_classes
+        if true_positive+false_positive+false_negative>0:
+            IU_value = IU_value + true_positive/float(true_positive+false_positive+false_negative)
+            number_classes = number_classes+1
+
+    result = 1/number_classes
+    result = result*IU_value
+
+    return IU_value/number_classes
 
 
 
 def colourSegment(labels, label_colours, input_blob): 
-	#colourSegment function transforms the class labels into a viewable image
+    #colourSegment function transforms the class labels into a viewable image
 
-        # Resize it for 3 channels, now (3, 360, 480)
-        segmentation_ind_3ch = np.resize(labels,(3,input_blob.data.shape[2],input_blob.data.shape[3]))
-        # Converts it to format H x W x C (was C x H x W)
-        segmentation_ind_3ch = segmentation_ind_3ch.transpose(1,2,0).astype(np.uint8)
-        # Create a new array (all zeros) with the shape of segmentation_ind_3ch
-        _output = np.zeros(segmentation_ind_3ch.shape, dtype=np.uint8)
+    # Resize it for 3 channels, now (3, 360, 480)
+    segmentation_ind_3ch = np.resize(labels,(3,input_blob.data.shape[2],input_blob.data.shape[3]))
+    # Converts it to format H x W x C (was C x H x W)
+    segmentation_ind_3ch = segmentation_ind_3ch.transpose(1,2,0).astype(np.uint8)
+    # Create a new array (all zeros) with the shape of segmentation_ind_3ch
+    _output = np.zeros(segmentation_ind_3ch.shape, dtype=np.uint8)
 
-        # Fill it with colours of classes
-        cv2.LUT(segmentation_ind_3ch,label_colours,_output)
-	_output = _output.astype(float)/255 # Optional, for convention
+    # Fill it with colours of classes
+    cv2.LUT(segmentation_ind_3ch,label_colours,_output)
+    _output = _output.astype(float)/255 # Optional, for convention
 
-	return _output
-	
+    return _output
+        
 
 
 if __name__ == '__main__':
@@ -131,70 +130,73 @@ if __name__ == '__main__':
     cv2.namedWindow("Input")
     cv2.namedWindow("Output")
 
-    
-    for filename in os.listdir(args.data_to_segment):
+    imageListFile = open(args.data_to_segment, 'r')
+    for line in imageListFile:
+        filename = None
+        if args.labels:
+            filename = line.partition(' ')[0]
+        else:
+            filename = line.strip()
+
+        print filename
         # Given an Image, convert to ndarray and preprocess for VGG
-        _input = Image.open(os.path.join(args.data_to_segment, filename))
+        _input = Image.open(filename)
         frame = pre_processing(_input, input_blob.data.shape)
-        
+
         # Shape for input (data blob is N x C x H x W), set data
+        print 'pre-processing done'
         input_blob.reshape(1, *frame.shape)
         input_blob.data[...] = frame
-        
-        # Run the network and take argmax for prediction
-        net.forward()        
-        
-        _output = 0
-	guessed_labels = 0
 
-        
+        # Run the network and take argmax for prediction
+        net.forward()
+        print 'finished forward pass'
+        _output = 0
+        guessed_labels = 0
+
+
         # If FCN-8
         if args.FCN:
-	    # Squeeze : matrix size (1, 1, 360, 480) => (360, 480). Take argmax to choose the biggest class score (FCN outputs class scores)
-	    guessed_labels = np.argmax(np.squeeze(output_blob.data), axis=0)
-        
+            print 'using fcn'
+            # Squeeze : matrix size (1, 1, 360, 480) => (360, 480).
+            # Take argmax to choose the biggest class score (FCN outputs class scores)
+            guessed_labels = np.argmax(np.squeeze(output_blob.data), axis=0)
+
         # If SegNet
         else:
+            print 'using segnet'
             # Squeeze : matrix size (1, 1, 360, 480) => (360, 480).
             guessed_labels = np.squeeze(output_blob.data)
 
-
-
-	# Read the colours of the classes
+        # Read the colours of the classes
         label_colours = cv2.imread(args.colours).astype(np.uint8)
-	#Transform the class labels into a segmented image
-       	_output = colourSegment(guessed_labels, label_colours, input_blob)
-        
-	#If specify the ground-truth, calculate mean IU
-	if args.labelled != '':
-		path_labels = os.path.join(args.labelled, filename)
-		if os.path.isfile(path_labels):
-			#Load ground-truth
-			real_label = np.array(Image.open(path_labels))
+        #Transform the class labels into a segmented image
+        _output = colourSegment(guessed_labels, label_colours, input_blob)
 
-			#Calculate and print the mean IU
-			print 'Mean IU : ', mean_IU(np.array(guessed_labels, dtype=np.uint8),np.array(real_label, dtype=np.uint8))
+        #If specify the ground-truth, calculate mean IU
+        if args.labels:
+            #Load ground-truth
+            label_filename = line.partition(' ')[2].strip()
+            real_label = np.array(Image.open(label_filename))
 
-			#Transform the real labels into a showable image
-			show_label = colourSegment(real_label, label_colours, input_blob)
-			cv2.imshow("Labelled", show_label)
-        
+            #Calculate and print the mean IU
+            print 'Mean IU : ', mean_IU(np.array(guessed_labels, dtype=np.uint8),
+                                        np.array(real_label, dtype=np.uint8))
+
+            #Transform the real labels into a showable image
+            show_label = colourSegment(real_label, label_colours, input_blob)
+            cv2.imshow("Labelled", show_label)
+
         # Display input and output
         cv2.imshow("Input", np.array(_input))
         cv2.imshow("Output", _output)
-        
+
         key = cv2.waitKey(1)
         if key == 27: # exit on ESC
             break
 
     cv2.destroyAllWindows()
     
-
-
-
-
-
-
     """
     # Given an Image, convert to ndarray and preprocess for VGG
     _input = Image.open(args.data_to_segment)
