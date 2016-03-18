@@ -105,7 +105,7 @@ def main(argv):
         caffe.set_mode_cpu()
         print("CPU mode")
 
-    # Make classifier.
+    # Instantiate classifier.
     classifier = caffe.Classifier(args.model_def, args.pretrained_model,
             image_dims=image_dims, mean=mean,
             input_scale=args.input_scale, raw_scale=args.raw_scale,
