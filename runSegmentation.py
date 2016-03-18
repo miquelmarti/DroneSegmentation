@@ -75,11 +75,11 @@ def get_arguments():
     parser.add_argument('--input', type=str, required=False, default='data', help='Default is data, change it for the name of the input in your network (mostly foundable as the bottom of the first layer in the model (prototxt))')
     parser.add_argument('--output', type=str, required=False, default='output', help='Default is output, change it for the name of the output in your network (mostly foundable as the top of the last layer in the model (prototxt))')
 
-    parser.add_argument('--FCN', type=bool, required=False, default=False, help='If FCN is used, set this argument to true. Because an extra argmax at the output is needed (FCN returns class scores, while SegNet directly returns class index)')
+    parser.add_argument('--FCN', action="store_true", help='If FCN is used, provide this flag. Because an extra argmax at the output is needed (FCN returns class scores, while SegNet directly returns class index)')
     
     # Mandatory arguments
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('--video', type=str)
+    group.add_argument('--video', type=str, help='a video file to be segmented')
     group.add_argument('--images', type=str, help='a text file containing a list of images to segment')
     group.add_argument('--labels', type=str, help='a text file containing space-separated pairs - the first item is an image to segment, the second is the ground-truth labelling.')
     
@@ -182,7 +182,8 @@ if __name__ == '__main__':
     cv2.namedWindow("Output")
 
     mean_IUs = []
-    # imageListFile = open(args.data_to_segment, 'r')
+
+    # create the appropriate iterator
     imageIterator = None
     if args.video is not None:
         imageIterator = VideoIterator(args.video)
@@ -195,7 +196,6 @@ if __name__ == '__main__':
 
         
     for _input, real_label in imageIterator:
-
         # Given an Image, convert to ndarray and preprocess for VGG
         frame = pre_processing(_input, input_blob.data.shape)
 
@@ -242,8 +242,8 @@ if __name__ == '__main__':
                    cv2.resize(_input, (input_shape[3], input_shape[2])))
         cv2.imshow("Output", _output)
 
-        key = cv2.waitKey(1)
-        if key == 27: # exit on ESC
+        key = cv2.waitKey(0)
+        if key % 256 == 27: # exit on ESC - keycode is platform-dependent
             break
 
     cv2.destroyAllWindows()
