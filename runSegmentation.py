@@ -1,15 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import misc
-from PIL import Image
 import argparse
 import time
 import cv2
 import os
 
-
 # Caffe module need to be on python path
 import caffe
+
+# for some reason, cv2 doesn't define this flag explicitly
+CV2_LOAD_IMAGE_UNCHANGED = -1 
 
 def get_arguments():
     # Import arguments
@@ -74,7 +75,7 @@ def pre_processing(img, shape):
     return frame
 
 
-def mean_IU(guess,real):
+def compute_mean_IU(guess,real):
     class_ranges = range(min(guess.min(),real.min()),max(guess.max(),real.max())+1)
     number_classes = 0
     IU_value = 0.0
@@ -130,6 +131,7 @@ if __name__ == '__main__':
     cv2.namedWindow("Input")
     cv2.namedWindow("Output")
 
+    mean_IUs = []
     imageListFile = open(args.data_to_segment, 'r')
     for line in imageListFile:
         filename = None
@@ -138,33 +140,28 @@ if __name__ == '__main__':
         else:
             filename = line.strip()
 
-        print filename
         # Given an Image, convert to ndarray and preprocess for VGG
-        _input = Image.open(filename)
+        _input = cv2.imread(filename, CV2_LOAD_IMAGE_UNCHANGED)
         frame = pre_processing(_input, input_blob.data.shape)
 
         # Shape for input (data blob is N x C x H x W), set data
-        print 'pre-processing done'
         input_blob.reshape(1, *frame.shape)
         input_blob.data[...] = frame
 
         # Run the network and take argmax for prediction
         net.forward()
-        print 'finished forward pass'
         _output = 0
         guessed_labels = 0
 
 
         # If FCN-8
         if args.FCN:
-            print 'using fcn'
             # Squeeze : matrix size (1, 1, 360, 480) => (360, 480).
             # Take argmax to choose the biggest class score (FCN outputs class scores)
             guessed_labels = np.argmax(np.squeeze(output_blob.data), axis=0)
 
         # If SegNet
         else:
-            print 'using segnet'
             # Squeeze : matrix size (1, 1, 360, 480) => (360, 480).
             guessed_labels = np.squeeze(output_blob.data)
 
@@ -178,11 +175,14 @@ if __name__ == '__main__':
         if args.labels:
             #Load ground-truth
             label_filename = line.partition(' ')[2].strip()
-            real_label = np.array(Image.open(label_filename))
+            real_label = np.array(cv2.imread(label_filename,
+                                             CV2_LOAD_IMAGE_UNCHANGED))
 
             #Calculate and print the mean IU
-            print 'Mean IU : ', mean_IU(np.array(guessed_labels, dtype=np.uint8),
-                                        np.array(real_label, dtype=np.uint8))
+            mean_IU = compute_mean_IU(np.array(guessed_labels, dtype=np.uint8),
+                                      np.array(real_label, dtype=np.uint8))
+            print 'Mean IU:', mean_IU
+            mean_IUs.append(mean_IU)
 
             #Transform the real labels into a showable image
             show_label = colourSegment(real_label, label_colours, input_shape)
@@ -197,38 +197,4 @@ if __name__ == '__main__':
             break
 
     cv2.destroyAllWindows()
-    
-    """
-    # Given an Image, convert to ndarray and preprocess for VGG
-    _input = Image.open(args.data_to_segment)
-    frame = pre_processing(_input, input_blob.data.shape)
-    
-    # Shape for input (data blob is N x C x H x W), set data
-    input_blob.reshape(1, *frame.shape)
-    input_blob.data[...] = frame
-    
-    # Run the network and take argmax for prediction
-    net.forward()
-    
-    # Get the final output
-    # Remove single dimensional entries (was (1, 1, 360, 480), become (360, 480))
-    #segmentation_ind = np.squeeze(output_blob.data)
-    # Resize it for 3 channels, now (3, 360, 480)
-    #segmentation_ind_3ch = np.resize(segmentation_ind,(3,input_shape[2],input_shape[3]))
-    # Converts it to format H x W x C (was C x H x W)
-    #segmentation_ind = output_blob.data.transpose(0,2,3,1).astype(np.uint8)
-    #print segmentation_ind.shape
-    # Create a new array (all zeros) with the shape of segmentation_ind_3ch
-    #segmentation_rgb = np.zeros(segmentation_ind_3ch.shape, dtype=np.uint8)
-    _output = output_blob.data[0].argmax(axis=0)
-    _output = _output.astype(float)/255
-    
-    
-    # Display input and output
-    print type(_output)
-    plt.imshow(np.array(_input))
-    plt.imshow(_output)
-    plt.show()
-    key = cv2.waitKey(1)
-    time.sleep(100)
-    """
+    print "Average mean IU score:", np.mean(mean_IUs)
