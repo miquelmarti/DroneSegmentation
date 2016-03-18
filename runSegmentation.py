@@ -5,12 +5,60 @@ import argparse
 import time
 import cv2
 import os
+import sys
 
 # Caffe module need to be on python path
 import caffe
 
 # for some reason, cv2 doesn't define this flag explicitly
-CV2_LOAD_IMAGE_UNCHANGED = -1 
+CV2_LOAD_IMAGE_UNCHANGED = -1
+
+
+class FileListIterator(object):
+    listFile = None
+
+    def __init__(self, listFileName, pairs=False, sep=' '):
+        self.listFile = open(listFileName, 'r')
+        self.pairs = pairs
+        self.sep = sep
+    
+    def __iter__(self):
+        return self
+
+    def next(self):
+        nextLine = self.listFile.next()
+        p = nextLine.partition(self.sep)
+        nextImg = cv2.imread(p[0].strip(), CV2_LOAD_IMAGE_UNCHANGED)
+        nextLabelImg = None
+        if self.pairs:
+            nextLabelImg = cv2.imread(p[2].strip(), CV2_LOAD_IMAGE_UNCHANGED)
+        return (nextImg, nextLabelImg)
+
+    def __del__(self):
+        if type(self.listFile) is file:
+            self.listFile.close()
+
+
+class VideoIterator(object):
+    videoCapture = None
+
+    def __init__(self, videoFileName):
+        self.videoCapture = cv2.VideoCapture(videoFileName)
+    
+    def __iter__(self):
+        return self
+
+    def next(self):
+        rval, frame = self.videoCapture.read()
+        if rval:
+            return (frame, None) # no labels for videos
+        else:
+            raise StopIteration()
+
+    def __del__(self):
+        if type(self.videoCapture) is not None:
+            self.videoCapture.release()
+    
 
 def get_arguments():
     # Import arguments
@@ -30,8 +78,10 @@ def get_arguments():
     parser.add_argument('--FCN', type=bool, required=False, default=False, help='If FCN is used, set this argument to true. Because an extra argmax at the output is needed (FCN returns class scores, while SegNet directly returns class index)')
     
     # Mandatory arguments
-    parser.add_argument('data_to_segment', type=str, help='a text file containing a list of images to segment')
-    parser.add_argument('--labels', action="store_true", help='if provided, it means the files in the data .txt file are paired into data,label pairs.')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--video', type=str)
+    group.add_argument('--images', type=str, help='a text file containing a list of images to segment')
+    group.add_argument('--labels', type=str, help='a text file containing space-separated pairs - the first item is an image to segment, the second is the ground-truth labelling.')
     
     return parser.parse_args()
     
@@ -60,7 +110,7 @@ def build_network(args):
 
 def pre_processing(img, shape):
     # Ensure that the image has the good size
-    # img = cv2.resize(img, (shape[3], shape[2])) # doesn't work for Image format
+    img = cv2.resize(img, (shape[3], shape[2]))
     
     # Get pixel values and convert them from RGB to BGR
     frame = np.array(img, dtype=np.float32)
@@ -132,16 +182,21 @@ if __name__ == '__main__':
     cv2.namedWindow("Output")
 
     mean_IUs = []
-    imageListFile = open(args.data_to_segment, 'r')
-    for line in imageListFile:
-        filename = None
-        if args.labels:
-            filename = line.partition(' ')[0]
-        else:
-            filename = line.strip()
+    # imageListFile = open(args.data_to_segment, 'r')
+    imageIterator = None
+    if args.video is not None:
+        imageIterator = VideoIterator(args.video)
+    elif args.images is not None:
+        imageIterator = FileListIterator(args.images)
+    elif args.labels is not None:
+        imageIterator = FileListIterator(args.labels, pairs = True)
+    else:
+        raise Error("No data provided!  Must specify exactly one of --video, --images, or --labels")
+
+        
+    for _input, real_label in imageIterator:
 
         # Given an Image, convert to ndarray and preprocess for VGG
-        _input = cv2.imread(filename, CV2_LOAD_IMAGE_UNCHANGED)
         frame = pre_processing(_input, input_blob.data.shape)
 
         # Shape for input (data blob is N x C x H x W), set data
@@ -171,13 +226,7 @@ if __name__ == '__main__':
         #Transform the class labels into a segmented image
         _output = colourSegment(guessed_labels, label_colours, input_shape)
 
-        #If specify the ground-truth, calculate mean IU
-        if args.labels:
-            #Load ground-truth
-            label_filename = line.partition(' ')[2].strip()
-            real_label = np.array(cv2.imread(label_filename,
-                                             CV2_LOAD_IMAGE_UNCHANGED))
-
+        if real_label is not None:
             #Calculate and print the mean IU
             mean_IU = compute_mean_IU(np.array(guessed_labels, dtype=np.uint8),
                                       np.array(real_label, dtype=np.uint8))
@@ -189,7 +238,8 @@ if __name__ == '__main__':
             cv2.imshow("Labelled", show_label)
 
         # Display input and output
-        cv2.imshow("Input", np.array(_input))
+        cv2.imshow("Input",
+                   cv2.resize(_input, (input_shape[3], input_shape[2])))
         cv2.imshow("Output", _output)
 
         key = cv2.waitKey(1)
@@ -197,4 +247,5 @@ if __name__ == '__main__':
             break
 
     cv2.destroyAllWindows()
-    print "Average mean IU score:", np.mean(mean_IUs)
+    if len(mean_IUs) > 0:
+        print "Average mean IU score:", np.mean(mean_IUs)
