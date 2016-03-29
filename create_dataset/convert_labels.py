@@ -1,6 +1,7 @@
 # Convert each label files from HxWxC (C=3) to HxWxC (C=1)
 # sudo python convert_labels.py ../shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/train_tmp.txt pascal_voc_21_colors.png ../shared/datasets/VOCdevkit/VOC2012/SegmentationClass/
 
+
 import lmdb
 import argparse
 import numpy as np
@@ -40,19 +41,30 @@ def getColorIndex(pixel):
 
 
 
-for in_idx, in_ in enumerate(open(args.text_file_with_paths)):
-    im = np.array(cv2.imread(in_.rstrip()))
-    newImage = np.empty_like(im)
-    newImage.resize((newImage.shape[0],newImage.shape[1],3))
+def main(args):
     
-    for i in range(0, im.shape[0]):
-        for j in range(0, im.shape[1]):
-            newImage[i][j] = [getColorIndex(im[i][j]), getColorIndex(im[i][j]), getColorIndex(im[i][j])]
+    for in_idx, in_ in enumerate(open(args.text_file_with_paths)):
+        im = np.array(cv2.imread(in_.rstrip()))
+        newImage = np.empty_like(im)
+        newImage.resize((newImage.shape[0],newImage.shape[1],3))
+        
+        for i in range(0, im.shape[0]):
+            for j in range(0, im.shape[1]):
+                newImage[i][j] = [getColorIndex(im[i][j]), getColorIndex(im[i][j]), getColorIndex(im[i][j])]
+        
+        print 'img: ' + str(in_idx+1) + ' -> done'
+        
+        path, filename = os.path.split(in_.rstrip())
+        newImage_ = Image.fromarray(newImage)
+        newImage_.save(args.path_output + filename)
+
+
+
+
+if __name__ == '__main__':
     
-    print 'img: ' + str(in_idx+1) + ' -> done'
+    main(None)
     
-    path, filename = os.path.split(in_.rstrip())
-    newImage_ = Image.fromarray(newImage)
-    newImage_.save(args.path_output + filename)
+    pass
 
 

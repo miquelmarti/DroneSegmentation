@@ -40,29 +40,37 @@ def toBGR(pixel):
 
 
 
-for in_idx, in_ in enumerate(open(args.text_file_with_paths)):
-    im = np.array(cv2.imread(in_.rstrip()))
-    print 'img: ' + str(in_idx)
+def main(args):
     
-    for i in range(0, im.shape[0]):
-        for j in range(0, im.shape[1]):
-            if new_class(im[i][j]):
-                classes[0].append(im[i][j].tolist())
-                print str(len(classes[0])-1) + ' classes found'
+    for in_idx, in_ in enumerate(open(args.text_file_with_paths)):
+        im = np.array(cv2.imread(in_.rstrip()))
+        print 'img: ' + str(in_idx)
+        
+        for i in range(0, im.shape[0]):
+            for j in range(0, im.shape[1]):
+                if new_class(im[i][j]):
+                    classes[0].append(im[i][j].tolist())
+                    print str(len(classes[0])-1) + ' classes found'
+        
+        if len(classes[0]) > args.number_of_classes:
+            break
+
+    print classes
+    for i in range(0, len(classes[0])):
+        classes[0][i] = toBGR(classes[0][i])
+    for i in range(len(classes[0]), 256):
+        classes[0].append([0,0,0])
+
+
+    img_new = Image.new('RGB', (len(classes[0]), len(classes)))
+    img_new.putdata([tuple(p) for row in classes for p in row])
+    img_new.save(args.output)
+
+
+
+
+if __name__ == '__main__':
     
-    if len(classes[0]) > args.number_of_classes:
-        break
-
-print classes
-for i in range(0, len(classes[0])):
-    classes[0][i] = toBGR(classes[0][i])
-for i in range(len(classes[0]), 256):
-    classes[0].append([0,0,0])
-
-
-img_new = Image.new('RGB', (len(classes[0]), len(classes)))
-img_new.putdata([tuple(p) for row in classes for p in row])
-img_new.save(args.output)
-
-
-
+    main(None)
+    
+    pass
