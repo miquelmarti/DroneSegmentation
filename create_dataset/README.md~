@@ -19,17 +19,5 @@ IMPORTANT : I finally realize that the labels of Pascal VOC 2012 have like two s
 So, no need to convert them, you just have to open the labels with Image (from PIL)
 
 
-Convert labels drone :
-Used to convert all the png labels from Kai-Yan format (with the number of class in each pixel, but in the wrong format (RGB), like [0,4,2]) to the format used for LMDB (a simple number between 0 and nb_of_classes-1).
-The last update was done in March the 30th, the number of classes and their number may have changed.
-
-
-Create dataset lmdb :
+Create dataset :
 Create the dataset in LMDB format containing the images of the given text file (like train.txt). Labels flag is mandatory for creating lmdb groud truth datasets.
-
-
-Create drone colors :
-An ad-hoc code generating the colors for the Drone dataset, all the colors are given arbitrarly in this code, all of them can be changed if needed.
-Output : color.png, usable for visualization
-
-

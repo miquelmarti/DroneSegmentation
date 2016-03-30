@@ -50,7 +50,8 @@ def main(args):
         
         for i in range(0, im.shape[0]):
             for j in range(0, im.shape[1]):
-                newImage[i][j] = [getColorIndex(im[i][j]), getColorIndex(im[i][j]), getColorIndex(im[i][j])]
+                col = getColorIndex(im[i][j])
+                newImage[i][j] = [col, col, col]
         
         print 'img: ' + str(in_idx+1) + ' -> done'
         
