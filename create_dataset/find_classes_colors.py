@@ -19,10 +19,12 @@ parser.add_argument('text_file_with_paths', type=str, help='Path to the file tha
 parser.add_argument('number_of_classes', type=int, help='Number of classes of the datasets')
 parser.add_argument('output', type=str, help='Name of the output.png')
 
-args = parser.parse_args()
+arguments = parser.parse_args()
 
 
-classes = [[[0,0,0]]]
+classes = [[]]
+for i in range(0, 256):
+    classes[0].append([-1,-1,-1])
 
 
 def new_class(pixel):
@@ -42,29 +44,44 @@ def toBGR(pixel):
 
 def main(args):
     
-    for in_idx, in_ in enumerate(open(args.text_file_with_paths)):
+    cpt = 1
+    
+    for in_idx, in_ in enumerate(open(arguments.text_file_with_paths)):
         im = np.array(cv2.imread(in_.rstrip()))
+        IM = np.array(Image.open(in_.rstrip()), dtype=np.int)
         print 'img: ' + str(in_idx)
         
         for i in range(0, im.shape[0]):
             for j in range(0, im.shape[1]):
                 if new_class(im[i][j]):
-                    classes[0].append(im[i][j].tolist())
-                    print str(len(classes[0])-1) + ' classes found'
+                    classes[0][IM[i][j]][0] = im[i][j][0]
+                    classes[0][IM[i][j]][1] = im[i][j][1]
+                    classes[0][IM[i][j]][2] = im[i][j][2]
+                    cpt += 1
+                    print str(cpt-1) + ' classes found'
         
-        if len(classes[0]) > args.number_of_classes:
+        if cpt > arguments.number_of_classes:
             break
-
+    
+    
+    print classes[0][arguments.number_of_classes]
+    classes[0][arguments.number_of_classes-1][0] = classes[0][255][0]
+    classes[0][arguments.number_of_classes-1][1] = classes[0][255][1]
+    classes[0][arguments.number_of_classes-1][2] = classes[0][255][2]
+    
+    for i in range(0, 256):
+        if classes[0][i][0] == -1 and classes[0][i][1] == -1 and classes[0][i][2] == -1:
+            classes[0][i][0] = 0
+            classes[0][i][1] = 0
+            classes[0][i][2] = 0
+    classes[0][255][0] = 0
+    classes[0][255][1] = 0
+    classes[0][255][2] = 0
+    
     print classes
-    for i in range(0, len(classes[0])):
-        classes[0][i] = toBGR(classes[0][i])
-    for i in range(len(classes[0]), 256):
-        classes[0].append([0,0,0])
-
-
     img_new = Image.new('RGB', (len(classes[0]), len(classes)))
     img_new.putdata([tuple(p) for row in classes for p in row])
-    img_new.save(args.output)
+    img_new.save(arguments.output)
 
 
 
@@ -74,3 +91,5 @@ if __name__ == '__main__':
     main(None)
     
     pass
+
+

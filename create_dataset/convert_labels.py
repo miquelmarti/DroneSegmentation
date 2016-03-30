@@ -22,10 +22,10 @@ parser.add_argument('text_file_with_paths', type=str, help='Path to the file tha
 parser.add_argument('path_to_colors', type=str, help='Colors of the dataset, can be created with find_classes_colors.py')
 parser.add_argument('path_output', type=str, help='Path where to create the new labels')
 
-args = parser.parse_args()
+arguments = parser.parse_args()
 
 
-colors = cv2.imread(args.path_to_colors)[0]
+colors = cv2.imread(arguments.path_to_colors)[0]
 
 
 
@@ -43,10 +43,10 @@ def getColorIndex(pixel):
 
 def main(args):
     
-    for in_idx, in_ in enumerate(open(args.text_file_with_paths)):
+    for in_idx, in_ in enumerate(open(arguments.text_file_with_paths)):
         im = np.array(cv2.imread(in_.rstrip()))
         newImage = np.empty_like(im)
-        newImage.resize((newImage.shape[0],newImage.shape[1],3))
+        newImage.resize((newImage.shape[0], newImage.shape[1],3))
         
         for i in range(0, im.shape[0]):
             for j in range(0, im.shape[1]):
@@ -56,7 +56,7 @@ def main(args):
         
         path, filename = os.path.split(in_.rstrip())
         newImage_ = Image.fromarray(newImage)
-        newImage_.save(args.path_output + filename)
+        newImage_.save(arguments.path_output + filename)
 
 
 
