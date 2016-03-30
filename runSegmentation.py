@@ -1,6 +1,13 @@
+# Code, as generic as possible, for the visualization
+# Ex : python /home/pierre/hgRepos/caffeTools/runSegmentation.py --model /home/shared/caffeSegNet/models/segnet_webcam/deploy.prototxt --weights /home/shared/caffeSegNet/models/segnet_webcam/segnet_webcam.caffemodel --colours /home/shared/datasets/CamVid/colours/camvid12.png --output argmax --labels /home/shared/datasets/CamVid/train.txt
+
+# TODO : remove the FCN flag dependance
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import misc
+from PIL import Image
 import argparse
 import time
 import cv2
@@ -28,7 +35,8 @@ class FileListIterator(object):
     def next(self):
         nextLine = self.listFile.next()
         p = nextLine.partition(self.sep)
-        nextImg = cv2.imread(p[0].strip(), CV2_LOAD_IMAGE_UNCHANGED)
+        #nextImg = cv2.imread(p[0].strip(), CV2_LOAD_IMAGE_UNCHANGED)
+        nextImg = Image.open(p[0].strip())
         nextLabelImg = None
         if self.pairs:
             nextLabelImg = cv2.imread(p[2].strip(), CV2_LOAD_IMAGE_UNCHANGED)
@@ -51,7 +59,7 @@ class VideoIterator(object):
     def next(self):
         rval, frame = self.videoCapture.read()
         if rval:
-            return (frame, None) # no labels for videos
+            return (Image.fromarray(frame, 'RGB'), None) # no labels for videos
         else:
             raise StopIteration()
 
@@ -65,17 +73,32 @@ def get_arguments():
     parser = argparse.ArgumentParser()
     
     # Mandatory options
-    parser.add_argument('--model', type=str, required=True, help='Path to the model (usually [...]/deploy.prototxt)')
-    parser.add_argument('--weights', type=str, required=True, help='Path to the weights (usually [...]/xx.caffemodel)')
+    parser.add_argument('--model', type=str, required=True, \
+                                    help=   'Path to the model (usually [...]/deploy.prototxt)')
+    parser.add_argument('--weights', type=str, required=True, \
+                                    help=   'Path to the weights (usually [...]/xx.caffemodel)')
     
     # Optional options
-    parser.add_argument('--colours', type=str, required=False, default='', help='If the colours of the classes are provided (data/CamVid/colours/camvid12.png)')
-    parser.add_argument('--gpu', type=bool, required=False, default=True, help='Default true, set False for CPU mode')
-    parser.add_argument('--test', type=bool, required=False, default=True, help='Default true, set False for training mode')
-    parser.add_argument('--input', type=str, required=False, default='data', help='Default is data, change it for the name of the input in your network (mostly foundable as the bottom of the first layer in the model (prototxt))')
-    parser.add_argument('--output', type=str, required=False, default='output', help='Default is output, change it for the name of the output in your network (mostly foundable as the top of the last layer in the model (prototxt))')
-
-    parser.add_argument('--FCN', action="store_true", help='If FCN is used, provide this flag. Because an extra argmax at the output is needed (FCN returns class scores, while SegNet directly returns class index)')
+    parser.add_argument('--colours', type=str, required=False, default='', \
+                                    help=   'If the colours of the classes are provided \
+                                            (data/CamVid/colours/camvid12.png)')
+    parser.add_argument('--cpu', action="store_true", \
+                                    help=   'Default false, set it for CPU mode')
+    parser.add_argument('--input', type=str, required=False, default='data', \
+                                    help=   'Default is data, change it for the name of the input \
+                                            in your network (mostly foundable as the bottom of the \
+                                            first layer in the model (prototxt))')
+    parser.add_argument('--output', type=str, required=False, default='output', \
+                                    help=   'Default is output, change it for the name of the output \
+                                            in your network (mostly foundable as the top of the last \
+                                            layer in the model (prototxt))')
+    parser.add_argument('--key', action="store_true", \
+                                    help=   'For visualization image per image (have to press the \
+                                            space button for the next image then)')
+    parser.add_argument('--FCN', action="store_true", \
+                                    help=   'If FCN is used, provide this flag. Because an extra \
+                                            argmax at the output is needed (FCN returns class scores, \
+                                            while SegNet directly returns class index)')
     
     # Mandatory arguments
     group = parser.add_mutually_exclusive_group()
@@ -88,7 +111,7 @@ def get_arguments():
 
 def build_network(args):
     # GPU / CPU mode
-    if args.gpu == False:
+    if args.cpu:
         print 'Set CPU mode'
         caffe.set_mode_cpu()
     else:
@@ -96,28 +119,25 @@ def build_network(args):
         caffe.set_mode_gpu()
     
     # Creation of the network
-    if args.test == False:
-        net = caffe.Net(args.model,      # defines the structure of the model
-                        args.weights,    # contains the trained weights
-                        caffe.TRAIN)     # use train mode (e.g., don't perform dropout)
-    else:
-        net = caffe.Net(args.model,      # defines the structure of the model
-                        args.weights,    # contains the trained weights
-                        caffe.TEST)      # use test mode (e.g., don't perform dropout)
+    net = caffe.Net(args.model,      # defines the structure of the model
+                    args.weights,    # contains the trained weights
+                    caffe.TEST)      # use test mode (e.g., don't perform dropout)
     
     return net
 
 
 def pre_processing(img, shape):
     # Ensure that the image has the good size
-    img = cv2.resize(img, (shape[3], shape[2]))
+    #img = cv2.resize(img, (shape[3], shape[2]))
+    img = img.resize((shape[3], shape[2]), Image.ANTIALIAS)
     
     # Get pixel values and convert them from RGB to BGR
     frame = np.array(img, dtype=np.float32)
     frame = frame[:,:,::-1]
 
-    # Substract mean pixel values of VGG training set
-    frame -= np.array((104.00698793,116.66876762,122.67891434))
+    # Substract mean pixel values of pascal training set
+    if args.FCN:
+        frame -= np.array((104.00698793, 116.66876762, 122.67891434))
 
     # Reorder multi-channel image matrix from W x H x C to C x H x W expected by Caffe
     frame = frame.transpose((2,0,1))
@@ -125,10 +145,13 @@ def pre_processing(img, shape):
     return frame
 
 
-def compute_mean_IU(guess,real):
-    class_ranges = range(min(guess.min(),real.min()),max(guess.max(),real.max())+1)
+def compute_mean_IU(guess, real):
+    class_ranges = range(min(guess.min(),real.min()), max(guess.max(), real.max())+1)
     number_classes = 0
     IU_value = 0.0
+    
+    if args.FCN:
+        real = real.argmax(axis=2)
 
     for ccc in class_ranges:
         true_positive  = sum(sum((real == ccc) & (guess == ccc)))
@@ -150,14 +173,14 @@ def colourSegment(labels, label_colours, input_shape):
     #colourSegment function transforms the class labels into a viewable image
 
     # Resize it for 3 channels, now (3, 360, 480)
-    segmentation_ind_3ch = np.resize(labels,(3,input_shape[2],input_shape[3]))
+    segmentation_ind_3ch = np.resize(labels, (3, input_shape[2], input_shape[3]))
     # Converts it to format H x W x C (was C x H x W)
     segmentation_ind_3ch = segmentation_ind_3ch.transpose(1,2,0).astype(np.uint8)
     # Create a new array (all zeros) with the shape of segmentation_ind_3ch
     _output = np.zeros(segmentation_ind_3ch.shape, dtype=np.uint8)
 
     # Fill it with colours of classes
-    cv2.LUT(segmentation_ind_3ch,label_colours,_output)
+    cv2.LUT(segmentation_ind_3ch, label_colours, _output)
     _output = _output.astype(float)/255 # Optional, for convention
 
     return _output
@@ -175,12 +198,14 @@ if __name__ == '__main__':
     # Get input and output from the network
     input_blob = net.blobs[args.input]
     output_blob = net.blobs[args.output]
+    input_shape = input_blob.data.shape
     
     
     # Display windows
     cv2.namedWindow("Input")
     cv2.namedWindow("Output")
-
+    
+    # Init the array for storing the mean I/Us
     mean_IUs = []
 
     # create the appropriate iterator
@@ -197,7 +222,7 @@ if __name__ == '__main__':
         
     for _input, real_label in imageIterator:
         # Given an Image, convert to ndarray and preprocess for VGG
-        frame = pre_processing(_input, input_blob.data.shape)
+        frame = pre_processing(_input, input_shape)
 
         # Shape for input (data blob is N x C x H x W), set data
         input_blob.reshape(1, *frame.shape)
@@ -213,7 +238,8 @@ if __name__ == '__main__':
         if args.FCN:
             # Squeeze : matrix size (1, 1, 360, 480) => (360, 480).
             # Take argmax to choose the biggest class score (FCN outputs class scores)
-            guessed_labels = np.argmax(np.squeeze(output_blob.data), axis=0)
+            #guessed_labels = np.argmax(np.squeeze(output_blob.data), axis=0)
+            guessed_labels = output_blob.data[0].argmax(axis=0)
 
         # If SegNet
         else:
@@ -222,30 +248,42 @@ if __name__ == '__main__':
 
         # Read the colours of the classes
         label_colours = cv2.imread(args.colours).astype(np.uint8)
-        input_shape = input_blob.data.shape
         #Transform the class labels into a segmented image
         _output = colourSegment(guessed_labels, label_colours, input_shape)
-
+        
         if real_label is not None:
-            #Calculate and print the mean IU
+            # Calculate and print the mean IU
             mean_IU = compute_mean_IU(np.array(guessed_labels, dtype=np.uint8),
                                       np.array(real_label, dtype=np.uint8))
             print 'Mean IU:', mean_IU
             mean_IUs.append(mean_IU)
 
-            #Transform the real labels into a showable image
-            show_label = colourSegment(real_label, label_colours, input_shape)
-            cv2.imshow("Labelled", show_label)
-
+            # Display the real labels
+            if args.FCN:
+                cv2.imshow("Labelled", real_label)
+            else:
+                show_label = colourSegment(real_label, label_colours, input_shape)
+                cv2.imshow("Labelled", show_label)
+        
         # Display input and output
+        _input = _input.resize((input_shape[3], input_shape[2]), Image.ANTIALIAS)
         cv2.imshow("Input",
-                   cv2.resize(_input, (input_shape[3], input_shape[2])))
+                   #cv2.resize(_input, (input_shape[3], input_shape[2])))
+                   np.array(_input))
         cv2.imshow("Output", _output)
 
-        key = cv2.waitKey(0)
+        
+        key = 0
+        if args.key:
+            key = cv2.waitKey(0)
+        else:
+            key = cv2.waitKey(1000)
         if key % 256 == 27: # exit on ESC - keycode is platform-dependent
             break
 
     cv2.destroyAllWindows()
     if len(mean_IUs) > 0:
         print "Average mean IU score:", np.mean(mean_IUs)
+
+
+
