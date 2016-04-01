@@ -9,10 +9,10 @@ import glob
 from random import shuffle
 
 
-H = 224 # Required Height
-W = 224 # Required Width
-dataset_name = '/home/pierre/pascal_2012_224/train_gt_lmdb/' # Folder where to create the dataset
-file_with_paths = '/home/shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/train_lab.txt' # Text file with all the paths
+H = 500 # Required Height
+W = 500 # Required Width
+dataset_name = '/home/pierre/pascal_2012/train_lmdb/' # Folder where to create the dataset
+file_with_paths = '/home/shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt' # Text file with all the paths
 labels = True # Set to true if ground truth
 number_of_classes = 21 # Number of classes in the dataset
 

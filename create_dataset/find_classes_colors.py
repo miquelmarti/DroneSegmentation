@@ -1,6 +1,5 @@
-# Return output.png, the file with all the colors in the database
-# Need to be launch with a train.txt linking the labels images (with HxWxC C=3)
-# EX : python find_classes_colors.py ../shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/train_tmp.txt 21 pascal_voc_21_colors.png
+# Return output.png, the file with all the colors in the database. Need to be launch with a train.txt linking the labels images (with HxWxC C=3)
+# python find_classes_colors.py /home/shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/train_img.txt 21 pascal_voc_21_colors.png
 
 import caffe
 import lmdb
@@ -34,12 +33,6 @@ def new_class(pixel):
     
     return True
 
-def toBGR(pixel):
-    tmp = pixel[0]
-    pixel[0] = pixel[2]
-    pixel[2] = tmp
-    return pixel
-
 
 
 def main(args):
@@ -64,19 +57,13 @@ def main(args):
             break
     
     
-    print classes[0][arguments.number_of_classes]
-    classes[0][arguments.number_of_classes-1][0] = classes[0][255][0]
-    classes[0][arguments.number_of_classes-1][1] = classes[0][255][1]
-    classes[0][arguments.number_of_classes-1][2] = classes[0][255][2]
+    classes[0][arguments.number_of_classes-1] = classes[0][255]
     
     for i in range(0, 256):
         if classes[0][i][0] == -1 and classes[0][i][1] == -1 and classes[0][i][2] == -1:
-            classes[0][i][0] = 0
-            classes[0][i][1] = 0
-            classes[0][i][2] = 0
-    classes[0][255][0] = 0
-    classes[0][255][1] = 0
-    classes[0][255][2] = 0
+            classes[0][i] = [0,0,0]
+    classes[0][255] = [0,0,0]
+    
     
     print classes
     img_new = Image.new('RGB', (len(classes[0]), len(classes)))

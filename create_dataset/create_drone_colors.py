@@ -1,6 +1,5 @@
-# Return output.png, the file with all the colors in the database
-# Need to be launch with a train.txt linking the labels images (with HxWxC C=3)
-# EX : python create_drone_colors.py ../shared/datasets/Kai_drone_camVid/labels/lab.txt drone_colors.png
+# Return output.png, the file with all the colors in the database. Need to be launch with a train.txt linking the labels images (with HxWxC C=3)
+# python create_drone_colors.py drone_colors.png
 
 import caffe
 import lmdb
@@ -15,7 +14,6 @@ import scipy.misc
 parser = argparse.ArgumentParser()
 
 # Mandatory options
-parser.add_argument('text_file_with_paths', type=str, help='Path to the file that lists the absolute path to each image')
 parser.add_argument('output', type=str, help='Name of the output.png')
 
 arguments = parser.parse_args()

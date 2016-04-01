@@ -56,7 +56,8 @@ def main(args):
     caffe.set_mode_gpu()
     
     param_pairs = [('fc6', 'fc6-conv'),
-                   ('fc7', 'fc7-conv')]
+                   ('fc7', 'fc7-conv'),
+                   ('fc8', 'fc8-conv')]
     make_fully_conv('/home/pierre/tmpModels/VGG/VGG_ILSVRC_16_layers_deploy.prototxt',
                     '/home/pierre/tmpModels/VGG/VGG_ILSVRC_16_layers.caffemodel',
                     '/home/pierre/tmpModels/VGG/VGG_ILSVRC_16_layers_fcn_deploy.prototxt',

@@ -1,6 +1,6 @@
 Pre-processing
 -> Get the caffe log of the training to display :
-During the training, $(train_command) 2>&1 | tee info.logGet Losses (shell)
+During the training, $(train_command) 2>&1 | tee info.log
 
 Get loss (shell)
 -> Create a file listing all the losses (ex: loss.txt)

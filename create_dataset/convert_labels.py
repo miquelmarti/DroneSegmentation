@@ -1,5 +1,5 @@
 # Convert each label files from HxWxC (C=3) to HxWxC (C=1)
-# sudo python convert_labels.py ../shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/train_tmp.txt pascal_voc_21_colors.png ../shared/datasets/VOCdevkit/VOC2012/SegmentationClass/
+# sudo python convert_labels.py /home/shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/train_img.txt /home/shared/datasets/VOCdevkit/VOC2012/colors/pascal_voc_21_colors.png /home/shared/datasets/VOCdevkit/VOC2012/SegmentationClass/
 
 
 import lmdb

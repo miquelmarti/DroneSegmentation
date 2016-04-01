@@ -1,5 +1,5 @@
 # Convert each label files from HxWxC (C=3) to HxWxC (C=1)
-# sudo python convert_labels_drone.py /home/shared/datasets/Kai_drone/labels/lab.txt drone_colors.png /home/shared/datasets/Kai_drone/labels_classes/
+# sudo python convert_labels_drone.py /home/shared/datasets/Kai_drone/labels/lab.txt /home/shared/datasets/Kai_drone/colors/drone_colors.png /home/shared/datasets/Kai_drone/labels_classes/
 
 
 import lmdb
