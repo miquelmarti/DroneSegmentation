@@ -153,6 +153,14 @@ def pre_processing(img, shape):
     return frame
 
 
+def getAverageMean(means):
+    final_means = []
+    for m in means:
+        if len(m) > 0 and np.mean(m) > 0:
+            final_means.append(np.mean(m))
+    return np.mean(final_means)
+
+
 def compute_mean_IU(guess, real, means):
     # Adapt for labels with the colors of classes and not with their number (like pascal)
     if len(real.shape) == 3:
@@ -284,7 +292,7 @@ if __name__ == '__main__':
             mean_IUs = compute_mean_IU( np.array(guessed_labels, dtype=np.uint8),
                                         np.array(real_label, dtype=np.uint8),
                                         mean_IUs)
-            print "Current mean IU score:", np.mean(np.mean(mean_IUs, axis=1))
+            print "Current mean IU score:", getAverageMean(mean_IUs)
             
             # Display the real labels
             show_label = real_label
@@ -328,7 +336,7 @@ if __name__ == '__main__':
     elif args.hide == False:
         cv2.destroyAllWindows()
     if len(mean_IUs) > 0:
-        print "Average mean IU score:", np.mean(np.mean(mean_IUs, axis=1))
+        print "Average mean IU score:", getAverageMean(mean_IUs)
 
 
 
