@@ -153,27 +153,30 @@ def pre_processing(img, shape):
     return frame
 
 
-def compute_mean_IU(guess, real):
-    class_ranges = range(min(guess.min(),real.min()), max(guess.max(), real.max())+1)
-    number_classes = 0
-    IU_value = 0.0
-    
+def compute_mean_IU(guess, real, means):
+    # Adapt for labels with the colors of classes and not with their number (like pascal)
     if len(real.shape) == 3:
         real = real.argmax(axis=2)
     
+    # Goes to look for classes that are present in the groundtruth or guessed segmentation
+    class_ranges = range(min(guess.min(),real.min()), max(guess.max(), real.max())+1)
+    
+    # If we found new classes, we extend the array
+    if len(means) < class_ranges[len(class_ranges)-1] + 1:
+        for i in range(len(means), class_ranges[len(class_ranges)-1] + 1):
+            means.append([])
+    
     for ccc in class_ranges:
+        # Check the matching between guess and real for the corresponding class
         true_positive  = sum(sum((real == ccc) & (guess == ccc)))
         false_positive = sum(sum((real != ccc) & (guess == ccc)))
         false_negative = sum(sum((real == ccc) & (guess != ccc)))
+        
+        # Only calculate IU for classes that are present in groundtruth or guessed segmentation
+        if true_positive + false_positive + false_negative > 0:
+            means[ccc].append(true_positive / float(true_positive + false_positive + false_negative))
 
-        if true_positive+false_positive+false_negative>0:
-            IU_value = IU_value + true_positive/float(true_positive+false_positive+false_negative)
-            number_classes = number_classes+1
-
-    result = 1/number_classes
-    result = result*IU_value
-
-    return IU_value/number_classes
+    return means
 
 
 
@@ -278,10 +281,10 @@ if __name__ == '__main__':
             real_label = cv2.resize(real_label, (input_shape[3], input_shape[2]))
             
             # Calculate and print the mean IU
-            mean_IU = compute_mean_IU(np.array(guessed_labels, dtype=np.uint8),
-                                      np.array(real_label, dtype=np.uint8))
-            print 'Mean IU:', mean_IU
-            mean_IUs.append(mean_IU)
+            mean_IUs = compute_mean_IU( np.array(guessed_labels, dtype=np.uint8),
+                                        np.array(real_label, dtype=np.uint8),
+                                        mean_IUs)
+            print "Current mean IU score:", np.mean(np.mean(mean_IUs, axis=1))
             
             # Display the real labels
             show_label = real_label
@@ -325,7 +328,7 @@ if __name__ == '__main__':
     elif args.hide == False:
         cv2.destroyAllWindows()
     if len(mean_IUs) > 0:
-        print "Average mean IU score:", np.mean(mean_IUs)
+        print "Average mean IU score:", np.mean(np.mean(mean_IUs, axis=1))
 
 
 
