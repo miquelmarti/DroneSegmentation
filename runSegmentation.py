@@ -273,16 +273,17 @@ if __name__ == '__main__':
 
         if real_label is not None:
             # Display the real labels
+            show_label = real_label
             if len(real_label.shape) == 2:
-                real_label = colourSegment(real_label, label_colours, input_shape)
+                show_label = colourSegment(show_label, label_colours, input_shape)
             elif len(real_label.shape) != 3:
                 print 'Unknown labels format'
                 break
-            real_label = cv2.resize(real_label, (input_shape[3], input_shape[2]))
+            show_label = cv2.resize(show_label, (input_shape[3], input_shape[2]))
             if args.record == '' or args.hide:
-                cv2.imshow("Labelled", real_label)
+                cv2.imshow("Labelled", show_label)
             else:
-                labels.write(real_label)
+                labels.write(show_label)
             
             # Calculate and print the mean IU
             mean_IU = compute_mean_IU(np.array(guessed_labels, dtype=np.uint8),
