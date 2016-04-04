@@ -3,9 +3,11 @@
 # Code, as generic as possible, for the visualization
 # Ex : python /home/pierre/hgRepos/caffeTools/runSegmentation.py --model /home/shared/caffeSegNet/models/segnet_webcam/deploy.prototxt --weights /home/shared/caffeSegNet/models/segnet_webcam/segnet_webcam.caffemodel --colours /home/shared/datasets/CamVid/colours/camvid12.png --output argmax --labels /home/shared/datasets/CamVid/train.txt
 
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import misc
+from PIL import Image
 import argparse
 import time
 import cv2
@@ -33,7 +35,7 @@ class FileListIterator(object):
     def next(self):
         nextLine = self.listFile.next()
         p = nextLine.partition(self.sep)
-        nextImg = cv2.imread(p[0].strip(), CV2_LOAD_IMAGE_UNCHANGED)
+        nextImg = Image.open(p[0].strip())
         nextLabelImg = None
         if self.pairs:
             nextLabelImg = cv2.imread(p[2].strip(), CV2_LOAD_IMAGE_UNCHANGED)
@@ -56,7 +58,7 @@ class VideoIterator(object):
     def next(self):
         rval, frame = self.videoCapture.read()
         if rval:
-            return (frame, None) # no labels for videos
+            return (Image.fromarray(frame, 'RGB'), None) # no labels for videos
         else:
             raise StopIteration()
 
@@ -68,14 +70,13 @@ class VideoIterator(object):
 def get_arguments():
     # Import arguments
     parser = argparse.ArgumentParser()
-
+    group = parser.add_mutually_exclusive_group()
     
     # Mandatory options
     parser.add_argument('--model', type=str, required=True, \
                                     help=   'Path to the model (usually [...]/deploy.prototxt)')
     parser.add_argument('--weights', type=str, required=True, \
                                     help=   'Path to the weights (usually [...]/xx.caffemodel)')
-    group = parser.add_mutually_exclusive_group()
     group.add_argument('--video', type=str, \
                                     help=   'A video file to be segmented')
     group.add_argument('--images', type=str, \
@@ -136,7 +137,7 @@ def build_network(args):
 
 def pre_processing(img, shape):
     # Ensure that the image has the good size
-    img = cv2.resize(img, (shape[3], shape[2]))
+    img = img.resize((shape[3], shape[2]), Image.ANTIALIAS)
     
     # Get pixel values and convert them from RGB to BGR
     frame = np.array(img, dtype=np.float32)
@@ -159,8 +160,7 @@ def compute_mean_IU(guess, real):
     
     if len(real.shape) == 3:
         real = real.argmax(axis=2)
-    print real.shape
-
+    
     for ccc in class_ranges:
         true_positive  = sum(sum((real == ccc) & (guess == ccc)))
         false_positive = sum(sum((real != ccc) & (guess == ccc)))
@@ -217,7 +217,7 @@ if __name__ == '__main__':
     
     
     # Display windows
-    if args.record == '' or args.hide:
+    if args.record == '' and args.hide == False:
         cv2.namedWindow("Input")
         cv2.namedWindow("Output")
     
@@ -238,7 +238,7 @@ if __name__ == '__main__':
     
     cpt = 1
     for _input, real_label in imageIterator:
-        if args.record == '' or args.hide:
+        if args.record != '' or args.hide:
             print 'img ' + str(cpt)
             cpt += 1
         
@@ -266,11 +266,12 @@ if __name__ == '__main__':
         label_colours = cv2.imread(args.colours).astype(np.uint8)
         
         # Resize input to the same size as other
-        _input = cv2.resize(_input, (input_shape[3], input_shape[2]))
+        _input = _input.resize((input_shape[3], input_shape[2]), Image.ANTIALIAS)
         
         #Transform the class labels into a segmented image
         _output = colourSegment(guessed_labels, label_colours, input_shape)
-
+        
+        # If we also have the ground truth
         if real_label is not None:
             # Display the real labels
             show_label = real_label
@@ -296,7 +297,7 @@ if __name__ == '__main__':
         _input = np.array(cv2.cvtColor(np.array(_input), cv2.COLOR_BGR2RGB))
         
         # Display input and output
-        if args.record == '' or args.hide:
+        if args.record == '' and args.hide == False:
             cv2.imshow("Input", _input)
             cv2.imshow("Output", _output)
         else:
@@ -304,7 +305,7 @@ if __name__ == '__main__':
             segmentation.write(_output)
 
         # If key, wait for space press, if not, display one image per second
-        if args.record == '' or args.hide:
+        if args.record == '' and args.hide == False:
             key = 0
             if args.key:
                 key = cv2.waitKey(0)
@@ -315,11 +316,11 @@ if __name__ == '__main__':
     
     
     # Exit properly
-    if args.record != '' and args.hide == False:
+    if args.record != '':
         images.release()
         segmentation.release()
         labels.release()
-    else:
+    elif args.hide == False:
         cv2.destroyAllWindows()
     if len(mean_IUs) > 0:
         print "Average mean IU score:", np.mean(mean_IUs)
