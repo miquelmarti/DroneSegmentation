@@ -82,6 +82,8 @@ conversion = [  [0,0,0],
                 [0,10,3],
                 [0,10,4]]
 
+other_classes = []
+
 
 
 
@@ -92,6 +94,12 @@ def getColorIndex(pixel):
         if conversion[i][0] == pixel[0] and conversion[i][1] == pixel[1] and conversion[i][2] == pixel[2]:
             return i
     
+    for i in range(0, len(other_classes)):
+        if other_classes[i][0] == pixel[0] and other_classes[i][1] == pixel[1] and other_classes[i][2] == pixel[2]:
+            return 255
+    
+    other_classes.append(pixel)
+    print pixel
     return 255
     print 'Found unknown color... Exit'
     print pixel
@@ -107,12 +115,12 @@ def main(args):
         IM = Image.open(in_.rstrip())
         im2 = np.array(IM)
         newImage = np.empty_like(im2)
-        newImage.resize((newImage.shape[0], newImage.shape[1],3))
+        newImage.resize((newImage.shape[0], newImage.shape[1]))
         
         for i in range(0, im2.shape[0]):
             for j in range(0, im2.shape[1]):
                 col = getColorIndex(im2[i][j])
-                newImage[i][j] = [col, col, col]
+                newImage[i][j] = col
         
         print 'img: ' + str(in_idx+1) + ' -> done'
         

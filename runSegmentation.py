@@ -273,24 +273,26 @@ if __name__ == '__main__':
         
         # If we also have the ground truth
         if real_label is not None:
-            # Display the real labels
-            show_label = real_label
-            if len(real_label.shape) == 2:
-                show_label = colourSegment(show_label, label_colours, input_shape)
-            elif len(real_label.shape) != 3:
-                print 'Unknown labels format'
-                break
-            show_label = cv2.resize(show_label, (input_shape[3], input_shape[2]))
-            if args.record == '' or args.hide:
-                cv2.imshow("Labelled", show_label)
-            else:
-                labels.write(show_label)
+            
+            # Resize to the same size as other images
+            real_label = cv2.resize(real_label, (input_shape[3], input_shape[2]))
             
             # Calculate and print the mean IU
             mean_IU = compute_mean_IU(np.array(guessed_labels, dtype=np.uint8),
                                       np.array(real_label, dtype=np.uint8))
             print 'Mean IU:', mean_IU
             mean_IUs.append(mean_IU)
+            
+            # Display the real labels
+            show_label = real_label
+            if len(show_label.shape) == 2:
+                show_label = colourSegment(show_label, label_colours, input_shape)
+            elif len(show_label.shape) != 3:
+                print 'Unknown labels format'
+            if args.record == '' or args.hide:
+                cv2.imshow("Labelled", show_label)
+            elif args.record != '':
+                labels.write(show_label)
         
         
         # Switch to RGB (PIL Image read files as BGR)
