@@ -1,11 +1,11 @@
+#!/usr/bin/env python
+
 # Code, as generic as possible, for the visualization
 # Ex : python /home/pierre/hgRepos/caffeTools/runSegmentation.py --model /home/shared/caffeSegNet/models/segnet_webcam/deploy.prototxt --weights /home/shared/caffeSegNet/models/segnet_webcam/segnet_webcam.caffemodel --colours /home/shared/datasets/CamVid/colours/camvid12.png --output argmax --labels /home/shared/datasets/CamVid/train.txt
-
 
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import misc
-from PIL import Image
 import argparse
 import time
 import cv2
@@ -33,7 +33,7 @@ class FileListIterator(object):
     def next(self):
         nextLine = self.listFile.next()
         p = nextLine.partition(self.sep)
-        nextImg = Image.open(p[0].strip())
+        nextImg = cv2.imread(p[0].strip(), CV2_LOAD_IMAGE_UNCHANGED)
         nextLabelImg = None
         if self.pairs:
             nextLabelImg = cv2.imread(p[2].strip(), CV2_LOAD_IMAGE_UNCHANGED)
@@ -56,7 +56,7 @@ class VideoIterator(object):
     def next(self):
         rval, frame = self.videoCapture.read()
         if rval:
-            return (Image.fromarray(frame, 'RGB'), None) # no labels for videos
+            return (frame, None) # no labels for videos
         else:
             raise StopIteration()
 
@@ -68,13 +68,14 @@ class VideoIterator(object):
 def get_arguments():
     # Import arguments
     parser = argparse.ArgumentParser()
-    group = parser.add_mutually_exclusive_group()
+
     
     # Mandatory options
     parser.add_argument('--model', type=str, required=True, \
                                     help=   'Path to the model (usually [...]/deploy.prototxt)')
     parser.add_argument('--weights', type=str, required=True, \
                                     help=   'Path to the weights (usually [...]/xx.caffemodel)')
+    group = parser.add_mutually_exclusive_group()
     group.add_argument('--video', type=str, \
                                     help=   'A video file to be segmented')
     group.add_argument('--images', type=str, \
@@ -135,7 +136,7 @@ def build_network(args):
 
 def pre_processing(img, shape):
     # Ensure that the image has the good size
-    img = img.resize((shape[3], shape[2]), Image.ANTIALIAS)
+    img = cv2.resize(img, (shape[3], shape[2]))
     
     # Get pixel values and convert them from RGB to BGR
     frame = np.array(img, dtype=np.float32)
@@ -265,12 +266,11 @@ if __name__ == '__main__':
         label_colours = cv2.imread(args.colours).astype(np.uint8)
         
         # Resize input to the same size as other
-        _input = _input.resize((input_shape[3], input_shape[2]), Image.ANTIALIAS)
+        _input = cv2.resize(_input, (input_shape[3], input_shape[2]))
         
         #Transform the class labels into a segmented image
         _output = colourSegment(guessed_labels, label_colours, input_shape)
-        
-        # If we also have the ground truth
+
         if real_label is not None:
             # Display the real labels
             if len(real_label.shape) == 2:
