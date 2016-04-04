@@ -158,8 +158,7 @@ def compute_mean_IU(guess, real):
     
     if len(real.shape) == 3:
         real = real.argmax(axis=2)
-    print real.shape
-
+    
     for ccc in class_ranges:
         true_positive  = sum(sum((real == ccc) & (guess == ccc)))
         false_positive = sum(sum((real != ccc) & (guess == ccc)))
@@ -168,10 +167,10 @@ def compute_mean_IU(guess, real):
         if true_positive+false_positive+false_negative>0:
             IU_value = IU_value + true_positive/float(true_positive+false_positive+false_negative)
             number_classes = number_classes+1
-
+    
     result = 1/number_classes
     result = result*IU_value
-
+    
     return IU_value/number_classes
 
 
@@ -216,7 +215,7 @@ if __name__ == '__main__':
     
     
     # Display windows
-    if args.record == '' or args.hide:
+    if args.record == '' and args.hide == False:
         cv2.namedWindow("Input")
         cv2.namedWindow("Output")
     
@@ -237,7 +236,7 @@ if __name__ == '__main__':
     
     cpt = 1
     for _input, real_label in imageIterator:
-        if args.record == '' or args.hide:
+        if args.record != '' or args.hide:
             print 'img ' + str(cpt)
             cpt += 1
         
@@ -279,9 +278,9 @@ if __name__ == '__main__':
                 print 'Unknown labels format'
                 break
             real_label = cv2.resize(real_label, (input_shape[3], input_shape[2]))
-            if args.record == '' or args.hide:
+            if args.record == '' and args.hide == False:
                 cv2.imshow("Labelled", real_label)
-            else:
+            elif args.record != '':
                 labels.write(real_label)
             
             # Calculate and print the mean IU
@@ -295,15 +294,15 @@ if __name__ == '__main__':
         _input = np.array(cv2.cvtColor(np.array(_input), cv2.COLOR_BGR2RGB))
         
         # Display input and output
-        if args.record == '' or args.hide:
+        if args.record == '' and args.hide == False:
             cv2.imshow("Input", _input)
             cv2.imshow("Output", _output)
-        else:
+        elif args.record != '':
             images.write(_input)
             segmentation.write(_output)
 
         # If key, wait for space press, if not, display one image per second
-        if args.record == '' or args.hide:
+        if args.record == '' and args.hide == False:
             key = 0
             if args.key:
                 key = cv2.waitKey(0)
@@ -314,11 +313,11 @@ if __name__ == '__main__':
     
     
     # Exit properly
-    if args.record != '' and args.hide == False:
+    if args.record != '':
         images.release()
         segmentation.release()
         labels.release()
-    else:
+    elif args.hide == False:
         cv2.destroyAllWindows()
     if len(mean_IUs) > 0:
         print "Average mean IU score:", np.mean(mean_IUs)
