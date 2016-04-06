@@ -5,6 +5,7 @@
 
 
 import numpy as np
+import time
 import matplotlib.pyplot as plt
 from scipy import misc
 from PIL import Image
@@ -13,12 +14,45 @@ import time
 import cv2
 import os
 import sys
+from operator import truediv
 
 # Caffe module need to be on python path
 import caffe
 
 # for some reason, cv2 doesn't define this flag explicitly
 CV2_LOAD_IMAGE_UNCHANGED = -1
+# ignore divisions by zero
+np.seterr(divide='ignore', invalid='ignore')
+
+
+class Metric(object):
+    def __init__(self, pixel_accuracy, mean_accuracy, mean_IU, freq_weighted_IU,
+                        n_cl, n_im, t_is,
+                        n_iis, n_ijs,
+                        time_prep, time_arch, time_comp):
+        self.pixel_accuracy=pixel_accuracy      # success rate (Pixel accuracy (FCN), or Global average (SegNet))
+        self.mean_accuracy=mean_accuracy        # mean accuracy (Class average in SegNet (?))
+        self.mean_IU=mean_IU                    # mean IU
+        self.freq_weighted_IU=freq_weighted_IU  # frequency weighted IU (for FCN)
+        self.n_cl=n_cl                          # Number of classes
+        self.n_im=n_im                          # Number of images
+        self.t_is=t_is                          # Total number of pixels in class i
+        # n_ij : The number of pixels of class i predicted to belong to class j):
+        self.n_iis=n_iis                        # True positives
+        self.n_ijs=n_ijs                        # False positives (wrongly classified)
+        self.time_prep=time_prep                # Time to prepare the image to the network
+        self.time_arch=time_arch                # Time to process the image with the architecture
+        self.time_comp=time_comp                # Time to get the main metrics (like mean IU)
+
+    def __str__(self):
+        return  "Metrics :\n" + \
+                "\tnb classes : " + str(self.n_cl) + ", nb images : " + str(self.n_im) + "\n" + \
+                "\tt_i shape : " + str(np.array(self.t_is).shape) + "\n" + \
+                "\t\t" + str(self.t_is) + "\n" + \
+                "\tn_iis shape : " + str(np.array(self.n_iis).shape) + "\n" + \
+                "\t\t" + str(self.n_iis) + "\n" + \
+                "\tn_ijs shape : " + str(np.array(self.n_ijs).shape) + "\n" + \
+                "\t\t" + str(self.n_ijs) + "\n"
 
 
 class FileListIterator(object):
@@ -38,7 +72,7 @@ class FileListIterator(object):
         nextImg = Image.open(p[0].strip())
         nextLabelImg = None
         if self.pairs:
-            nextLabelImg = cv2.imread(p[2].strip(), CV2_LOAD_IMAGE_UNCHANGED)
+            nextLabelImg = Image.open(p[2].strip())#cv2.imread(p[2].strip(), CV2_LOAD_IMAGE_UNCHANGED)
         return (nextImg, nextLabelImg)
 
     def __del__(self):
@@ -77,6 +111,9 @@ def get_arguments():
                                     help=   'Path to the model (usually [...]/deploy.prototxt)')
     parser.add_argument('--weights', type=str, required=True, \
                                     help=   'Path to the weights (usually [...]/xx.caffemodel)')
+    parser.add_argument('--colours', type=str, required=True, \
+                                    help=   'If the colours of the classes are provided \
+                                            (data/CamVid/colours/camvid12.png)')
     group.add_argument('--video', type=str, \
                                     help=   'A video file to be segmented')
     group.add_argument('--images', type=str, \
@@ -88,9 +125,6 @@ def get_arguments():
     
     
     # Optional options
-    parser.add_argument('--colours', type=str, required=False, default='', \
-                                    help=   'If the colours of the classes are provided \
-                                            (data/CamVid/colours/camvid12.png)')
     parser.add_argument('--cpu', action="store_true", \
                                     help=   'Default false, set it for CPU mode')
     parser.add_argument('--input', type=str, required=False, default='data', \
@@ -104,10 +138,9 @@ def get_arguments():
     parser.add_argument('--key', action="store_true", \
                                     help=   'For visualization image per image (have to press the \
                                             space button for the next image then)')
-    parser.add_argument('--FCN', action="store_true", \
-                                    help=   'If FCN is used, provide this flag. Because an extra \
-                                            argmax at the output is needed (FCN returns class scores, \
-                                            while SegNet directly returns class index)')
+    parser.add_argument('--PASCAL', action="store_true", \
+                                    help=   'If Pascal VOC is used, provide this flag for the mean \
+                                            subtraction.')
     parser.add_argument('--hide', action="store_true", \
                                     help=   'If set, won\'t display the results')
     parser.add_argument('--record', type=str, required=False, default='', \
@@ -144,48 +177,13 @@ def pre_processing(img, shape):
     frame = frame[:,:,::-1]
 
     # Substract mean pixel values of pascal training set
-    if args.FCN:
+    if args.PASCAL:
         frame -= np.array((104.00698793, 116.66876762, 122.67891434))
 
     # Reorder multi-channel image matrix from W x H x C to C x H x W expected by Caffe
     frame = frame.transpose((2,0,1))
     
     return frame
-
-
-def getAverageMean(means):
-    final_means = []
-    for m in means:
-        if len(m) > 0 and np.mean(m) > 0:
-            final_means.append(np.mean(m))
-    return np.mean(final_means)
-
-
-def compute_mean_IU(guess, real, means):
-    # Adapt for labels with the colors of classes and not with their number (like pascal)
-    if len(real.shape) == 3:
-        real = real.argmax(axis=2)
-    
-    # Goes to look for classes that are present in the groundtruth or guessed segmentation
-    class_ranges = range(min(guess.min(),real.min()), max(guess.max(), real.max())+1)
-    
-    # If we found new classes, we extend the array
-    if len(means) < class_ranges[len(class_ranges)-1] + 1:
-        for i in range(len(means), class_ranges[len(class_ranges)-1] + 1):
-            means.append([])
-    
-    for ccc in class_ranges:
-        # Check the matching between guess and real for the corresponding class
-        true_positive  = sum(sum((real == ccc) & (guess == ccc)))
-        false_positive = sum(sum((real != ccc) & (guess == ccc)))
-        false_negative = sum(sum((real == ccc) & (guess != ccc)))
-        
-        # Only calculate IU for classes that are present in groundtruth or guessed segmentation
-        if true_positive + false_positive + false_negative > 0:
-            means[ccc].append(true_positive / float(true_positive + false_positive + false_negative))
-
-    return means
-
 
 
 def colourSegment(labels, label_colours, input_shape):
@@ -202,6 +200,81 @@ def colourSegment(labels, label_colours, input_shape):
     cv2.LUT(segmentation_ind_3ch, label_colours, _output)
 
     return _output
+
+
+def update_metrics(guess, real, metrics):
+    # Delete the borders
+    real[real==255]=0
+    
+    # Goes to look for classes that are present in the groundtruth or guessed segmentation
+    class_ranges = range(min(guess.min(), real.min()), max(guess.max(), real.max())+1)
+    
+    # If we found new classes, we extend the arrays
+    if metrics.n_cl < class_ranges[len(class_ranges)-1] + 1:
+        wantedNbClasses = class_ranges[len(class_ranges)-1] + 1
+        tmpNIJ = np.zeros((len(metrics.n_ijs), wantedNbClasses, wantedNbClasses))
+        for im in range(0, metrics.n_im-1):
+            for c in range(0, class_ranges[len(class_ranges)-1] + 1 - metrics.n_cl):
+                metrics.t_is[im].append(0)
+                metrics.n_iis[im].append(0)
+            
+            for c in range(0, metrics.n_cl):
+                for cc in range(0, metrics.n_cl):
+                    tmpNIJ[im][c][cc] = metrics.n_ijs[im][c][cc]
+            
+        metrics.n_ijs = tmpNIJ.tolist()
+        metrics.n_cl = class_ranges[len(class_ranges)-1] + 1
+    
+    # Extend for the current image
+    metrics.t_is.append([0]*metrics.n_cl)
+    metrics.n_iis.append([0]*metrics.n_cl)
+    metrics.n_ijs.append([[0]*metrics.n_cl]*metrics.n_cl)
+    
+    # For each class
+    for ccc in class_ranges:
+        tmpNIJ = []
+        for ccc2 in range(0, metrics.n_cl):
+            # Check the matching between guess and real for the corresponding class
+            nij = ((real == ccc) & (guess == ccc2))
+            tmpNIJ.append(sum(sum(nij)))
+            if ccc == ccc2:
+                metrics.n_iis[metrics.n_im-1][ccc] = sum(sum(nij))
+        metrics.n_ijs[metrics.n_im-1][ccc] = tmpNIJ
+        metrics.t_is[metrics.n_im-1][ccc] = sum(sum((real == ccc)))
+
+
+def compute_metrics(metrics):
+    # For all the images
+    for img in range(0, metrics.n_im):
+        t_i = np.array(metrics.t_is[img])
+        n_ii = np.array(metrics.n_iis[img])
+        n_ij = np.array(metrics.n_ijs[img])
+        n_cl = len(metrics.t_is[img]) - metrics.t_is[img].count(0)
+        
+        #print metrics
+        
+        # pixel_accuracy = sum_i (n_ii) / sum_i (t_i) 
+        metrics.pixel_accuracy.append( \
+                                np.divide(float(np.sum(n_ii)), float(np.sum(t_i))) )
+        
+        # mean_accuracy = (1/n_cl) * sum_i (n_ii / t_i) 
+        nii_div_ti = np.divide(n_ii, t_i, dtype=float)
+        nii_div_ti[np.isnan(nii_div_ti)] = 0
+        metrics.mean_accuracy.append( \
+                                (1 / float(n_cl)) * np.sum(nii_div_ti) )
+        
+        # mean_iu = (1/n_cl) * sum_i (n_ii / (t_i + sum_j(n_ji) - n_ii)) 
+        ti_plu_nji_min_nii = np.subtract(np.add(t_i, np.sum(n_ij, axis=0)), n_ii)# float(t_i + sum(n_ji) - n_ii)
+        nii_div_denom = np.divide(n_ii, ti_plu_nji_min_nii, dtype=float)
+        nii_div_denom[np.isnan(nii_div_denom)] = 0
+        metrics.mean_IU.append( \
+                                (1 / float(n_cl)) * np.sum(nii_div_denom) )
+        
+        # frequency_weighted_iu = (sum_i (t_i))^-1 * (sum_i ((t_i * n_ii) / (t_i + sum_j(n_ji) - n_ii))) 
+        ti_by_nii_div_denom = np.divide(np.multiply(t_i, n_ii), ti_plu_nji_min_nii, dtype=float)
+        ti_by_nii_div_denom[np.isnan(ti_by_nii_div_denom)] = 0
+        metrics.freq_weighted_IU.append( \
+                                (1 / float(sum(t_i))) * np.sum(ti_by_nii_div_denom) )
         
 
 
@@ -218,24 +291,23 @@ if __name__ == '__main__':
     output_blob = net.blobs[args.output]
     input_shape = input_blob.data.shape
     
-    
-    
     # Video recording
     if args.record != '':
-        images = cv2.VideoWriter(args.record + 'img.avi', cv2.VideoWriter_fourcc('M','J','P','G'), 5.0, (input_shape[3],input_shape[2]))
-        labels = cv2.VideoWriter(args.record + 'labels.avi', cv2.VideoWriter_fourcc('M','J','P','G'), 5.0, (input_shape[3],input_shape[2]))
-        segmentation = cv2.VideoWriter(args.record + 'segmentation.avi', cv2.VideoWriter_fourcc('M','J','P','G'), 5.0, (input_shape[3],input_shape[2]))
+        fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
+        shape = (input_shape[3],input_shape[2])
+        images = cv2.VideoWriter(args.record + 'img.avi', fourcc, 5.0, shape)
+        labels = cv2.VideoWriter(args.record + 'labels.avi', fourcc, 5.0, shape)
+        segmentation = cv2.VideoWriter(args.record + 'segmentation.avi', fourcc, 5.0, shape)
     
-    
-    # Display windows
+    # Initialize windows
     if args.record == '' and args.hide == False:
         cv2.namedWindow("Input")
         cv2.namedWindow("Output")
     
-    # Init the array for storing the mean I/Us
-    mean_IUs = []
+    # Init the structure for storing the metrics
+    metrics = Metric([], [], [], [], 0, 0, [], [], [], [], [], [])
 
-    # create the appropriate iterator
+    # Create the appropriate iterator
     imageIterator = None
     if args.video is not None:
         imageIterator = VideoIterator(args.video)
@@ -247,21 +319,29 @@ if __name__ == '__main__':
         raise Error("No data provided!  Must specify exactly one of --video, --images, or --labels")
     
     
-    cpt = 1
+    # Main loop, for each image to process
     for _input, real_label in imageIterator:
-        if args.record != '' or args.hide:
-            print 'img ' + str(cpt)
-            cpt += 1
         
-        # Given an Image, convert to ndarray and preprocess for VGG
+        # New image
+        metrics.n_im += 1
+        if args.record != '' or args.hide:
+            print 'img ' + str(metrics.n_im)
+        
+        # Preprocess the image for the network
+        start = time.time()
         frame = pre_processing(_input, input_shape)
+        metrics.time_prep.append(time.time() - start)
 
         # Shape for input (data blob is N x C x H x W), set data
         input_blob.reshape(1, *frame.shape)
         input_blob.data[...] = frame
-
+        
         # Run the network and take argmax for prediction
+        start = time.time()
         net.forward()
+        metrics.time_arch.append(time.time() - start)
+        
+        # guessed_label will hold the output of the network and _output the output to display
         _output = 0
         guessed_labels = 0
         
@@ -279,27 +359,30 @@ if __name__ == '__main__':
         # Resize input to the same size as other
         _input = _input.resize((input_shape[3], input_shape[2]), Image.ANTIALIAS)
         
-        #Transform the class labels into a segmented image
+        # Transform the class labels into a segmented image
         _output = colourSegment(guessed_labels, label_colours, input_shape)
         
         # If we also have the ground truth
         if real_label is not None:
             
             # Resize to the same size as other images
-            real_label = cv2.resize(real_label, (input_shape[3], input_shape[2]))
+            real_label = real_label.resize((input_shape[3], input_shape[2]), Image.ANTIALIAS)
             
-            # Calculate and print the mean IU
-            mean_IUs = compute_mean_IU( np.array(guessed_labels, dtype=np.uint8),
-                                        np.array(real_label, dtype=np.uint8),
-                                        mean_IUs)
-            print "Current mean IU score:", getAverageMean(mean_IUs)
+            # Calculate the metrics for this image
+            start = time.time()
+            update_metrics( np.array(guessed_labels, dtype=np.uint8),
+                            np.array(real_label, dtype=np.uint8),
+                            metrics)
+            metrics.time_comp.append(time.time() - start)
             
-            # Display the real labels
-            show_label = real_label
+            # Convert the ground truth if needed into a RGB array
+            show_label = np.array(real_label)
             if len(show_label.shape) == 2:
                 show_label = colourSegment(show_label, label_colours, input_shape)
             elif len(show_label.shape) != 3:
                 print 'Unknown labels format'
+            
+            # Display the ground truth
             if args.record == '' or args.hide:
                 cv2.imshow("Labelled", show_label)
             elif args.record != '':
@@ -317,7 +400,7 @@ if __name__ == '__main__':
             images.write(_input)
             segmentation.write(_output)
 
-        # If key, wait for space press, if not, display one image per second
+        # If key, wait for key press, if not, display one image per second
         if args.record == '' and args.hide == False:
             key = 0
             if args.key:
@@ -335,8 +418,17 @@ if __name__ == '__main__':
         labels.release()
     elif args.hide == False:
         cv2.destroyAllWindows()
-    if len(mean_IUs) > 0:
-        print "Average mean IU score:", getAverageMean(mean_IUs)
+    
+    # Display the metrics
+    print "Average time to prepare the image : ", np.mean(metrics.time_prep)
+    print "Average time to process the image in the architecture : ", np.mean(metrics.time_arch)
+    if len(metrics.t_is) > 0:
+        print "Average time to calculate the metrics : ", np.mean(metrics.time_comp)
+        compute_metrics(metrics)
+        print "Average pixel accuracy : ", np.mean(metrics.pixel_accuracy)
+        print "Average mean accuracy : ", np.mean(metrics.mean_accuracy)
+        print "Average mean IU score : ", np.mean(metrics.mean_IU)
+        print "Average frequency weighted IU : ", np.mean(metrics.freq_weighted_IU)
 
 
 
