@@ -9,6 +9,7 @@ import glob
 from random import shuffle
 
 
+
 H = 360 # Required Height
 W = 480 # Required Width
 dataset_name = '/home/pierre/camvid/val_gt_lmdb/' # Folder where to create the dataset

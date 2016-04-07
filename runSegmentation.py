@@ -400,7 +400,7 @@ if __name__ == '__main__':
         if args.record == '' and args.hide == False:
             cv2.imshow("Input", _input)
             cv2.imshow("Output", _output)
-        else:
+        elif args.record != '':
             images.write(_input)
             segmentation.write(_output)
 
