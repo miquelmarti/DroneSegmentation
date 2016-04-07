@@ -35,7 +35,7 @@ def main(args):
     in_db = lmdb.open(args.output_path, map_size=int(1e12))
     with in_db.begin(write=True) as in_txn:
         for in_idx, in_ in enumerate(open(args.input_images)):
-            print 'img: ' + str(in_idx)
+            print 'Loading image ', str(in_idx), ' : ', in_.rstrip()
             
             # load image:
             im = np.array(Image.open(in_.rstrip()))
