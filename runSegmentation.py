@@ -26,7 +26,7 @@ np.seterr(divide='ignore', invalid='ignore')
 
 
 class Metric(object):
-    def __init__(self, pixel_accuracy, mean_accuracy, mean_IU, freq_weighted_IU,
+    def __init__(self, pixel_accuracy, mean_accuracy, mean_IU, freq_weighted_IU, mean_IU_per_class,
                         n_cl, n_im, t_is,
                         n_iis, n_ijs,
                         time_prep, time_arch, time_comp):
@@ -34,6 +34,7 @@ class Metric(object):
         self.mean_accuracy=mean_accuracy        # mean accuracy (Class average in SegNet (?))
         self.mean_IU=mean_IU                    # mean IU
         self.freq_weighted_IU=freq_weighted_IU  # frequency weighted IU (for FCN)
+        self.mean_IU_per_class=mean_IU_per_class# Mean IU for each class
         self.n_cl=n_cl                          # Number of classes
         self.n_im=n_im                          # Number of images
         self.t_is=t_is                          # Total number of pixels in class i
@@ -270,6 +271,9 @@ def compute_metrics(metrics):
         metrics.mean_IU.append( \
                                 (1 / float(n_cl)) * np.sum(nii_div_denom) )
         
+        # mean_ius_per_class[i] = n_ii / (t_i + sum_j(n_ji) - n_ii)) 
+        metrics.mean_IU_per_class.append(nii_div_denom)
+        
         # frequency_weighted_iu = (sum_i (t_i))^-1 * (sum_i ((t_i * n_ii) / (t_i + sum_j(n_ji) - n_ii))) 
         ti_by_nii_div_denom = np.divide(np.multiply(t_i, n_ii), ti_plu_nji_min_nii, dtype=float)
         ti_by_nii_div_denom[np.isnan(ti_by_nii_div_denom)] = 0
@@ -305,7 +309,7 @@ if __name__ == '__main__':
         cv2.namedWindow("Output")
     
     # Init the structure for storing the metrics
-    metrics = Metric([], [], [], [], 0, 0, [], [], [], [], [], [])
+    metrics = Metric([], [], [], [], [], 0, 0, [], [], [], [], [], [])
 
     # Create the appropriate iterator
     imageIterator = None
@@ -429,6 +433,13 @@ if __name__ == '__main__':
         print "Average mean accuracy : ", np.mean(metrics.mean_accuracy)
         print "Average mean IU score : ", np.mean(metrics.mean_IU)
         print "Average frequency weighted IU : ", np.mean(metrics.freq_weighted_IU)
+        print "Mean IU per classes : "
+        for i in range(0, metrics.n_cl):
+            col = np.array(metrics.mean_IU_per_class)[:,i]
+            if np.sum(col != 0) == 0:
+                print "\tclass ", i, " : 0"
+            else:
+                print "\tclass ", i, " : ", (np.sum(col) / np.sum(col != 0))
 
 
 

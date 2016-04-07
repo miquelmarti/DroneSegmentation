@@ -10,7 +10,7 @@ dst=$2
 
 cat $src | grep loss > 'loss_iter.txt'
 cat 'loss_iter.txt' | grep Iteration > 'loss_line.txt'
-cut -d ' ' -f 9 'loss_line.txt' > $dst
+cut -d ' ' -f 10 'loss_line.txt' > $dst
 
 rm 'loss_iter.txt'
 rm 'loss_line.txt'

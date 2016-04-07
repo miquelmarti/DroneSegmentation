@@ -9,12 +9,12 @@ import glob
 from random import shuffle
 
 
-H = 500 # Required Height
-W = 500 # Required Width
-dataset_name = '/home/pierre/pascal_2012/train_lmdb/' # Folder where to create the dataset
-file_with_paths = '/home/shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt' # Text file with all the paths
+H = 360 # Required Height
+W = 480 # Required Width
+dataset_name = '/home/pierre/camvid/val_gt_lmdb/' # Folder where to create the dataset
+file_with_paths = '/home/shared/datasets/CamVid/val_lab.txt' # Text file with all the paths
 labels = True # Set to true if ground truth
-number_of_classes = 21 # Number of classes in the dataset
+number_of_classes = 12 # Number of classes in the dataset
 
 
 
@@ -34,7 +34,7 @@ def main(args):
             if labels:
                 # Resize the input image
                 Limg = Image.fromarray(im)
-                Limg = Limg.resize([H, W],Image.NEAREST)
+                Limg = Limg.resize([W, H],Image.NEAREST)
                 im = np.array(Limg,Dtype)
                 # Convert from HxWxC (C=3) to HxWxC (C=1)
                 im = im.reshape(im.shape[0],im.shape[1],1)
@@ -42,7 +42,7 @@ def main(args):
                 # RGB to BGR
                 im = im[:,:,::-1]
                 im = Image.fromarray(im)
-                im = im.resize([H, W], Image.ANTIALIAS)
+                im = im.resize([W, H], Image.ANTIALIAS)
                 im = np.array(im,Dtype)
             
             # Convert to CxHxW
