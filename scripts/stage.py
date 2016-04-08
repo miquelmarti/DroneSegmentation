@@ -76,7 +76,7 @@ class Stage(object):
             tmpFilenames += [solverFilename, modelFilename]
 
         # run caffe with the provided network description and solver info 
-        solver = caffe.SGDSolver(solverFilename)
+        solver = caffe.get_solver(str(solverFilename))
         if weights:
             solver.net.copy_from(weights)
         solver.solve()

@@ -1,0 +1,4 @@
+stage {
+    name: "train_fcn-8"
+    solver: "examples/train_fcn/solver.prototxt"
+}

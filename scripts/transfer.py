@@ -26,7 +26,7 @@ def getArguments():
     parser.add_argument('--weights', help='\
     A .caffemodel file containing the initial weights of the first stage.  \
     If not provided, the first stage will learn all weights from scratch.')
-
+    # TODO argument to allow user to specify version of caffe to use
     machineGroup = parser.add_mutually_exclusive_group()
     machineGroup.add_argument('--cpu', action='store_true', help='\
     If this flag is set, runs all training on the CPU.')
@@ -44,11 +44,10 @@ def getStagesFromMsgs(stageMsgs, solverFilename=None, modelFilename=None):
     stages = []
     for stageMsg in stageMsgs:
         # unpack values
-        if stage.HasField(SOLVER_FIELD):
-            solverFilename = stage.solver
-        elif solverFilename is not None:
-            stage.solver = solverFilename
-        else:
+        if stageMsg.HasField(SOLVER_FIELD):
+            solverFilename = stageMsg.solver
+        elif solverFilename is None:
+            # No solver is defined for this stage!
             raise Exception('First layer provides no solver.prototxt file')
         # execute stage
         # TODO implement modelFilename logic
@@ -76,9 +75,11 @@ if __name__ == "__main__":
         caffe.set_mode_gpu()
 
     # Read in the stages and carry them out
-    stageMsgs = transferLearning_pb2.TransferLearning()
-    caffeUtils.readFromPrototxt(stages, args.stages)
-    print "There are", len(stages), "stages specified"
+    tlMsg = transferLearning_pb2.TransferLearning()
+    caffeUtils.readFromPrototxt(tlMsg, args.stages)
+    stageMsgs = tlMsg.stage
+    # TODO testing print statement, remove this
+    print "There are", len(stageMsgs), "stages specified"
     stages = getStagesFromMsgs(stageMsgs)
     executeListOfStages(stages, args.weights, args.clean)
 
