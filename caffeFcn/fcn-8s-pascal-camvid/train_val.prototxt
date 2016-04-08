@@ -12,7 +12,7 @@ layer {
     mean_value: 122.67892
   }
   data_param {
-    source: "/home/pierre/FCN-8/data/CamVid/database/train_lmdb"
+    source: "/home/shared/datasets/CamVid/LMDB/train_lmdb"
     batch_size: 1
     backend: LMDB
   }
@@ -25,7 +25,7 @@ layer {
     phase: TRAIN
   }
   data_param {
-    source: "/home/pierre/FCN-8/data/CamVid/database/train_gt_lmdb"
+    source: "/home/shared/datasets/CamVid/LMDB/train_gt_lmdb"
     batch_size: 1
     backend: LMDB
   }
@@ -43,7 +43,7 @@ layer {
     mean_value: 122.67892
   }
   data_param {
-    source: "/home/pierre/FCN-8/data/CamVid/database/val_lmdb"
+    source: "/home/shared/datasets/CamVid/LMDB/val_lmdb"
     batch_size: 1
     backend: LMDB
   }
@@ -56,7 +56,7 @@ layer {
     phase: TEST
   }
   data_param {
-    source: "/home/pierre/FCN-8/data/CamVid/database/val_gt_lmdb"
+    source: "/home/shared/datasets/CamVid/LMDB/val_gt_lmdb"
     batch_size: 1
     backend: LMDB
   }
