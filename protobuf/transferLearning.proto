@@ -1,0 +1,32 @@
+syntax = "proto2";
+
+package transferLearning;
+
+/*
+ Represents a single stage of transfer learning, in which we initialize weights
+ and learning rates from some pre-defined set of weights (or not) and learn on
+ a new dataset.
+*/
+
+// FIELDS
+// For each stage (they're in a list):
+message Stage {
+    required string name = 1;
+    
+    // TODO the dataset used to learn in this stage
+    // optional string dataset = ;
+    // TODO a partial model file to be integrated into the main file
+    // optional string partialModel = ;
+    
+    // The solver model used in this stage
+    optional string solver = 2;
+    // Specifies layers to freeze turing training, as a list
+    repeated string freeze = 3;
+    // Specifies layers to reinitialize with random values
+    repeated string ignore = 4;
+}
+
+// Defines a whole transfer learning cycle
+message TransferLearning {
+    repeated Stage stage = 1;
+}

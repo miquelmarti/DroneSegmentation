@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cd protobuf
+protoc --python_out=../scripts transferLearning.proto
+cd -
