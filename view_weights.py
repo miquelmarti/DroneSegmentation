@@ -1,6 +1,6 @@
 '''
 RUN COMMAND EXAMPLE :
-python view_weights.py --model /home/johannes/project/models/segnet/deploy-pascal.prototxt --weights /home/johannes/project/models/segnet/train_pascal/ --layer "conv1_1" --scale_divide 0.5 --scale_shift 0.0
+python view_weights.py --model /home/johannes/project/models/segnet/deploy-pascal.prototxt --weights /home/johannes/project/models/segnet/train_pascal/ --layer "conv1_1" --scale_divide 0.1 --scale_shift -0.05
 
 Press ESC to exit
 '''
@@ -31,11 +31,12 @@ def get_arguments():
     parser.add_argument('--terminal', type=bool, required=False, default=False, help='Set true for printing weights in terminal')
     parser.add_argument('--scale_shift', type=float, required=False, default=0.0, help='Substracts the data value by this before plot')
     parser.add_argument('--scale_divide', type=float, required=False, default=1.0, help='Divides the data value by this before plot')
+    parser.add_argument('--autoscale', type=bool, required=False, default=False, help='Sets automatically the scale to better print the weights')
     
     return parser.parse_args()
 
 
-def build_network(args):
+def build_network(args, caffemodel):
     # GPU / CPU mode
     if args.cpu:
         print 'Set CPU mode'
@@ -46,11 +47,11 @@ def build_network(args):
     
     # Creation of the network
     net = caffe.Net(args.model,      # defines the structure of the model
-                        args.weights,    # contains the trained weights
+                        caffemodel,    # contains the trained weights
                         caffe.TEST)      # use test mode (e.g., don't perform dropout)
     return net
 
-def vis_square(data, scale_shift, scale_divide):
+def vis_square(data, scale_shift, scale_divide, autoscale):
     """Code by Caffe. 
     Take an array of shape (n, height, width) or (n, height, width, 3)
        and visualize each (height, width) thing in a grid of size approx. sqrt(n) by sqrt(n)"""
@@ -58,8 +59,10 @@ def vis_square(data, scale_shift, scale_divide):
     # normalize data for display
     if data.max()-data.min()>0:
             
-            #data = (data - data.min()) / (data.max() - data.min())
-            data = (data-scale_shift)/scale_divide
+            if autoscale:
+                data = (data - data.min()) / (data.max() - data.min())
+            else:
+                data = (data-scale_shift)/scale_divide
             
             # force the number of filters to be square
             n = int(np.ceil(np.sqrt(data.shape[0])))
@@ -81,8 +84,8 @@ def vis_square(data, scale_shift, scale_divide):
     
 def main(args, caffemodel):
     print "Opening ", caffemodel
-    # Set the network according to the arguments
-    net = build_network(args)
+    
+    net = build_network(args, caffemodel) #Set the network according to the arguments
 
     # Which layer to see ?
     layer_to_see = args.layer
@@ -98,8 +101,14 @@ def main(args, caffemodel):
     if args.terminal:
     	print "BIAS (of shape ", bias.shape ,") : ", bias
     	
+    #Transforms a little the data in order to make them printable
+    weights_printable = weights.transpose(0, 2, 3, 1) #Puts dimensions in right order
+    
+    if weights_printable.shape[3] > 3:
+        weights_printable = weights_printable[:,:,:,0:3] #In case there are more than 3 channels, show the 3 first ones
+    
     #Plot all weights in a window
-    vis_square(weights.transpose(0, 2, 3, 1), args.scale_shift, args.scale_divide)
+    vis_square(weights_printable, args.scale_shift, args.scale_divide, args.autoscale)
 
         
 def getfiles(dirpath):
@@ -120,13 +129,13 @@ if __name__ == '__main__':
     # Get all options
     args = get_arguments()
     
-    if os.path.isdir(args.weights): #If we give a weight directory, iterate through files inside it
+    if os.path.isdir(args.weights): #If we give a directory with many weight files, iterate through files
         list_files = getfiles(args.weights)
         for i in list_files:
             if i.endswith(".caffemodel"): #Only select caffemodel files in the folder
-                main(args, i) #Run script
+                main(args, i) #Run weight printing script
                 
-                key = cv2.waitKey(100)
+                key = cv2.waitKey(0)
                 if key % 256 == 27: # exit on ESC
                         break
                 continue
@@ -134,8 +143,9 @@ if __name__ == '__main__':
                 continue
 
 
-    else:
-        #just take single weights file
+    else: #If we only give one single weight file
         caffemodel = args.weights
-        #Run the script
-        main(args, caffemodel)
+        
+        main(args, caffemodel) #Run weight printing script
+        
+        key = cv2.waitKey(0) #Stops the script and opens window
