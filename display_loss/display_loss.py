@@ -11,14 +11,12 @@ import operator
 
 
 TARGET_STRS = ['Iteration', 'loss']
-ITER_VAL_IDX = 5
-LOSS_VAL_IDX = 9
+ITER_VAL_IDX = -4
+LOSS_VAL_IDX = -1
 
 
 parser = argparse.ArgumentParser()
-# Mandatory options
 parser.add_argument('log_file', type=str, help='Path to the Caffe output log file')
-# parser.add_argument('display_frequency', type=int, help='Number between each displayed iteration')
 
 args = parser.parse_args()
 
