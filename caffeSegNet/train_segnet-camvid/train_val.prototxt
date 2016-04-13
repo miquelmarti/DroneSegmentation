@@ -5,8 +5,8 @@ layer {
   top: "data"
   top: "label"
   dense_image_data_param {
-    source: "/home/pierre/SegNet/data/CamVid/train.txt"	# Change this to the absolute path to your data file
-    batch_size: 4   			# Change this number to a batch size that will fit on your GPU
+    source: "/home/shared/datasets/CamVid/train.txt"
+    batch_size: 4
     shuffle: true
   }
 }

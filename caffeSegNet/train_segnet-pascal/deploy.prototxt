@@ -5,7 +5,7 @@ layer {
   top: "data"
   top: "label"
   dense_image_data_param {
-    source: "/home/pierre/SegNet/CamVid/test.txt"	# Change this to the absolute path to your data file
+    source: "/home/shared/datasets/Vocdevkit/Voc2012/ImageSet/Segmentation/val_img_lab.txt"
     batch_size: 1
   }
 }

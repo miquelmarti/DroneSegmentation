@@ -1,12 +1,64 @@
 name: "VGG_ILSVRC_16_layer"
 layer {
   name: "data"
-  type: "DenseImageData"
+  type: "Data"
   top: "data"
+  include {
+    phase: TRAIN
+  }
+  transform_param {
+    mean_value: 104.00699
+    mean_value: 116.66877
+    mean_value: 122.67892
+  }
+  data_param {
+    source: "/home/shared/datasets/Vocdevkit/VOCContext/LMDB/train_lmdb"
+    batch_size: 2
+    backend: LMDB
+  }
+}
+layer {
+  name: "label"
+  type: "Data"
   top: "label"
-  dense_image_data_param {
-    source: "/home/shared/datasets/CamVid/test.txt"
-    batch_size: 1
+  include {
+    phase: TRAIN
+  }
+  data_param {
+    source: "/home/shared/datasets/Vocdevkit/VOCContext/LMDB/train_gt_lmdb"
+    batch_size: 2
+    backend: LMDB
+  }
+}
+layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  include {
+    phase: TEST
+  }
+  transform_param {
+    mean_value: 104.00699
+    mean_value: 116.66877
+    mean_value: 122.67892
+  }
+  data_param {
+    source: "/home/shared/datasets/Vocdevkit/VOCContext/LMDB/val_lmdb"
+    batch_size: 2
+    backend: LMDB
+  }
+}
+layer {
+  name: "label"
+  type: "Data"
+  top: "label"
+  include {
+    phase: TEST
+  }
+  data_param {
+    source: "/home/shared/datasets/Vocdevkit/VOCContext/LMDB/val_gt_lmdb"
+    batch_size: 2
+    backend: LMDB
   }
 }
 layer {
@@ -48,7 +100,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -104,7 +155,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -172,7 +222,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -228,7 +277,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -296,7 +344,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -352,7 +399,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -408,7 +454,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -476,7 +521,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -532,7 +576,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -588,7 +631,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -656,7 +698,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -712,7 +753,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -768,7 +808,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -848,7 +887,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -905,7 +943,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -961,7 +998,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1029,7 +1065,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1085,7 +1120,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1141,7 +1175,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1207,7 +1240,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1263,7 +1295,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1319,7 +1350,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1385,7 +1415,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1441,7 +1470,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1507,7 +1535,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1550,9 +1577,33 @@ layer {
   }
 }
 layer {
-  name: "prob"
-  type: "Softmax"
+  name: "loss"
+  type: "SoftmaxWithLoss"
   bottom: "conv1_1_D"
-  top: "prob"
+  bottom: "label"
+  top: "loss"
   softmax_param {engine: CAFFE}
+  loss_param: {
+    weight_by_label_freqs: true
+    ignore_label: 11
+    class_weighting: 0.2595
+    class_weighting: 0.1826
+    class_weighting: 4.5640
+    class_weighting: 0.1417
+    class_weighting: 0.9051
+    class_weighting: 0.3826
+    class_weighting: 9.6446
+    class_weighting: 1.8418
+    class_weighting: 0.6823
+    class_weighting: 6.2478
+    class_weighting: 7.3614
+  }
+}
+layer {
+  name: "accuracy"
+  type: "Accuracy"
+  bottom: "conv1_1_D"
+  bottom: "label"
+  top: "accuracy"
+  top: "per_class_accuracy"
 }
