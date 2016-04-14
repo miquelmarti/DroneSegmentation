@@ -7,12 +7,12 @@ layer {
     phase: TRAIN
   }
   transform_param {
-    mean_value: 104.00699
-    mean_value: 116.66877
-    mean_value: 122.67892
+    mean_value: 0
+    mean_value: 0
+    mean_value: 0
   }
   data_param {
-    source: "/home/shared/datasets/CamVid/LMDB/train_lmdb"
+    source: "/home/shared/datasets/CamVid/LMDB_2/train_lmdb"
     batch_size: 2
     backend: LMDB
   }
@@ -25,7 +25,7 @@ layer {
     phase: TRAIN
   }
   data_param {
-    source: "/home/shared/datasets/CamVid/LMDB/train_gt_lmdb"
+    source: "/home/shared/datasets/CamVid/LMDB_2/train_gt_lmdb"
     batch_size: 2
     backend: LMDB
   }
@@ -38,12 +38,12 @@ layer {
     phase: TEST
   }
   transform_param {
-    mean_value: 104.00699
-    mean_value: 116.66877
-    mean_value: 122.67892
+    mean_value: 0
+    mean_value: 0
+    mean_value: 0
   }
   data_param {
-    source: "/home/shared/datasets/CamVid/LMDB/val_lmdb"
+    source: "/home/shared/datasets/CamVid/LMDB_2/val_lmdb"
     batch_size: 2
     backend: LMDB
   }
@@ -56,7 +56,7 @@ layer {
     phase: TEST
   }
   data_param {
-    source: "/home/shared/datasets/CamVid/LMDB/val_gt_lmdb"
+    source: "/home/shared/datasets/CamVid/LMDB_2/val_gt_lmdb"
     batch_size: 2
     backend: LMDB
   }

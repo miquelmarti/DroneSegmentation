@@ -5,8 +5,8 @@ layer {
   top: "data"
   top: "label"
   dense_image_data_param {
-    source: "/home/shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/train_img_lab_224.txt"
-    batch_size: 4
+    source: "/home/shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/train_img_lab_500.txt"
+    batch_size: 2
     shuffle: true
   }
 }
@@ -860,6 +860,8 @@ layer {
   bottom: "pool5_mask"
   upsample_param {
     scale: 2
+    upsample_w: 32
+    upsample_h: 32
   }
 }
 layer {
@@ -1048,6 +1050,8 @@ layer {
   bottom: "pool4_mask"
   upsample_param {
     scale: 2
+    upsample_w: 63
+    upsample_h: 63
   }
 }
 layer {
@@ -1235,6 +1239,8 @@ layer {
   bottom: "pool3_mask"
   upsample_param {
     scale: 2
+    upsample_w: 125
+    upsample_h: 125
   }
 }
 layer {

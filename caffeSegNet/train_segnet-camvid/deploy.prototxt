@@ -1,14 +1,9 @@
 name: "VGG_ILSVRC_16_layer"
-layer {
-  name: "data"
-  type: "DenseImageData"
-  top: "data"
-  top: "label"
-  dense_image_data_param {
-    source: "/home/shared/datasets/CamVid/test.txt"
-    batch_size: 1
-  }
-}
+input: "data"
+input_dim: 1
+input_dim: 3
+input_dim: 360
+input_dim: 480
 layer {
   bottom: "data"
   top: "conv1_1"
