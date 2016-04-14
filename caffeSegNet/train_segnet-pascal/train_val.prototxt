@@ -5,7 +5,7 @@ layer {
   top: "data"
   top: "label"
   dense_image_data_param {
-    source: "/home/shared/datasets/VOCdevkit/VOC2012/ImageSet/Segmentation/train_img_lab.txt"
+    source: "/home/shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/train_img_lab_224.txt"
     batch_size: 4
     shuffle: true
   }
