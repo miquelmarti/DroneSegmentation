@@ -5,7 +5,7 @@ layer {
   top: "data"
   top: "label"
   dense_image_data_param {
-    source: "/home/shared/datasets/Vocdevkit/Voc2012/ImageSet/Segmentation/train_img_lab.txt"
+    source: "/home/shared/datasets/VOCdevkit/VOC2012/ImageSet/Segmentation/train_img_lab.txt"
     batch_size: 4
     shuffle: true
   }
@@ -50,7 +50,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -107,7 +106,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1092,6 +1090,7 @@ layer {
     decay_mult: 0
   }
   bn_param {
+	scale_filler {
 	  type: "constant"
 	  value: 1
 	}
