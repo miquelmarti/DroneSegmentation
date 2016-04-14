@@ -156,15 +156,14 @@ def build_network(args):
     # GPU / CPU mode
     if args.cpu:
         print 'Set CPU mode'
-        caffe.set_mode_cpu()
+     #   caffe.set_mode_cpu()
     else:
         print 'Set GPU mode'
         caffe.set_mode_gpu()
     
     # Creation of the network
     net = caffe.Net(args.model,      # defines the structure of the model
-                    args.weights,    # contains the trained weights
-                    caffe.TEST)      # use test mode (e.g., don't perform dropout)
+                    args.weights)      # use test mode (e.g., don't perform dropout)
     
     return net
 
@@ -443,3 +442,4 @@ if __name__ == '__main__':
 
 
 
+ 
