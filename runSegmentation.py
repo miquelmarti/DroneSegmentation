@@ -148,22 +148,32 @@ def get_arguments():
                                     help=   'For recording the videos, expected the path (and prefix) \
                                             of where to save them like /path/to/segnet_. Will create \
                                             two or three videos, depends on if the labels are provided')
+    parser.add_argument('--old_caffe', action="store_true", \
+                                    help=   'If we use an old version of Caffe (ex. the ones used by CRF or DeepLab, the command to create a network in the C++ is slightly different.')
     
     return parser.parse_args()
     
 
 def build_network(args):
-    # GPU / CPU mode
-    if args.cpu:
-        print 'Set CPU mode'
-     #   caffe.set_mode_cpu()
-    else:
-        print 'Set GPU mode'
-        caffe.set_mode_gpu()
+
+    if args.old_caffe: #If using an older version of Caffe, there is no caffe.set_mode_xxx() and we cannot specify caffe.TRAIN or caffe.TEST
+            # Creation of the network
+            net = caffe.Net(args.model,      # defines the structure of the model
+                            args.weights)    # contains the trained weights
     
-    # Creation of the network
-    net = caffe.Net(args.model,      # defines the structure of the model
-                    args.weights)      # use test mode (e.g., don't perform dropout)
+    else:
+            # GPU / CPU mode
+            if args.cpu:
+                print 'Set CPU mode'
+                caffe.set_mode_cpu()
+            else:
+                print 'Set GPU mode'
+                caffe.set_mode_gpu()
+            
+            # Creation of the network
+            net = caffe.Net(args.model,      # defines the structure of the model
+                            args.weights,    # contains the trained weights
+                            caffe.TEST)      # use test mode (e.g., don't perform dropout)
     
     return net
 
@@ -442,4 +452,3 @@ if __name__ == '__main__':
 
 
 
- 
