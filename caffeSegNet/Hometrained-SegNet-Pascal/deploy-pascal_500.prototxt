@@ -1528,9 +1528,3 @@ layer {
   top: "prob"
   softmax_param {engine: CAFFE}
 }
-layer {
-  name: "argmax"
-  type: "ArgMax"
-  bottom: "prob"
-  top: "argmax"
-}
