@@ -5,7 +5,7 @@ layer {
   top: "data"
   top: "label"
   dense_image_data_param {
-    source: "/home/shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/train_img_lab_500.txt"
+    source: "/home/shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/train_img_lab_224.txt"
     batch_size: 2
     shuffle: true
   }
@@ -25,11 +25,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 64
     pad: 1
@@ -56,7 +55,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -81,11 +80,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 64
     pad: 1
@@ -112,7 +110,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -121,15 +119,6 @@ layer {
   top: "conv1_2"
   name: "relu1_2"
   type: "ReLU"
-}
-layer {
-  name: "pool1_drop"
-  type: "Dropout"
-  bottom: "conv1_2"
-  top: "conv1_2"
-  dropout_param {
-    dropout_ratio: 0.5
-  }
 }
 layer {
   bottom: "conv1_2"
@@ -158,11 +147,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 128
     pad: 1
@@ -189,7 +177,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -214,11 +202,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 128
     pad: 1
@@ -245,7 +232,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -254,15 +241,6 @@ layer {
   top: "conv2_2"
   name: "relu2_2"
   type: "ReLU"
-}
-layer {
-  name: "pool2_drop"
-  type: "Dropout"
-  bottom: "conv2_2"
-  top: "conv2_2"
-  dropout_param {
-    dropout_ratio: 0.5
-  }
 }
 layer {
   bottom: "conv2_2"
@@ -291,11 +269,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 256
     pad: 1
@@ -322,7 +299,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -347,11 +324,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 256
     pad: 1
@@ -378,7 +354,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -403,11 +379,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 256
     pad: 1
@@ -434,7 +409,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -443,15 +418,6 @@ layer {
   top: "conv3_3"
   name: "relu3_3"
   type: "ReLU"
-}
-layer {
-  name: "pool3_drop"
-  type: "Dropout"
-  bottom: "conv3_3"
-  top: "conv3_3"
-  dropout_param {
-    dropout_ratio: 0.5
-  }
 }
 layer {
   bottom: "conv3_3"
@@ -480,11 +446,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 512
     pad: 1
@@ -511,7 +476,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -536,11 +501,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 512
     pad: 1
@@ -567,7 +531,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -592,11 +556,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 512
     pad: 1
@@ -623,7 +586,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -632,15 +595,6 @@ layer {
   top: "conv4_3"
   name: "relu4_3"
   type: "ReLU"
-}
-layer {
-  name: "pool4_drop"
-  type: "Dropout"
-  bottom: "conv4_3"
-  top: "conv4_3"
-  dropout_param {
-    dropout_ratio: 0.5
-  }
 }
 layer {
   bottom: "conv4_3"
@@ -669,11 +623,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 512
     pad: 1
@@ -700,7 +653,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -725,11 +678,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 512
     pad: 1
@@ -756,7 +708,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -781,11 +733,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 512
     pad: 1
@@ -812,7 +763,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -821,15 +772,6 @@ layer {
   top: "conv5_3"
   name: "relu5_3"
   type: "ReLU"
-}
-layer {
-  name: "pool5_drop"
-  type: "Dropout"
-  bottom: "conv5_3"
-  top: "conv5_3"
-  dropout_param {
-    dropout_ratio: 0.5
-  }
 }
 layer {
   bottom: "conv5_3"
@@ -844,15 +786,6 @@ layer {
   }
 }
 layer {
-  name: "upsample5_drop"
-  type: "Dropout"
-  bottom: "pool5"
-  top: "pool5"
-  dropout_param {
-    dropout_ratio: 0.5
-  }
-}
-layer {
   name: "upsample5"
   type: "Upsample"
   bottom: "pool5"
@@ -860,8 +793,6 @@ layer {
   bottom: "pool5_mask"
   upsample_param {
     scale: 2
-    upsample_w: 32
-    upsample_h: 32
   }
 }
 layer {
@@ -879,11 +810,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 512
     pad: 1
@@ -910,7 +840,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -936,11 +866,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 512
     pad: 1
@@ -967,7 +896,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -992,11 +921,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 512
     pad: 1
@@ -1023,7 +951,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -1034,15 +962,6 @@ layer {
   type: "ReLU"
 }
 layer {
-  name: "upsample4_drop"
-  type: "Dropout"
-  bottom: "conv5_1_D"
-  top: "conv5_1_D"
-  dropout_param {
-    dropout_ratio: 0.5
-  }
-}
-layer {
   name: "upsample4"
   type: "Upsample"
   bottom: "conv5_1_D"
@@ -1050,8 +969,6 @@ layer {
   bottom: "pool4_mask"
   upsample_param {
     scale: 2
-    upsample_w: 63
-    upsample_h: 63
   }
 }
 layer {
@@ -1069,11 +986,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 512
     pad: 1
@@ -1100,7 +1016,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -1125,11 +1041,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 512
     pad: 1
@@ -1156,7 +1071,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -1181,11 +1096,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 256
     pad: 1
@@ -1212,7 +1126,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -1223,15 +1137,6 @@ layer {
   type: "ReLU"
 }
 layer {
-  name: "upsample3_drop"
-  type: "Dropout"
-  bottom: "conv4_1_D"
-  top: "conv4_1_D"
-  dropout_param {
-    dropout_ratio: 0.5
-  }
-}
-layer {
   name: "upsample3"
   type: "Upsample"
   bottom: "conv4_1_D"
@@ -1239,8 +1144,6 @@ layer {
   bottom: "pool3_mask"
   upsample_param {
     scale: 2
-    upsample_w: 125
-    upsample_h: 125
   }
 }
 layer {
@@ -1258,11 +1161,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 256
     pad: 1
@@ -1289,7 +1191,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -1314,11 +1216,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 256
     pad: 1
@@ -1345,7 +1246,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -1370,11 +1271,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 128
     pad: 1
@@ -1401,7 +1301,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -1410,15 +1310,6 @@ layer {
   top: "conv3_1_D"
   name: "relu3_1_D"
   type: "ReLU"
-}
-layer {
-  name: "upsample2_drop"
-  type: "Dropout"
-  bottom: "conv3_1_D"
-  top: "conv3_1_D"
-  dropout_param {
-    dropout_ratio: 0.5
-  }
 }
 layer {
   name: "upsample2"
@@ -1445,11 +1336,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 128
     pad: 1
@@ -1476,7 +1366,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -1501,11 +1391,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 64
     pad: 1
@@ -1532,7 +1421,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -1541,15 +1430,6 @@ layer {
   top: "conv2_1_D"
   name: "relu2_1_D"
   type: "ReLU"
-}
-layer {
-  name: "upsample1_drop"
-  type: "Dropout"
-  bottom: "conv2_1_D"
-  top: "conv2_1_D"
-  dropout_param {
-    dropout_ratio: 0.5
-  }
 }
 layer {
   name: "upsample1"
@@ -1576,11 +1456,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 64
     pad: 1
@@ -1607,7 +1486,7 @@ layer {
 	}
 	shift_filler {
 	  type: "constant"
-	  value: 0
+	  value: 0.001
 	}
  }
 }
@@ -1632,11 +1511,10 @@ layer {
   }
   convolution_param {
     weight_filler {
-      type: "xavier"
+      type: "msra"
     }
     bias_filler {
       type: "constant"
-      value: 0
     }
     num_output: 21
     pad: 1
@@ -1652,6 +1530,7 @@ layer {
   softmax_param {engine: CAFFE}
   loss_param: {
     weight_by_label_freqs: true
+    ignore_label: 255
     class_weighting: 0.2719
     class_weighting: 1.5830
     class_weighting: 3.0120

@@ -10,6 +10,6 @@ display: 20
 momentum: 0.9
 max_iter: 80000
 weight_decay: 0.0005
-snapshot: 10000
+snapshot: 1000
 snapshot_prefix: "/home/pierre/hgRepos/models/caffeSegNet/train_segnet-pascal/train/train"
 solver_mode: GPU
