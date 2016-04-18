@@ -1,4 +1,4 @@
-net: "/home/pierre/hgRepos/models/caffeSegNet/train_segnet-pascal/train_val.prototxt"
+net: "/home/pierre/hgRepos/models/caffeSegNet/train_segnet-pascal/dropout_weighting/train_val.prototxt"
 test_initialization: false
 test_iter: 1
 test_interval: 10000000
@@ -11,5 +11,5 @@ momentum: 0.9
 max_iter: 80000
 weight_decay: 0.0005
 snapshot: 1000
-snapshot_prefix: "/home/pierre/hgRepos/models/caffeSegNet/train_segnet-pascal/train/train"
+snapshot_prefix: "/home/pierre/hgRepos/models/caffeSegNet/train_segnet-pascal/dropout_weighting/train/train"
 solver_mode: GPU
