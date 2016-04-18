@@ -1,9 +1,66 @@
 name: "VGG_ILSVRC_16_layer"
-input: "data"
-input_dim: 1
-input_dim: 3
-input_dim: 224
-input_dim: 224
+layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  include {
+    phase: TRAIN
+  }
+  transform_param {
+    mean_value: 104.00699
+    mean_value: 116.66877
+    mean_value: 122.67892
+  }
+  data_param {
+    source: "/home/shared/datasets/VOCdevkit/VOC2012/LMDB/train_lmdb"
+    batch_size: 2
+    backend: LMDB
+  }
+}
+layer {
+  name: "label"
+  type: "Data"
+  top: "label"
+  include {
+    phase: TRAIN
+  }
+  data_param {
+    source: "/home/shared/datasets/VOCdevkit/VOC2012/LMDB/train_gt_lmdb"
+    batch_size: 2
+    backend: LMDB
+  }
+}
+layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  include {
+    phase: TEST
+  }
+  transform_param {
+    mean_value: 104.00699
+    mean_value: 116.66877
+    mean_value: 122.67892
+  }
+  data_param {
+    source: "/home/shared/datasets/VOCdevkit/VOC2012/LMDB/val_lmdb"
+    batch_size: 2
+    backend: LMDB
+  }
+}
+layer {
+  name: "label"
+  type: "Data"
+  top: "label"
+  include {
+    phase: TEST
+  }
+  data_param {
+    source: "/home/shared/datasets/VOCdevkit/VOC2012/LMDB/val_gt_lmdb"
+    batch_size: 2
+    backend: LMDB
+  }
+}
 layer {
   bottom: "data"
   top: "conv1_1"
@@ -787,6 +844,8 @@ layer {
   bottom: "pool5_mask"
   upsample_param {
     scale: 2
+    upsample_w: 32
+    upsample_h: 32
   }
 }
 layer {
@@ -963,6 +1022,8 @@ layer {
   bottom: "pool4_mask"
   upsample_param {
     scale: 2
+    upsample_w: 63
+    upsample_h: 63
   }
 }
 layer {
@@ -1138,6 +1199,8 @@ layer {
   bottom: "pool3_mask"
   upsample_param {
     scale: 2
+    upsample_w: 125
+    upsample_h: 125
   }
 }
 layer {
@@ -1493,7 +1556,7 @@ layer {
 layer {
   bottom: "conv1_2_D"
   top: "conv1_1_D"
-  name: "conv1_1_D"
+  name: "conv1_1_D-v2"
   type: "Convolution"
   param {
     lr_mult: 1
@@ -1516,10 +1579,43 @@ layer {
   }
 }
 layer {
-  name: "prob"
-  type: "Softmax"
+  name: "loss"
+  type: "SoftmaxWithLoss"
   bottom: "conv1_1_D"
-  top: "prob"
+  bottom: "label"
+  top: "loss"
   softmax_param {engine: CAFFE}
+  loss_param: {
+    weight_by_label_freqs: true
+    ignore_label: 21
+    class_weighting: 0.2719
+    class_weighting: 1.5830
+    class_weighting: 3.0120
+    class_weighting: 1.6572
+    class_weighting: 1.7892
+    class_weighting: 1.7815
+    class_weighting: 0.5962
+    class_weighting: 1.2053
+    class_weighting: 0.6740
+    class_weighting: 1.8299
+    class_weighting: 0.9166
+    class_weighting: 0.8532
+    class_weighting: 0.8935
+    class_weighting: 0.9973
+    class_weighting: 0.9742
+    class_weighting: 1.1778
+    class_weighting: 1.9162
+    class_weighting: 1.0000
+    class_weighting: 0.8758
+    class_weighting: 0.7225
+    class_weighting: 1.3287
+  }
 }
-
+layer {
+  name: "accuracy"
+  type: "Accuracy"
+  bottom: "conv1_1_D"
+  bottom: "label"
+  top: "accuracy"
+  top: "per_class_accuracy"
+}
