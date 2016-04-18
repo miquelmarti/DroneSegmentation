@@ -43,7 +43,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -99,7 +98,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -167,7 +165,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -223,7 +220,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -291,7 +287,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -347,7 +342,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -403,7 +397,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -471,7 +464,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -527,7 +519,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -583,7 +574,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -651,7 +641,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -707,7 +696,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -763,7 +751,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -843,7 +830,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -900,7 +886,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -956,7 +941,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1024,7 +1008,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1080,7 +1063,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1136,7 +1118,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1202,7 +1183,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1258,7 +1238,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1314,7 +1293,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1380,7 +1358,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1436,7 +1413,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
@@ -1502,7 +1478,6 @@ layer {
     decay_mult: 0
   }
   bn_param {
-	bn_mode: INFERENCE
 	scale_filler {
 	  type: "constant"
 	  value: 1
