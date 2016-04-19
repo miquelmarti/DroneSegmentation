@@ -1,3 +1,5 @@
+Training time : 38 hours
+
 Average time to prepare the image :  0.0263907233134
 Average time to process the image in the architecture :  0.387333881287
 Average time to calculate the metrics :  0.205967908732
