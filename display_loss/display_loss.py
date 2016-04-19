@@ -67,24 +67,6 @@ def getTestStats(lines):
         
     # remove duplicate iteration numbers
     return stats
-    
-
-def getTestStats2(lines):
-    tags = [ITER_TAG,
-            LOSS_TAG,
-            OV_ACC_TAG,
-            MEAN_ACC_TAG,
-            MEAN_IU_TAG,
-            FWAVACC_TAG]
-    stats = { tag: [] for tag in tags }
-    # accumulate statistic values in the tags dict
-    for l in lines:
-        tagsInLine = filter(lambda tag : tag in l, tags)
-        [stats[tag].append(getTaggedValue(l, tag)) for tag in tagsInLine]
-    # remove duplicate iteration numbers
-    iterations = sorted(set(stats[ITER_TAG]))
-    del stats[ITER_TAG]
-    return iterations, stats
 
 
 def plotXAndY(x, y, title):
