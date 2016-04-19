@@ -49,8 +49,8 @@ def build_network(args, caffemodel):
     
     # Creation of the network
     net = caffe.Net(args.model,      # defines the structure of the model
-                        caffemodel,    # contains the trained weights
-                        caffe.TEST)      # use test mode (e.g., don't perform dropout)
+                    caffemodel,    # contains the trained weights
+                    caffe.TEST)      # use test mode (e.g., don't perform dropout)
     return net
 
 def vis_square(data, scale_shift, scale_divide, autoscale):
