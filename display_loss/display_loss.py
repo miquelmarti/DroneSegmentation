@@ -49,6 +49,27 @@ def getTaggedValue(line, tag, valType=float):
 
 
 def getTestStats(lines):
+    tags = [LOSS_TAG,
+            OV_ACC_TAG,
+            MEAN_ACC_TAG,
+            MEAN_IU_TAG,
+            FWAVACC_TAG]
+    stats = { tag: [] for tag in tags }
+    # accumulate statistic values in the tags dict
+    for l in lines:
+        tagsInLine = filter(lambda tag : tag in l, tags)
+        if len(tagsInLine) == 0:
+            continue
+        tagVals = {tag: getTaggedValue(l, tag) for tag in tagsInLine}
+        iteration = getIterNum(l)
+        for tag in tagVals:
+            stats[tag].append((iteration, tagVals[tag]))
+        
+    # remove duplicate iteration numbers
+    return stats
+    
+
+def getTestStats2(lines):
     tags = [ITER_TAG,
             LOSS_TAG,
             OV_ACC_TAG,
@@ -66,10 +87,9 @@ def getTestStats(lines):
     return iterations, stats
 
 
-def plotXAndY(x, y, title = None):
+def plotXAndY(x, y, title):
     plt.plot(x, y)
-    if title:
-        plt.title(title)
+    plt.title(title)
     plt.show()
     
     
@@ -109,9 +129,10 @@ with open(args.log_file, 'r') as f:
     iterNums = map(getIterNum, lossLines)
     losses = [float(l.strip().rpartition(' ')[2]) for l in lossLines]
     if args.train_loss or displayAll:
-        plotXAndY(iterNums, losses)
+        plotXAndY(iterNums, losses, 'training loss')
 
-    iterations, testStats = getTestStats(segTestLines)
+    testStats = getTestStats(segTestLines)
     for tag in testStats:
         if displayAll or argVars[TAGS_TO_ARGS[tag]]:
-            plotXAndY(iterations, testStats[tag], tag)
+            iterations, stats = zip(*testStats[tag])
+            plotXAndY(iterations, stats, tag)
