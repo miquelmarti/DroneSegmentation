@@ -32,6 +32,8 @@ def get_arguments():
     parser.add_argument('--scale_shift', type=float, required=False, default=0.0, help='Substracts the data value by this before plot')
     parser.add_argument('--scale_divide', type=float, required=False, default=1.0, help='Divides the data value by this before plot')
     parser.add_argument('--autoscale', type=bool, required=False, default=False, help='Sets automatically the scale to better print the weights')
+    parser.add_argument('--stop', type=bool, required=False, default=False, help='Stops algorithm to better see weights')
+    parser.add_argument('--save', type=str, required=False, default='', help='Saves png files in this folder')
     
     return parser.parse_args()
 
@@ -47,8 +49,8 @@ def build_network(args, caffemodel):
     
     # Creation of the network
     net = caffe.Net(args.model,      # defines the structure of the model
-                        caffemodel,    # contains the trained weights
-                        caffe.TEST)      # use test mode (e.g., don't perform dropout)
+                    caffemodel,    # contains the trained weights
+                    caffe.TEST)      # use test mode (e.g., don't perform dropout)
     return net
 
 def vis_square(data, scale_shift, scale_divide, autoscale):
@@ -76,10 +78,14 @@ def vis_square(data, scale_shift, scale_divide, autoscale):
             data = data.reshape((n * data.shape[1], n * data.shape[3]) + data.shape[4:])
             
             #Plot a 600x600 window of the weights
-            cv2.imshow("Data", cv2.resize(data,(600,600),0,0,0,cv2.INTER_NEAREST))
+            data_to_show = cv2.resize(data,(600,600),0,0,0,cv2.INTER_NEAREST)
+            cv2.imshow("Data", data_to_show)
+            
+            return data_to_show
             
     else: 
         print "Filter weights are all equal to ", data.max(), " !"
+        return data.max()
     
     
 def main(args, caffemodel):
@@ -108,7 +114,7 @@ def main(args, caffemodel):
         weights_printable = weights_printable[:,:,:,0:3] #In case there are more than 3 channels, show the 3 first ones
     
     #Plot all weights in a window
-    vis_square(weights_printable, args.scale_shift, args.scale_divide, args.autoscale)
+    return vis_square(weights_printable, args.scale_shift, args.scale_divide, args.autoscale)
 
         
 def getfiles(dirpath):
@@ -133,9 +139,15 @@ if __name__ == '__main__':
         list_files = getfiles(args.weights)
         for i in list_files:
             if i.endswith(".caffemodel"): #Only select caffemodel files in the folder
-                main(args, i) #Run weight printing script
+                data_to_show = main(args, i) #Run weight printing script
                 
-                key = cv2.waitKey(0)
+                cv2.imwrite(args.save+'visualisation_'+str(i)+'.png', data_to_show)
+                
+                if args.stop:
+                        key = cv2.waitKey(0) #Stops algorithm and prints weights
+                else:
+                        key = cv2.waitKey(1) #0.1s between each file iteration
+                        
                 if key % 256 == 27: # exit on ESC
                         break
                 continue
@@ -146,6 +158,8 @@ if __name__ == '__main__':
     else: #If we only give one single weight file
         caffemodel = args.weights
         
-        main(args, caffemodel) #Run weight printing script
+        data_to_show = main(args, caffemodel) #Run weight printing script
+        cv2.imwrite(args.save+'visualisation.png', data_to_show)
         
         key = cv2.waitKey(0) #Stops the script and opens window
+
