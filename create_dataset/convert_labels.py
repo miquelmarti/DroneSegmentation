@@ -1,5 +1,5 @@
 # Convert each label files from HxWxC (C=3) to HxWxC (C=1)
-# sudo python convert_labels.py /home/shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/train_img.txt /home/shared/datasets/VOCdevkit/VOC2012/colors/pascal_voc_21_colors.png /home/shared/datasets/VOCdevkit/VOC2012/SegmentationClass/
+# sudo python convert_labels.py /home/shared/datasets/VOCdevkit/VOC2012/SegmentationClass /home/shared/datasets/VOCdevkit/VOC2012/colors/pascal_voc_21_colors.png /home/shared/datasets/VOCdevkit/VOC2012/SegmentationClass_2/
 
 
 import lmdb
@@ -18,7 +18,7 @@ import numpngw
 parser = argparse.ArgumentParser()
 
 # Mandatory options
-parser.add_argument('text_file_with_paths', type=str, help='Path to the file that lists the absolute path to each image')
+parser.add_argument('path_input', type=str, help='Path to the file that lists the absolute path to each image')
 parser.add_argument('path_to_colors', type=str, help='Colors of the dataset, can be created with find_classes_colors.py')
 parser.add_argument('path_output', type=str, help='Path where to create the new labels')
 
@@ -43,10 +43,11 @@ def getColorIndex(pixel):
 
 def main(args):
     
-    for in_idx, in_ in enumerate(open(arguments.text_file_with_paths)):
-        im = np.array(cv2.imread(in_.rstrip()))
+    for in_idx, in_ in enumerate(os.listdir(arguments.path_input)):
+        full_path = os.path.join(arguments.path_input, in_.rstrip())
+        im = np.array(cv2.imread(full_path))
         newImage = np.empty_like(im)
-        newImage.resize((newImage.shape[0], newImage.shape[1],3))
+        newImage.resize((newImage.shape[0], newImage.shape[1], 3))
         
         for i in range(0, im.shape[0]):
             for j in range(0, im.shape[1]):
@@ -55,10 +56,9 @@ def main(args):
         
         print 'img: ' + str(in_idx+1) + ' -> done'
         
-        path, filename = os.path.split(in_.rstrip())
         newImage_ = Image.fromarray(newImage)
-        newImage_.save(arguments.path_output + filename)
-
+        newImage_.save(os.path.join(arguments.path_output, in_))
+        
 
 
 

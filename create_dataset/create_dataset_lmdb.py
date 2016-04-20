@@ -48,7 +48,8 @@ def main(args):
                 Limg = Limg.resize([args.W, args.H],Image.NEAREST)
                 im = np.array(Limg,Dtype)
                 # Convert from HxWxC (C=3) to HxWxC (C=1)
-                im = im.reshape(im.shape[0],im.shape[1],1)
+                #im = im.reshape(im.shape[0],im.shape[1],1)
+                im = im[:,:,0].reshape(im.shape[0],im.shape[1],1)
             else:
                 # RGB to BGR
                 im = im[:,:,::-1]

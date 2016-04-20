@@ -370,7 +370,13 @@ if __name__ == '__main__':
         if real_label is not None:
             
             # Resize to the same size as other images
-            real_label = real_label.resize((input_shape[3], input_shape[2]), Image.ANTIALIAS)
+            real_label = real_label.resize((input_shape[3], input_shape[2]), Image.NEAREST)
+            
+            # If pascal VOC, reshape the label to HxWx1s
+            tmpReal = np.array(real_label)
+            if len(tmpReal.shape) == 3:
+                tmpReal = tmpReal[:,:,0]
+            real_label = Image.fromarray(tmpReal)
             
             # Calculate the metrics for this image
             start = time.time()

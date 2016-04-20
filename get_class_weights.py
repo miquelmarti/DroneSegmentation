@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# 
-
 
 import numpy as np
 import argparse
@@ -72,13 +70,19 @@ if __name__ == '__main__':
         # Convert image
         rl = np.array(real_label)
         
+        # If pascal VOC, reshape the label to HxWx1s
+        if len(rl.shape) == 3:
+            rl = rl[:,:,0]
+        
         # Get the number of pixels per class for this image
         tmp = [0]*args.nb_class
         for i in range(0, len(rl)):
             for j in range(0, len(rl[i])):
-                if rl[i][j] != 255:
+                if rl[i][j] != args.nb_class:
                     tmp[rl[i][j]] += 1
         array.append(tmp)
+        
+        print 'img ', len(array), ' -> done'
     
     # Get freq(c)
     freq_c = [0]*args.nb_class
