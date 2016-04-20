@@ -1,9 +1,8 @@
-'''
-RUN COMMAND EXAMPLE :
-python view_weights.py --model /home/johannes/project/models/segnet/deploy-pascal.prototxt --weights /home/johannes/project/models/segnet/train_pascal/ --layer "conv1_1" --scale_divide 0.1 --scale_shift -0.05
+#!/usr/bin/env python
 
-Press ESC to exit
-'''
+# Code for visualizing the main look of the weights
+# Ex : python view_weights.py --model /home/johannes/project/models/segnet/deploy-pascal.prototxt --weights /home/johannes/project/models/segnet/train_pascal/ --layer "conv1_1" --scale_divide 0.1 --scale_shift -0.05
+
 
 import numpy as np
 import matplotlib.pyplot as plt

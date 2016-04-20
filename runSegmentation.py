@@ -3,6 +3,12 @@
 # Code, as generic as possible, for the visualization
 # Ex : python /home/pierre/hgRepos/caffeTools/runSegmentation.py --model /home/shared/caffeSegNet/models/segnet_webcam/deploy.prototxt --weights /home/shared/caffeSegNet/models/segnet_webcam/segnet_webcam.caffemodel --colours /home/shared/datasets/CamVid/colours/camvid12.png --output argmax --labels /home/shared/datasets/CamVid/train.txt
 
+# TODO ; the update metrics doesn't take the borders in consideration : it means that there are some pixels in the real labels equal to nb_of_class (border class), that won't be ok in the guessed label.
+# TODO ; check the mean IU per classes : was done really fast, and I didn't check if it was ok with the papers values
+# TODO ; check if the video / hide modes work
+# TODO ; add the --folder option, that takes a folder as input and segment each image in it
+
+
 
 import numpy as np
 import time
@@ -213,8 +219,6 @@ def colourSegment(labels, label_colours, input_shape):
 
 
 def update_metrics(guess, real, metrics):
-    # Delete the borders
-    real[real==255]=0
     
     # Goes to look for classes that are present in the groundtruth or guessed segmentation
     class_ranges = range(min(guess.min(), real.min()), max(guess.max(), real.max())+1)

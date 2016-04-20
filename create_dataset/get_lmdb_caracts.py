@@ -1,10 +1,16 @@
+# Get few caracteristics of lmdb_folder
+# python get_lmdb_caracts.py /home/shared/datasets/VOCdevkit/VOC2012/LMDB
+
+# TODO : Add an analysis of the caracteristics
+
+
 import caffe
 import lmdb
 import argparse
 import os
 import caffe.proto.caffe_pb2
 from caffe.io import datum_to_array
-    
+
 
 def get_arguments():
     # Import arguments
