@@ -9341,3 +9341,6 @@ I0421 20:14:27.028403 23025 solver.cpp:486] Iteration 32040, lr = 0.001
 I0421 20:14:59.683159 23025 solver.cpp:214] Iteration 32060, loss = 0.817678
 I0421 20:14:59.683428 23025 solver.cpp:229]     Train net output #0: loss = 0.817679 (* 1 = 0.817679 loss)
 I0421 20:14:59.683460 23025 solver.cpp:486] Iteration 32060, lr = 0.001
+I0421 20:15:32.533511 23025 solver.cpp:214] Iteration 32080, loss = 0.359865
+I0421 20:15:32.533717 23025 solver.cpp:229]     Train net output #0: loss = 0.359867 (* 1 = 0.359867 loss)
+I0421 20:15:32.533746 23025 solver.cpp:486] Iteration 32080, lr = 0.001
