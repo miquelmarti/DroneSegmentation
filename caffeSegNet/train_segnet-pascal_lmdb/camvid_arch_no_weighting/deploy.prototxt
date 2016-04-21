@@ -69,8 +69,6 @@ layer {
     lr_mult: 1
     decay_mult: 1
   }
-    upsample_w: 32
-    upsample_h: 32
   param {
     lr_mult: 2
     decay_mult: 0
