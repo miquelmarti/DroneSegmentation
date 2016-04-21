@@ -1,3 +1,13 @@
 #!/bin/sh
+
+MODEL_PATH="/home/pierre/hgRepos/models/caffeSegNet/train_segnet-pascal/camvid_arch_weighting"
+DATASET_PATH="/home/shared/datasets/VOCdevkit/VOC2012"
+
 export PYTHONPATH="/home/shared/caffeSegNet/python"
-python /home/pierre/hgRepos/caffeTools/runSegmentation.py --model /home/pierre/hgRepos/models/caffeSegNet/train_segnet-pascal/camvid_arch_weighting/deploy.prototxt --weights /home/pierre/hgRepos/models/caffeSegNet/train_segnet-pascal/camvid_arch_weighting/train/train_iter_80000.caffemodel --colours /home/shared/datasets/VOCdevkit/VOC2012/colors/pascal_voc_21_colors_2.png --output prob --labels /home/shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/val_img_lab.txt
+python /home/pierre/hgRepos/caffeTools/runSegmentation.py                           \
+                --model     ${MODEL_PATH}/deploy.prototxt                           \
+                --weights   ${MODEL_PATH}/train/train_iter_80000.caffemodel         \
+                --colours   ${DATASET_PATH}/colours/pascal_voc_21_colours.png       \
+                --output    prob                                                    \
+                --PASCAL                                                            \
+                --labels    ${DATASET_PATH}/lists/val_img_lab.txt

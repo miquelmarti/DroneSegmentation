@@ -5,7 +5,7 @@ layer {
   top: "data"
   top: "label"
   dense_image_data_param {
-    source: "/home/shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/train_img_lab_224.txt"
+    source: "/home/shared/datasets/VOCdevkit/VOC2012/lists/train_img_lab_224x224.txt"
     batch_size: 2
     shuffle: true
   }
@@ -1530,28 +1530,28 @@ layer {
   softmax_param {engine: CAFFE}
   loss_param: {
     weight_by_label_freqs: true
-    ignore_label: 255
-    class_weighting: 0.2719
-    class_weighting: 1.5830
-    class_weighting: 3.0120
-    class_weighting: 1.6572
-    class_weighting: 1.7892
-    class_weighting: 1.7815
-    class_weighting: 0.5962
-    class_weighting: 1.2053
-    class_weighting: 0.6740
-    class_weighting: 1.8299
-    class_weighting: 0.9166
-    class_weighting: 0.8532
-    class_weighting: 0.8935
-    class_weighting: 0.9973
-    class_weighting: 0.9742
-    class_weighting: 1.1778
-    class_weighting: 1.9162
+    ignore_label: 21
+    class_weighting: 0.2575
+    class_weighting: 1.5446
+    class_weighting: 2.6895
+    class_weighting: 1.5547
+    class_weighting: 1.6918
+    class_weighting: 1.8216
+    class_weighting: 0.5749
+    class_weighting: 1.1614
+    class_weighting: 0.6107
+    class_weighting: 1.6478
     class_weighting: 1.0000
-    class_weighting: 0.8758
-    class_weighting: 0.7225
-    class_weighting: 1.3287
+    class_weighting: 0.7758
+    class_weighting: 0.8874
+    class_weighting: 0.9321
+    class_weighting: 0.9144
+    class_weighting: 1.1558
+    class_weighting: 1.5686
+    class_weighting: 0.9138
+    class_weighting: 0.8194
+    class_weighting: 0.6881
+    class_weighting: 1.1602
   }
 }
 layer {

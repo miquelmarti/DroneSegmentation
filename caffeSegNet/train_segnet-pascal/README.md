@@ -1,11 +1,15 @@
 Many tests here :
 
-camvid_arch_no_weighting : test with the same train_val and deploy as the one for camvid, and without weighting the classes
-    -> 
-
 camvid_arch_weighting : test with the same train_val and deploy as the one for camvid, and with weighting the classes (get them with get_class_weighting)
-    -> the loss doesn't decrease at all, but the training seems to work. Still not perfect thought
+    -> the loss decreases a little, but is not stabilized at all
 
-dropout_weighting_wrong_colors : use the segnet architecture provided for camvid, with the weighting per classes (get them with get_class_weighting), and with pascal_21_colors.png (see in VOC2012/colors/README why it can be wrong)
-    -> The shape of the class is built correctly, but no colors... weird
+camvid_arch_no_weighting : test with the same train_val and deploy as the one for camvid, and without weighting the classes
+    -> the loss decreases (but don't stabilize yet). The training is unfinished, but good
+
+dropout_weighting : use the segnet architecture provided for pascal, with the weighting per classes (get them with get_class_weighting)
+    -> maybe the worst, the loss seems to decrease but nothing sure, and the results are quite bad
+
+dropout_no_weighting : use the segnet architecture provided for pascal, without the weighting per classes
+    -> the loss decreases REALLY slowly... some results, nothing perfect
+
 

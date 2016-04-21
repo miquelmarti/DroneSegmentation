@@ -5,7 +5,7 @@ layer {
   top: "data"
   top: "label"
   dense_image_data_param {
-    source: "/home/shared/datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/train_img_lab_224.txt"
+    source: "/home/shared/datasets/VOCdevkit/VOC2012/lists/train_img_lab_224x224.txt"
     batch_size: 2
     shuffle: true
   }
@@ -1646,7 +1646,7 @@ layer {
   softmax_param {engine: CAFFE}
   loss_param: {
     weight_by_label_freqs: true
-    ignore_label: 255
+    ignore_label: 21
     class_weighting: 0.2719
     class_weighting: 1.5830
     class_weighting: 3.0120
