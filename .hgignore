@@ -11,3 +11,6 @@ syntax: glob
 
 # auto-generated "compiled" python files
 *.pyc
+
+# log files - maintain these yourself
+*.log
