@@ -64,8 +64,8 @@ def getTestStats(lines):
         iteration = getIterNum(l)
         for tag in tagVals:
             stats[tag].append((iteration, tagVals[tag]))
-        
-    # remove duplicate iteration numbers
+    for tag in stats:
+        stats[tag] = sorted(stats[tag], key=lambda x: x[0])
     return stats
 
 
@@ -104,7 +104,9 @@ with open(args.log_file, 'r') as f:
     lossLines = []
     segTestLines = []
     for l in f:
-        if l.startswith(SEG_TEST_PREFIX) and SEG_TEST_AVOID not in l:
+        if not (l.startswith(SEG_TEST_PREFIX) or SEG_TEST_AVOID in l):
+            continue # ignore badly-formatted lines
+        elif l.startswith(SEG_TEST_PREFIX) and SEG_TEST_AVOID not in l:
             segTestLines.append(l)
         elif reduce(lambda x,y: x and y, [t in l for t in TRAIN_LOSS_TAGS]):
             lossLines.append(l)

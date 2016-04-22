@@ -105,52 +105,47 @@ class VideoIterator(object):
 def get_arguments():
     # Import arguments
     parser = argparse.ArgumentParser()
-    group = parser.add_mutually_exclusive_group()
     
     # Mandatory options
-    parser.add_argument('--model', type=str, required=True, \
-                                    help=   'Path to the model (usually [...]/deploy.prototxt)')
-    parser.add_argument('--weights', type=str, required=True, \
-                                    help=   'Path to the weights (usually [...]/xx.caffemodel)')
-    parser.add_argument('--colours', type=str, required=True, \
-                                    help=   'If the colours of the classes are provided \
-                                            (data/CamVid/colours/camvid12.png)')
-    group.add_argument('--video', type=str, \
-                                    help=   'A video file to be segmented')
-    group.add_argument('--images', type=str, \
-                                    help=   'A text file containing a list of images to segment')
-    group.add_argument('--labels', type=str, \
-                                    help=   'A text file containing space-separated pairs - the first \
-                                            item is an image to segment, the second is the ground-truth \
-                                            labelling.')
+    parser.add_argument('--model', type=str, required=True, help='\
+    Path to the model (usually [...]/deploy.prototxt)')
+    parser.add_argument('--weights', type=str, required=True, help='\
+    Path to the weights (usually [...]/xx.caffemodel)')
+    parser.add_argument('--colours', type=str, required=True, help='\
+    If the colours of the classes are provided \
+    (eg. data/CamVid/colours/camvid12.png)')
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--video', type=str, help='A video file to be segmented')
+    group.add_argument('--images', type=str, help='\
+    A text file containing a list of images to segment')
+    group.add_argument('--labels', type=str, help='\
+    A text file containing space-separated pairs - the first item is an image \
+    to segment, the second is the ground-truth labelling.')
     
-    
-    # Optional options
-    parser.add_argument('--cpu', action="store_true", \
-                                    help=   'Default false, set it for CPU mode')
-    parser.add_argument('--input', type=str, required=False, default='data', \
-                                    help=   'Default is data, change it for the name of the input \
-                                            in your network (mostly foundable as the bottom of the \
-                                            first layer in the model (prototxt))')
-    parser.add_argument('--output', type=str, required=False, default='output', \
-                                    help=   'Default is output, change it for the name of the output \
-                                            in your network (mostly foundable as the top of the last \
-                                            layer in the model (prototxt))')
-    parser.add_argument('--key', action="store_true", \
-                                    help=   'For visualization image per image (have to press the \
-                                            space button for the next image then)')
-    parser.add_argument('--PASCAL', action="store_true", \
-                                    help=   'If Pascal VOC is used, provide this flag for the mean \
-                                            subtraction.')
-    parser.add_argument('--hide', action="store_true", \
-                                    help=   'If set, won\'t display the results')
-    parser.add_argument('--record', type=str, required=False, default='', \
-                                    help=   'For recording the videos, expected the path (and prefix) \
-                                            of where to save them like /path/to/segnet_. Will create \
-                                            two or three videos, depends on if the labels are provided')
-    parser.add_argument('--old_caffe', action="store_true", \
-                                    help=   'If we use an old version of Caffe (ex. the ones used by CRF or DeepLab, the command to create a network in the C++ is slightly different.')
-    
+    # Optional arguments
+    parser.add_argument('--cpu', action="store_true", help='\
+    Default false, set it for CPU mode')
+    parser.add_argument('--input', type=str, default='data', help='\
+    Default is "data", change it to the value of the "bottom" field of your \
+    network\'s input layer.')
+    parser.add_argument('--output', type=str, default='output', help='\
+    Default is "output", change it to the name of the output in your network \
+    (usually the "top" value of the last layer in the deploy.prototxt).')
+    parser.add_argument('--key', action="store_true", help='\
+    For visualization image per image (have to press the space button for the \
+    next image then)')
+    parser.add_argument('--PASCAL', action="store_true", help='\
+    If Pascal VOC is used, provide this flag to perform mean subtraction.')
+    parser.add_argument('--hide', action="store_true", help='\
+    If set, the segmentation won\'t be displayed.')
+    parser.add_argument('--record', type=str, default='', help='\
+    For recording the videos, expected the path (and prefix) of where to save \
+    them like /path/to/segnet_. Will create two or three videos, depends on if \
+    the labels are provided')
+    parser.add_argument('--old_caffe', action="store_true", help='\
+    If we use an old version of Caffe (ex. the ones used by CRF or DeepLab), \
+    the command to create a network in the C++ is slightly different.')
     return parser.parse_args()
     
 
@@ -449,6 +444,3 @@ if __name__ == '__main__':
                 print "\tclass ", i, " : 0"
             else:
                 print "\tclass ", i, " : ", (np.sum(col) / np.sum(col != 0))
-
-
-
