@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-# 
+# Get the weights per classes of a dataset (following this paper : http://arxiv.org/pdf/1411.4734v4.pdf)
+# Ex : python /home/pierre/hgRepos/caffeTools/get_class_weights.py /home/shared/datasets/CamVid/train_lab.txt 12
 
 
 import numpy as np
@@ -9,6 +10,7 @@ from PIL import Image
 import cv2
 
 
+# Class for reading the file listing the labels
 class FileListIterator(object):
     listFile = None
 
@@ -20,6 +22,7 @@ class FileListIterator(object):
         return self
 
     def next(self):
+        # Image from PIL for getting the number of the classes (and not the colours with cv2)
         nextLine = self.listFile.next()
         nextImg = Image.open(nextLine.rstrip())
         return nextImg
@@ -72,13 +75,21 @@ if __name__ == '__main__':
         # Convert image
         rl = np.array(real_label)
         
+        # If pascal VOC, reshape the label to HxWx1s
+        if len(rl.shape) == 3:
+            rl = rl[:,:,0]
+        
         # Get the number of pixels per class for this image
         tmp = [0]*args.nb_class
         for i in range(0, len(rl)):
             for j in range(0, len(rl[i])):
-                if rl[i][j] != 255:
+                # the class args.nb_class is the border, we don't want it
+                if rl[i][j] != args.nb_class:
                     tmp[rl[i][j]] += 1
         array.append(tmp)
+        
+        print 'img ', len(array), ' -> done'
+    
     
     # Get freq(c)
     freq_c = [0]*args.nb_class
@@ -100,6 +111,12 @@ if __name__ == '__main__':
         if freq_c[i] != 0:
             freq[i] = float(median) / freq_c[i]
     
-    print freq
-    
+    # Display the class_weighting
+    print '  loss_param: {'
+    print '    weight_by_label_freqs: true'
+    print '    ignore_label: ', args.nb_class
+    for i in range(0, args.nb_class):
+        print '    class_weighting: ', round(freq[i], 4)
+    print '  }'
+
 

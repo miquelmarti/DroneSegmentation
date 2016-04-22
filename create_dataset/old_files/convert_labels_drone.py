@@ -14,17 +14,22 @@ import numpngw
 
 
 
-parser = argparse.ArgumentParser()
+def get_arguments():
+    # Import arguments
+    parser = argparse.ArgumentParser()
+    
+    # Mandatory options
+    parser.add_argument('text_file_with_paths', type=str, \
+                                    help='Path to the file that lists the absolute path to each image')
+    parser.add_argument('path_to_colours', type=str, \
+                                    help='Colours of the dataset, can be created with find_classes_colors.py')
+    parser.add_argument('path_output', type=str, \
+                                    help='Path where to create the new labels')
+    
+    return parser.parse_args()
 
-# Mandatory options
-parser.add_argument('text_file_with_paths', type=str, help='Path to the file that lists the absolute path to each image')
-parser.add_argument('path_to_colors', type=str, help='Colors of the dataset, can be created with find_classes_colors.py')
-parser.add_argument('path_output', type=str, help='Path where to create the new labels')
-
-arguments = parser.parse_args()
 
 
-colors = cv2.imread(arguments.path_to_colors)[0]
 conversion = [  [0,0,0],
                 [0,0,1],
                 [0,1,0],
@@ -89,7 +94,7 @@ other_classes = []
 
 
 
-def getColorIndex(pixel):
+def getColourIndex(pixel, colour):
     for i in range(0, len(conversion)):
         if conversion[i][0] == pixel[0] and conversion[i][1] == pixel[1] and conversion[i][2] == pixel[2]:
             return i
@@ -110,6 +115,12 @@ def getColorIndex(pixel):
 
 def main(args):
     
+    # Get all options
+    args = get_arguments()
+    
+    # Get the colours
+    colours = cv2.imread(arguments.path_to_colours)[0]
+    
     for in_idx, in_ in enumerate(open(arguments.text_file_with_paths)):
         im = np.array(cv2.imread(in_.rstrip()))
         IM = Image.open(in_.rstrip())
@@ -119,7 +130,7 @@ def main(args):
         
         for i in range(0, im2.shape[0]):
             for j in range(0, im2.shape[1]):
-                col = getColorIndex(im2[i][j])
+                col = getColourIndex(im2[i][j], colour)
                 newImage[i][j] = col
         
         print 'img: ' + str(in_idx+1) + ' -> done'

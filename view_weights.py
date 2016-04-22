@@ -1,9 +1,8 @@
-'''
-RUN COMMAND EXAMPLE :
-python view_weights.py --model /home/johannes/project/models/segnet/deploy-pascal.prototxt --weights /home/johannes/project/models/segnet/train_pascal/ --layer "conv1_1" --scale_divide 0.1 --scale_shift -0.05
+#!/usr/bin/env python
 
-Press ESC to exit
-'''
+# Code for visualizing the main look of the weights
+# Ex : python view_weights.py --model /home/johannes/project/models/segnet/deploy-pascal.prototxt --weights /home/johannes/project/models/segnet/train_pascal/ --layer "conv1_1" --scale_divide 0.1 --scale_shift -0.05
+
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -141,7 +140,8 @@ if __name__ == '__main__':
             if i.endswith(".caffemodel"): #Only select caffemodel files in the folder
                 data_to_show = main(args, i) #Run weight printing script
                 
-                cv2.imwrite(args.save+'visualisation_'+str(i)+'.png', data_to_show)
+                if(args.save != ''):
+                        cv2.imwrite(args.save+'visualisation_'+str(i)+'.png', data_to_show)
                 
                 if args.stop:
                         key = cv2.waitKey(0) #Stops algorithm and prints weights
@@ -159,7 +159,9 @@ if __name__ == '__main__':
         caffemodel = args.weights
         
         data_to_show = main(args, caffemodel) #Run weight printing script
-        cv2.imwrite(args.save+'visualisation.png', data_to_show)
+        
+        if(args.save != ''):
+                cv2.imwrite(args.save+'visualisation.png', data_to_show)
         
         key = cv2.waitKey(0) #Stops the script and opens window
 

@@ -1,23 +1,25 @@
+## FOLDERS ########################
 # create dataset folder
 Contains many files for dealing with the providing datasets and convert them into a readable format for caffe
 
+# old files folder
+Contains some files used in the past, may be useful for the following of the project. If not, after few weeks, may be deleted
 
-# display loss folder
-Two simple files for visualize the loss from the log given by caffe
 
 
+## FILES ##########################
 # classify.py
 [...]
 
+# display_loss.py
+Take the info.log as input and display the training loss and other curves
 
-# copy_weights.py
-Simple code to turn VGG-16 into a fully convolutional model. Done by following the net surgery tutorial
-
+# get_class_weights.py
+In SegNet, the loss layer is weighting each classes. These one are given for CamVid, this code permits to get them for other datasets.
 
 # runSegmentation.py
-Used for the visualization. Be warn : there are many options.
+Used for the visualization.
 
-
-# viez_weights.py
+# view_weights.py
 Visualize the weights of a layer from the caffemodel of a given iteration.
 
