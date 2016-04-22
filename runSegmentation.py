@@ -219,6 +219,8 @@ def colourSegment(labels, label_colours, input_shape):
 
 
 def update_metrics(guess, real, metrics):
+    # Delete the borders
+    real[real==255]=0
     
     # Goes to look for classes that are present in the groundtruth or guessed segmentation
     class_ranges = range(min(guess.min(), real.min()), max(guess.max(), real.max())+1)

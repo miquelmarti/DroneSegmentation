@@ -140,7 +140,8 @@ if __name__ == '__main__':
             if i.endswith(".caffemodel"): #Only select caffemodel files in the folder
                 data_to_show = main(args, i) #Run weight printing script
                 
-                cv2.imwrite(args.save+'visualisation_'+str(i)+'.png', data_to_show)
+                if(args.save != ''):
+                        cv2.imwrite(args.save+'visualisation_'+str(i)+'.png', data_to_show)
                 
                 if args.stop:
                         key = cv2.waitKey(0) #Stops algorithm and prints weights
@@ -158,7 +159,9 @@ if __name__ == '__main__':
         caffemodel = args.weights
         
         data_to_show = main(args, caffemodel) #Run weight printing script
-        cv2.imwrite(args.save+'visualisation.png', data_to_show)
+        
+        if(args.save != ''):
+                cv2.imwrite(args.save+'visualisation.png', data_to_show)
         
         key = cv2.waitKey(0) #Stops the script and opens window
 
