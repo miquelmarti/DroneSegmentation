@@ -1,3 +1,44 @@
+Training time : 20 hours
+
+Average time to prepare the image :  0.022154328081
+Average time to process the image in the architecture :  0.107923583214
+Average time to calculate the metrics :  0.209526586566
+Average pixel accuracy :  0.877484811594
+Average mean accuracy :  0.756351342281
+Average mean IU score :  0.661530533939
+Average frequency weighted IU :  0.815443423312
+Mean IU per classes : 
+	class  0  :  0.863526870239
+	class  1  :  0.642808565263
+	class  2  :  0.246843620722
+	class  3  :  0.636446250913
+	class  4  :  0.517976636036
+	class  5  :  0.523973560313
+	class  6  :  0.689443227634
+	class  7  :  0.65341540838
+	class  8  :  0.610306926584
+	class  9  :  0.262605528132
+	class  10  :  0.545997488686
+	class  11  :  0.429945179805
+	class  12  :  0.650661436999
+	class  13  :  0.557785521472
+	class  14  :  0.60413366647
+	class  15  :  0.584885415292
+	class  16  :  0.289862942899
+	class  17  :  0.489875128904
+	class  18  :  0.383194753145
+	class  19  :  0.654177809162
+	class  20  :  0.588224810359
+
+
+
+
+
+
+
+
+_________________________________________________________________
+WITH DROPOUT LAYERS AT FC6 AND FC7 (OLD PROTOTXT) :
 Training time : 38 hours
 
 Average time to prepare the image :  0.0263907233134
