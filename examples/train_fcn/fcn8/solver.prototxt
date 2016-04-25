@@ -2,7 +2,7 @@ train_net: "train.prototxt"
 test_net: "val.prototxt"
 test_iter: 1111
 # make test net, but don't invoke it from the solver itself
-test_interval: 999999999
+test_interval: 4000
 display: 20
 average_loss: 20
 lr_policy: "fixed"
@@ -12,7 +12,7 @@ base_lr: 1e-14
 momentum: 0.99
 # no gradient accumulation
 iter_size: 1
-max_iter: 100000
+max_iter: 3000
 weight_decay: 0.0005
 snapshot: 4000
 snapshot_prefix: "train"
