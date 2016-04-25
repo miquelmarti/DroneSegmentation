@@ -1,0 +1,11 @@
+stage {
+    name: "flickr_finetune_test"
+    solver: "examples/flickr_finetune/solver.prototxt"
+    # freeze: "conv1"
+    # freeze: "conv2"
+    # freeze: "conv3"
+    # freeze: "conv4"
+    # freeze: "conv5"
+    # freeze: "fc6"
+    # freeze: "fc7"
+}

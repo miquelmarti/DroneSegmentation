@@ -23,7 +23,7 @@ def getArguments():
     parser.add_argument('--clean', action="store_true", help='\
     Cleans up intermediate .prototxt and .caffemodel files as the script \
     finishes with them.') 
-    parser.add_argument('--weights', help='\
+    parser.add_argument('--model', help='\
     A .caffemodel file containing the initial weights of the first stage.  \
     If not provided, the first stage will learn all weights from scratch.')
     # TODO argument to allow user to specify version of caffe to use
@@ -39,7 +39,7 @@ def getArguments():
     return parser.parse_args()
 
 
-def getStagesFromMsgs(stageMsgs, solverFilename=None, modelFilename=None):
+def getStagesFromMsgs(stageMsgs, solverFilename=None, trainNetFilename=None):
     """Instantiates a sequence of stages from protobuf "stage" messages."""
     stages = []
     for stageMsg in stageMsgs:
@@ -48,22 +48,21 @@ def getStagesFromMsgs(stageMsgs, solverFilename=None, modelFilename=None):
             solverFilename = stageMsg.solver
         elif solverFilename is None:
             # No solver is defined for this stage!
-            raise Exception('First layer provides no solver.prototxt file')
+            raise Exception('First layer provides no solver file')
         # execute stage
-        # TODO implement modelFilename logic
         stages.append(Stage(stageMsg.name, solverFilename, stageMsg.freeze,
-                            stageMsg.ignore))
+                            stageMsg.ignore, trainNetFilename))
     return stages
     
 
-def executeListOfStages(stages, firstWeightFile, clean):
-    weights = firstWeightFile
+def executeListOfStages(stages, firstModelFile, clean):
+    model = firstModelFile
     for stage in stages:
-        newWeights = stage.execute(weights)
-        if clean and weights != firstWeightFile:
-            os.remove(weights)
-        weights = newWeights
-    return weights
+        newModel = stage.execute(model)
+        if clean and model != firstModelFile:
+            os.remove(model)
+        model = newModel
+    return model
 
     
 if __name__ == "__main__":
@@ -78,8 +77,6 @@ if __name__ == "__main__":
     tlMsg = transferLearning_pb2.TransferLearning()
     caffeUtils.readFromPrototxt(tlMsg, args.stages)
     stageMsgs = tlMsg.stage
-    # TODO testing print statement, remove this
-    print "There are", len(stageMsgs), "stages specified"
     stages = getStagesFromMsgs(stageMsgs)
-    executeListOfStages(stages, args.weights, args.clean)
+    executeListOfStages(stages, args.model, args.clean)
 

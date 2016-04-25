@@ -2,14 +2,21 @@
 
 import google.protobuf
 from caffe.proto import caffe_pb2
+import os
 
-MODEL_FIELD = 'net'
+NET_FIELD = 'net'
+TRAIN_NET_FIELD = 'train_net'
 
-def getModelFilename(solverFilename):
+
+def getTrainNetFilename(solverFilename):
+    print solverFilename
     solverSpec = readSolver(solverFilename)
-    if not solverSpec.HasField(MODEL_FIELD):
-        raise Exception('solver.prototxt provides no caffe model!')
-    return solverSpec.net
+    if solverSpec.HasField(NET_FIELD):
+        return solverSpec.net
+    elif solverSpec.HasField(TRAIN_NET_FIELD):
+        return solverSpec.train_net
+    else:
+        raise Exception('solver.prototxt provides no training network!')
 
 
 def readSolver(filename):
@@ -25,6 +32,6 @@ def writeToPrototxt(message, filename):
 
 
 def readFromPrototxt(message, filename):
+    filename = os.path.abspath(filename)
     with open(filename, 'r') as f:
-        google.protobuf.text_format.Merge(f.read(), message)
-
+        google.protobuf.text_format.Merge(str(f.read()), message)        

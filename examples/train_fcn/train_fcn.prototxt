@@ -1,4 +1,20 @@
 stage {
+    name: "train_fcn-32"
+    solver: "examples/train_fcn/fcn32/solver.prototxt"
+    freeze: "upscore"
+    ignore: "fc6"
+    ignore: "fc7"
+}
+stage {
+    name: "train_fcn-16"
+    solver: "examples/train_fcn/fcn16/solver.prototxt"
+    freeze: "upscore2"
+    freeze: "upscore16"
+}
+stage {
     name: "train_fcn-8"
-    solver: "examples/train_fcn/solver.prototxt"
+    solver: "examples/train_fcn/fcn8/solver.prototxt"
+    freeze: "upscore2"
+    freeze: "upscore_pool4"
+    freeze: "upscore8"    
 }

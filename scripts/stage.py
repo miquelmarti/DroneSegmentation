@@ -6,7 +6,7 @@ import caffeUtils
 LR_MULT_FIELD = 'lr_mult'
 LAYER_PARAM_FIELD = 'param'
 TEMP_FILE_SUFFIX = '.tmp'
-WEIGHTS_SUFFIX = '.caffemodel'
+MODEL_SUFFIX = '.caffemodel'
 
 
 class Stage(object):
@@ -17,7 +17,7 @@ class Stage(object):
     """
     
     def __init__(self, name, solverFilename, freezeList, ignoreList,
-                 modelFilename=None):
+                 trainNetFilename=None):
         """
         Constructor for the Stage class.
 
@@ -26,32 +26,31 @@ class Stage(object):
         solverFilename -- filename of a solver prototxt file for this stage
         freezeList -- a list of names of layers to be frozen while training
         ignoreList -- a list of names of layers in the weight file to be ignored
-        modelFilename -- overrrides any net model included in the solver file
+        trainNetFilename -- overrrides any net model included in the solver file
         """
         self.name = name
         self.solverFilename = solverFilename
         self.freezeList = freezeList
         self.ignoreList = ignoreList
-
-        if modelFilename:
-            self.modelFilename = modelFilename
+        if trainNetFilename:
+            self.trainNetFilename = trainNetFilename
         else:
-            self.modelFilename = caffeUtils.getModelFilename(solverFilename)
+            self.trainNetFilename = caffeUtils.getTrainNetFilename(solverFilename)
 
                 
-    def execute(self, weights=None):
+    def execute(self, model=None):
         """Executes this learning stage in caffe."""
         
         # read in the provided caffe config files
         tmpFilenames = []
-        modelFilename = self.modelFilename
+        trainNetFilename = self.trainNetFilename
         solverFilename = self.solverFilename
-        if weights:
+        if model:
             # load requisite variables
-            model = caffe_pb2.NetParameter()
-            caffeUtils.readFromPrototxt(model, self.modelFilename)
+            trainNet = caffe_pb2.NetParameter()
+            caffeUtils.readFromPrototxt(trainNet, self.trainNetFilename)
 
-            for layer in model.layer:
+            for layer in trainNet.layer:
                 # freeze desired layers
                 if layer.name in self.freezeList:
                     if layer.HasField(LAYER_PARAM_FIELD):
@@ -67,23 +66,23 @@ class Stage(object):
                     pass
 
             # re-serialize modified files
-            modelFilename = modelFilename + TEMP_FILE_SUFFIX
-            caffeUtils.writeToPrototxt(model, modelFilename)
+            trainNetFilename = trainNetFilename + TEMP_FILE_SUFFIX
+            caffeUtils.writeToPrototxt(trainNet, trainNetFilename)
             solverSpec = caffeUtils.readSolver()
-            solverSpec.net = modelFilename
+            solverSpec.net = trainNetFilename
             solverFilename = solverFilename + TEMP_FILE_SUFFIX
             caffeUtils.writeToPrototxt(solverSpec, solverFilename)
-            tmpFilenames += [solverFilename, modelFilename]
+            tmpFilenames += [solverFilename, trainNetFilename]
 
         # run caffe with the provided network description and solver info 
         solver = caffe.get_solver(str(solverFilename))
-        if weights:
-            solver.net.copy_from(weights)
+        if model:
+            solver.net.copy_from(model)
         solver.solve()
 
-        outWeightsFilename = self.name + WEIGHTS_SUFFIX
-        solver.net.save(outWeightsFilename)
+        outModelFilename = self.name + MODEL_SUFFIX
+        solver.net.save(outModelFilename)
         # remove temporary files
         map(os.remove, tmpFilenames)
-        return outWeightsFilename
+        return outModelFilename
 
