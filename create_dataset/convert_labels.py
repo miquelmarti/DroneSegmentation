@@ -11,6 +11,7 @@ import sys
 import os
 from PIL import Image
 import numpngw
+import scipy.misc
 
 
 
@@ -58,22 +59,21 @@ def main(args):
         full_path = os.path.join(args.path_input, in_.rstrip())
         
         # Get the image and create a copy
-        im = np.array(cv2.imread(full_path))
-        newImage = np.empty_like(im)
-        newImage.resize((newImage.shape[0], newImage.shape[1], 3))
+        im = cv2.imread(full_path)
+        newImage = np.zeros((im.shape[0], im.shape[1]))
         
         # Replace each pixel of the copy by the number of the class
         for i in range(0, im.shape[0]):
             for j in range(0, im.shape[1]):
                 col = getColourIndex(im[i][j], colours)
-                newImage[i][j] = [col, col, col]
+                newImage[i][j] = col
         
         print 'img: ' + str(in_idx+1) + ' -> done'
         
         # Save the new label
-        newImage_ = Image.fromarray(newImage)
+        newImage_ = Image.fromarray(newImage).convert('P')
         newImage_.save(os.path.join(args.path_output, in_))
-        
+        #scipy.misc.imsave(os.path.join(args.path_output, in_), newImage)
 
 
 

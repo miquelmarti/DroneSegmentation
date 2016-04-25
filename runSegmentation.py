@@ -4,8 +4,8 @@
 # Ex : python /home/pierre/hgRepos/caffeTools/runSegmentation.py --model /home/shared/caffeSegNet/models/segnet_webcam/deploy.prototxt --weights /home/shared/caffeSegNet/models/segnet_webcam/segnet_webcam.caffemodel --colours /home/shared/datasets/CamVid/colours/camvid12.png --output argmax --labels /home/shared/datasets/CamVid/train.txt
 
 # TODO ; the update metrics doesn't take the borders in consideration : it means that there are some pixels in the real labels equal to nb_of_class (border class), that won't be ok in the guessed label.
-# TODO ; check the mean IU per classes : was done really fast, and I didn't check if it was ok with the papers values
-# TODO ; check if the video / hide modes work
+# TODO ; check the metrics with the papers values
+# TODO ; check if the video mode work
 # TODO ; add the --folder option, that takes a folder as input and segment each image in it
 
 
@@ -155,7 +155,9 @@ def get_arguments():
                                             of where to save them like /path/to/segnet_. Will create \
                                             two or three videos, depends on if the labels are provided')
     parser.add_argument('--old_caffe', action="store_true", \
-                                    help=   'If we use an old version of Caffe (ex. the ones used by CRF or DeepLab, the command to create a network in the C++ is slightly different.')
+                                    help=   'If we use an old version of Caffe (ex. the ones used by \
+                                            CRF or DeepLab, the command to create a network in the C++ \
+    is slightly different.')
     parser.add_argument('--resize', action="store_true", \
                                     help=   'If we want to resize all pictures to the size defined by prototxt.')
     
@@ -232,11 +234,11 @@ def update_metrics(guess, real, metrics):
     class_ranges = range(min(guess.min(), real.min()), max(guess.max(), real.max())+1)
     
     # If we found new classes, we extend the arrays
-    if metrics.n_cl < class_ranges[len(class_ranges)-1] + 1:
-        wantedNbClasses = class_ranges[len(class_ranges)-1] + 1
+    if metrics.n_cl < class_ranges[len(class_ranges)-1]:
+        wantedNbClasses = class_ranges[len(class_ranges)-1]
         tmpNIJ = np.zeros((len(metrics.n_ijs), wantedNbClasses, wantedNbClasses))
         for im in range(0, metrics.n_im-1):
-            for c in range(0, class_ranges[len(class_ranges)-1] + 1 - metrics.n_cl):
+            for c in range(0, class_ranges[len(class_ranges)-1] - metrics.n_cl):
                 metrics.t_is[im].append(0)
                 metrics.n_iis[im].append(0)
             
@@ -245,7 +247,7 @@ def update_metrics(guess, real, metrics):
                     tmpNIJ[im][c][cc] = metrics.n_ijs[im][c][cc]
             
         metrics.n_ijs = tmpNIJ.tolist()
-        metrics.n_cl = class_ranges[len(class_ranges)-1] + 1
+        metrics.n_cl = class_ranges[len(class_ranges)-1]
     
     # Extend for the current image
     metrics.t_is.append([0]*metrics.n_cl)
@@ -253,7 +255,7 @@ def update_metrics(guess, real, metrics):
     metrics.n_ijs.append([[0]*metrics.n_cl]*metrics.n_cl)
     
     # For each class
-    for ccc in class_ranges:
+    for ccc in range(0, len(class_ranges)-1):
         tmpNIJ = []
         for ccc2 in range(0, metrics.n_cl):
             # Check the matching between guess and real for the corresponding class
@@ -266,6 +268,7 @@ def update_metrics(guess, real, metrics):
 
 
 def compute_metrics(metrics):
+    
     # For all the images
     for img in range(0, metrics.n_im):
         t_i = np.array(metrics.t_is[img])
@@ -276,21 +279,18 @@ def compute_metrics(metrics):
         #print metrics
         
         # pixel_accuracy = sum_i (n_ii) / sum_i (t_i) 
-        metrics.pixel_accuracy.append( \
-                                np.divide(float(np.sum(n_ii)), float(np.sum(t_i))) )
+        metrics.pixel_accuracy.append( np.divide(float(np.sum(n_ii)), float(np.sum(t_i))) )
         
         # mean_accuracy = (1/n_cl) * sum_i (n_ii / t_i) 
         nii_div_ti = np.divide(n_ii, t_i, dtype=float)
         nii_div_ti[np.isnan(nii_div_ti)] = 0
-        metrics.mean_accuracy.append( \
-                                (1 / float(n_cl)) * np.sum(nii_div_ti) )
+        metrics.mean_accuracy.append( (1 / float(n_cl)) * np.sum(nii_div_ti) )
         
         # mean_iu = (1/n_cl) * sum_i (n_ii / (t_i + sum_j(n_ji) - n_ii)) 
-        ti_plu_nji_min_nii = np.subtract(np.add(t_i, np.sum(n_ij, axis=0)), n_ii)# float(t_i + sum(n_ji) - n_ii)
+        ti_plu_nji_min_nii = np.subtract(np.add(t_i, np.sum(n_ij, axis=0)), n_ii)
         nii_div_denom = np.divide(n_ii, ti_plu_nji_min_nii, dtype=float)
         nii_div_denom[np.isnan(nii_div_denom)] = 0
-        metrics.mean_IU.append( \
-                                (1 / float(n_cl)) * np.sum(nii_div_denom) )
+        metrics.mean_IU.append( (1 / float(n_cl)) * np.sum(nii_div_denom) )
         
         # mean_ius_per_class[i] = n_ii / (t_i + sum_j(n_ji) - n_ii)) 
         metrics.mean_IU_per_class.append(nii_div_denom)
@@ -298,8 +298,7 @@ def compute_metrics(metrics):
         # frequency_weighted_iu = (sum_i (t_i))^-1 * (sum_i ((t_i * n_ii) / (t_i + sum_j(n_ji) - n_ii))) 
         ti_by_nii_div_denom = np.divide(np.multiply(t_i, n_ii), ti_plu_nji_min_nii, dtype=float)
         ti_by_nii_div_denom[np.isnan(ti_by_nii_div_denom)] = 0
-        metrics.freq_weighted_IU.append( \
-                                (1 / float(sum(t_i))) * np.sum(ti_by_nii_div_denom) )
+        metrics.freq_weighted_IU.append( (1 / float(sum(t_i))) * np.sum(ti_by_nii_div_denom) )
         
 
 
@@ -383,7 +382,7 @@ if __name__ == '__main__':
         
         # Resize input to the same size as other
         if args.resize:
-                _input = _input.resize((input_shape[3], input_shape[2]), Image.ANTIALIAS)
+            _input = _input.resize((input_shape[3], input_shape[2]), Image.ANTIALIAS)
         
         # Transform the class labels into a segmented image
         _output = colourSegment(guessed_labels, label_colours, input_shape, args.resize)

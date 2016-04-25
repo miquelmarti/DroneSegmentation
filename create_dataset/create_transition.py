@@ -47,7 +47,7 @@ def main(args):
     # Save the png
     img_new = Image.new('RGB', (len(classes[0]), len(classes)))
     img_new.putdata([tuple(p) for row in classes for p in row])
-    img_new.save(arguments.output)
+    img_new.save(args.output)
 
 
 
