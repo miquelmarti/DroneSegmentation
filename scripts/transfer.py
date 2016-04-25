@@ -5,8 +5,6 @@
 # auto-generated python classes for protobuf formats
 import transferLearning_pb2
 import caffe
-from caffe.proto import caffe_pb2
-import google.protobuf
 import argparse
 import os
 import caffeUtils
@@ -22,7 +20,7 @@ def getArguments():
     # optional arguments
     parser.add_argument('--clean', action="store_true", help='\
     Cleans up intermediate .prototxt and .caffemodel files as the script \
-    finishes with them.') 
+    finishes with them.')
     parser.add_argument('--model', help='\
     A .caffemodel file containing the initial weights of the first stage.  \
     If not provided, the first stage will learn all weights from scratch.')
@@ -35,7 +33,7 @@ def getArguments():
 
     # required arguments
     parser.add_argument('stages', help='\
-    A .prototxt file defining the stages of transfer learning to be performed.')
+    A .prototxt file defining the transfer learning stages to be performed.')
     return parser.parse_args()
 
 
@@ -53,7 +51,7 @@ def getStagesFromMsgs(stageMsgs, solverFilename=None, trainNetFilename=None):
         stages.append(Stage(stageMsg.name, solverFilename, stageMsg.freeze,
                             stageMsg.ignore, trainNetFilename))
     return stages
-    
+
 
 def executeListOfStages(stages, firstModelFile, clean):
     model = firstModelFile
@@ -64,7 +62,7 @@ def executeListOfStages(stages, firstModelFile, clean):
         model = newModel
     return model
 
-    
+
 if __name__ == "__main__":
     args = getArguments()
     if args.cpu:
@@ -79,4 +77,3 @@ if __name__ == "__main__":
     stageMsgs = tlMsg.stage
     stages = getStagesFromMsgs(stageMsgs)
     executeListOfStages(stages, args.model, args.clean)
-
