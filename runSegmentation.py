@@ -33,7 +33,7 @@ np.seterr(divide='ignore', invalid='ignore')
 
 class Metric(object):
     def __init__(self, pixel_accuracy, mean_accuracy, mean_IU, freq_weighted_IU, mean_IU_per_class,
-                        n_cl, n_im, t_is,
+                        n_cl, bord255, n_im, t_is,
                         n_iis, n_ijs,
                         time_prep, time_arch, time_comp):
         self.pixel_accuracy=pixel_accuracy      # success rate (Pixel accuracy (FCN), or Global average (SegNet))
@@ -42,6 +42,7 @@ class Metric(object):
         self.freq_weighted_IU=freq_weighted_IU  # frequency weighted IU (for FCN)
         self.mean_IU_per_class=mean_IU_per_class# Mean IU for each class
         self.n_cl=n_cl                          # Number of classes
+        self.bord255=bord255                    # True if the number of the border is 255
         self.n_im=n_im                          # Number of images
         self.t_is=t_is                          # Total number of pixels in class i
         # n_ij : The number of pixels of class i predicted to belong to class j):
@@ -228,17 +229,21 @@ def colourSegment(labels, label_colours, input_shape, resize_img):
 
 def update_metrics(guess, real, metrics):
     # Delete the borders
-    real[real==255]=0
+    if metrics.bord255 == True or (real==255).any():
+        metrics.bord255 = True
+        real[real==255]=0
     
     # Goes to look for classes that are present in the groundtruth or guessed segmentation
     class_ranges = range(min(guess.min(), real.min()), max(guess.max(), real.max())+1)
+    wantedNbClasses = class_ranges[len(class_ranges)-1]
+    if metrics.bord255:
+        wantedNbClasses += 1
     
     # If we found new classes, we extend the arrays
-    if metrics.n_cl < class_ranges[len(class_ranges)-1] + 1:
-        wantedNbClasses = class_ranges[len(class_ranges)-1] + 1
+    if metrics.n_cl < wantedNbClasses:
         tmpNIJ = np.zeros((len(metrics.n_ijs), wantedNbClasses, wantedNbClasses))
         for im in range(0, metrics.n_im-1):
-            for c in range(0, class_ranges[len(class_ranges)-1] + 1 - metrics.n_cl):
+            for c in range(0, wantedNbClasses - metrics.n_cl):
                 metrics.t_is[im].append(0)
                 metrics.n_iis[im].append(0)
             
@@ -247,7 +252,7 @@ def update_metrics(guess, real, metrics):
                     tmpNIJ[im][c][cc] = metrics.n_ijs[im][c][cc]
             
         metrics.n_ijs = tmpNIJ.tolist()
-        metrics.n_cl = class_ranges[len(class_ranges)-1] + 1
+        metrics.n_cl = wantedNbClasses
     
     # Extend for the current image
     metrics.t_is.append([0]*metrics.n_cl)
@@ -255,7 +260,7 @@ def update_metrics(guess, real, metrics):
     metrics.n_ijs.append([[0]*metrics.n_cl]*metrics.n_cl)
     
     # For each class
-    for ccc in class_ranges:
+    for ccc in range(0, wantedNbClasses):
         tmpNIJ = []
         for ccc2 in range(0, metrics.n_cl):
             # Check the matching between guess and real for the corresponding class
@@ -329,7 +334,7 @@ if __name__ == '__main__':
         cv2.namedWindow("Output")
     
     # Init the structure for storing the metrics
-    metrics = Metric([], [], [], [], [], 0, 0, [], [], [], [], [], [])
+    metrics = Metric([], [], [], [], [], 0, False, 0, [], [], [], [], [], [])
 
     # Create the appropriate iterator
     imageIterator = None
