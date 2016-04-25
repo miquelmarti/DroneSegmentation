@@ -111,47 +111,54 @@ class VideoIterator(object):
 def get_arguments():
     # Import arguments
     parser = argparse.ArgumentParser()
+    group = parser.add_mutually_exclusive_group()
     
     # Mandatory options
-    parser.add_argument('--model', type=str, required=True, help='\
-    Path to the model (usually [...]/deploy.prototxt)')
-    parser.add_argument('--weights', type=str, required=True, help='\
-    Path to the weights (usually [...]/xx.caffemodel)')
-    parser.add_argument('--colours', type=str, required=True, help='\
-    If the colours of the classes are provided \
-    (eg. data/CamVid/colours/camvid12.png)')
-
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('--video', type=str, help='A video file to be segmented')
-    group.add_argument('--images', type=str, help='\
-    A text file containing a list of images to segment')
-    group.add_argument('--labels', type=str, help='\
-    A text file containing space-separated pairs - the first item is an image \
-    to segment, the second is the ground-truth labelling.')
+    parser.add_argument('--model', type=str, required=True, \
+                                    help=   'Path to the model (usually [...]/deploy.prototxt)')
+    parser.add_argument('--weights', type=str, required=True, \
+                                    help=   'Path to the weights (usually [...]/xx.caffemodel)')
+    parser.add_argument('--colours', type=str, required=True, \
+                                    help=   'If the colours of the classes are provided \
+                                            (data/CamVid/colours/camvid12.png)')
+    group.add_argument('--video', type=str, \
+                                    help=   'A video file to be segmented')
+    group.add_argument('--images', type=str, \
+                                    help=   'A text file containing a list of images to segment')
+    group.add_argument('--labels', type=str, \
+                                    help=   'A text file containing space-separated pairs - the first \
+                                            item is an image to segment, the second is the ground-truth \
+                                            labelling.')
     
-    # Optional arguments
-    parser.add_argument('--cpu', action="store_true", help='\
-    Default false, set it for CPU mode')
-    parser.add_argument('--input', type=str, default='data', help='\
-    Default is "data", change it to the value of the "bottom" field of your \
-    network\'s input layer.')
-    parser.add_argument('--output', type=str, default='output', help='\
-    Default is "output", change it to the name of the output in your network \
-    (usually the "top" value of the last layer in the deploy.prototxt).')
-    parser.add_argument('--key', action="store_true", help='\
-    For visualization image per image (have to press the space button for the \
-    next image then)')
-    parser.add_argument('--PASCAL', action="store_true", help='\
-    If Pascal VOC is used, provide this flag to perform mean subtraction.')
-    parser.add_argument('--hide', action="store_true", help='\
-    If set, the segmentation won\'t be displayed.')
-    parser.add_argument('--record', type=str, default='', help='\
-    For recording the videos, expected the path (and prefix) of where to save \
-    them like /path/to/segnet_. Will create two or three videos, depends on if \
-    the labels are provided')
-    parser.add_argument('--old_caffe', action="store_true", help='\
-    If we use an old version of Caffe (ex. the ones used by CRF or DeepLab), \
-    the command to create a network in the C++ is slightly different.')
+    
+    # Optional options
+    parser.add_argument('--cpu', action="store_true", \
+                                    help=   'Default false, set it for CPU mode')
+    parser.add_argument('--input', type=str, required=False, default='data', \
+                                    help=   'Default is data, change it for the name of the input \
+                                            in your network (mostly foundable as the bottom of the \
+                                            first layer in the model (prototxt))')
+    parser.add_argument('--output', type=str, required=False, default='output', \
+                                    help=   'Default is output, change it for the name of the output \
+                                            in your network (mostly foundable as the top of the last \
+                                            layer in the model (prototxt))')
+    parser.add_argument('--key', action="store_true", \
+                                    help=   'For visualization image per image (have to press the \
+                                            space button for the next image then)')
+    parser.add_argument('--PASCAL', action="store_true", \
+                                    help=   'If Pascal VOC is used, provide this flag for the mean \
+                                            subtraction.')
+    parser.add_argument('--hide', action="store_true", \
+                                    help=   'If set, won\'t display the results')
+    parser.add_argument('--record', type=str, required=False, default='', \
+                                    help=   'For recording the videos, expected the path (and prefix) \
+                                            of where to save them like /path/to/segnet_. Will create \
+                                            two or three videos, depends on if the labels are provided')
+    parser.add_argument('--old_caffe', action="store_true", \
+                                    help=   'If we use an old version of Caffe (ex. the ones used by CRF or DeepLab, the command to create a network in the C++ is slightly different.')
+    parser.add_argument('--resize', action="store_true", \
+                                    help=   'If we want to resize all pictures to the size defined by prototxt.')
+    
     return parser.parse_args()
     
 
@@ -179,9 +186,10 @@ def build_network(args):
     return net
 
 
-def pre_processing(img, shape):
+def pre_processing(img, shape, resize_img):
     # Ensure that the image has the good size
-    img = img.resize((shape[3], shape[2]), Image.ANTIALIAS)
+    if resize_img:
+        img = img.resize((shape[3], shape[2]), Image.ANTIALIAS)
     
     # Get pixel values and convert them from RGB to BGR
     frame = np.array(img, dtype=np.float32)
@@ -197,9 +205,12 @@ def pre_processing(img, shape):
     return frame
 
 
-def colourSegment(labels, label_colours, input_shape):
+def colourSegment(labels, label_colours, input_shape, resize_img):
     # Resize it for 3 channels, now (3, 360, 480)
-    segmentation_ind_3ch = np.resize(labels, (3, input_shape[2], input_shape[3]))
+    if resize_img:
+        segmentation_ind_3ch = np.resize(labels, (3, input_shape[2], input_shape[3]))
+    else:
+        segmentation_ind_3ch = np.resize(labels, (3, labels.shape[0], labels.shape[1]))
     
     # Converts it to format H x W x C (was C x H x W)
     segmentation_ind_3ch = segmentation_ind_3ch.transpose(1,2,0).astype(np.uint8)
@@ -343,7 +354,7 @@ if __name__ == '__main__':
         
         # Preprocess the image for the network
         start = time.time()
-        frame = pre_processing(_input, input_shape)
+        frame = pre_processing(_input, input_shape, args.resize)
         metrics.time_prep.append(time.time() - start)
 
         # Shape for input (data blob is N x C x H x W), set data
@@ -371,16 +382,18 @@ if __name__ == '__main__':
         label_colours = cv2.imread(args.colours).astype(np.uint8)
         
         # Resize input to the same size as other
-        _input = _input.resize((input_shape[3], input_shape[2]), Image.ANTIALIAS)
+        if args.resize:
+                _input = _input.resize((input_shape[3], input_shape[2]), Image.ANTIALIAS)
         
         # Transform the class labels into a segmented image
-        _output = colourSegment(guessed_labels, label_colours, input_shape)
+        _output = colourSegment(guessed_labels, label_colours, input_shape, args.resize)
         
         # If we also have the ground truth
         if real_label is not None:
             
             # Resize to the same size as other images
-            real_label = real_label.resize((input_shape[3], input_shape[2]), Image.NEAREST)
+            if args.resize:
+                real_label = real_label.resize((input_shape[3], input_shape[2]), Image.NEAREST)
             
             # If pascal VOC, reshape the label to HxWx1s
             tmpReal = np.array(real_label)
@@ -398,7 +411,7 @@ if __name__ == '__main__':
             # Convert the ground truth if needed into a RGB array
             show_label = np.array(real_label)
             if len(show_label.shape) == 2:
-                show_label = colourSegment(show_label, label_colours, input_shape)
+                show_label = colourSegment(show_label, label_colours, input_shape, args.resize)
             elif len(show_label.shape) != 3:
                 print 'Unknown labels format'
             
@@ -456,3 +469,6 @@ if __name__ == '__main__':
                 print "\tclass ", i, " : 0"
             else:
                 print "\tclass ", i, " : ", (np.sum(col) / np.sum(col != 0))
+
+
+
