@@ -234,11 +234,11 @@ def update_metrics(guess, real, metrics):
     class_ranges = range(min(guess.min(), real.min()), max(guess.max(), real.max())+1)
     
     # If we found new classes, we extend the arrays
-    if metrics.n_cl < class_ranges[len(class_ranges)-1]:
-        wantedNbClasses = class_ranges[len(class_ranges)-1]
+    if metrics.n_cl < class_ranges[len(class_ranges)-1] + 1:
+        wantedNbClasses = class_ranges[len(class_ranges)-1] + 1
         tmpNIJ = np.zeros((len(metrics.n_ijs), wantedNbClasses, wantedNbClasses))
         for im in range(0, metrics.n_im-1):
-            for c in range(0, class_ranges[len(class_ranges)-1] - metrics.n_cl):
+            for c in range(0, class_ranges[len(class_ranges)-1] + 1 - metrics.n_cl):
                 metrics.t_is[im].append(0)
                 metrics.n_iis[im].append(0)
             
@@ -247,7 +247,7 @@ def update_metrics(guess, real, metrics):
                     tmpNIJ[im][c][cc] = metrics.n_ijs[im][c][cc]
             
         metrics.n_ijs = tmpNIJ.tolist()
-        metrics.n_cl = class_ranges[len(class_ranges)-1]
+        metrics.n_cl = class_ranges[len(class_ranges)-1] + 1
     
     # Extend for the current image
     metrics.t_is.append([0]*metrics.n_cl)
@@ -255,7 +255,7 @@ def update_metrics(guess, real, metrics):
     metrics.n_ijs.append([[0]*metrics.n_cl]*metrics.n_cl)
     
     # For each class
-    for ccc in range(0, len(class_ranges)-1):
+    for ccc in class_ranges:
         tmpNIJ = []
         for ccc2 in range(0, metrics.n_cl):
             # Check the matching between guess and real for the corresponding class
