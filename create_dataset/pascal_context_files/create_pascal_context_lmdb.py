@@ -128,7 +128,7 @@ if __name__ == '__main__':
         val_list = [l.translate(None, ''.join('\n')) for l in val_list if len(l) > 0]
     
     nt, nv, fpath_imgs_train, fpath_labels_train, fpath_imgs_val, fpath_labels_val = \
-    pascal_context_to_lmdb(os.path.expanduser('/home/shared/datasets/VOCdevkit/VOC2012/JPEGImages_orig'),
+    pascal_context_to_lmdb(os.path.expanduser('/home/shared/datasets/VOCdevkit/VOC2012/JPEGImages'),
                            os.path.expanduser('/home/shared/datasets/VOCdevkit/VOCContext/trainval'),
                            os.path.expanduser('/home/shared/datasets/VOCdevkit/VOCContext/labels.txt'),
                            os.path.expanduser('/home/shared/datasets/VOCdevkit/VOCContext/59_labels.txt'),

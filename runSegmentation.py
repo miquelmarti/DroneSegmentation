@@ -33,7 +33,7 @@ np.seterr(divide='ignore', invalid='ignore')
 
 class Metric(object):
     def __init__(self, pixel_accuracy, mean_accuracy, mean_IU, freq_weighted_IU, mean_IU_per_class,
-                        n_cl, bord255, n_im, t_is,
+                        n_cl, bord255, n_im, t_is, t_js,
                         n_iis, n_ijs,
                         time_prep, time_arch, time_comp):
         self.pixel_accuracy=pixel_accuracy      # success rate (Pixel accuracy (FCN), or Global average (SegNet))
@@ -45,6 +45,7 @@ class Metric(object):
         self.bord255=bord255                    # True if the number of the border is 255
         self.n_im=n_im                          # Number of images
         self.t_is=t_is                          # Total number of pixels in class i
+        self.t_js=t_js                          # Total number of pixels in class i (guess labels)
         # n_ij : The number of pixels of class i predicted to belong to class j):
         self.n_iis=n_iis                        # True positives
         self.n_ijs=n_ijs                        # False positives (wrongly classified)
@@ -245,6 +246,7 @@ def update_metrics(guess, real, metrics):
         for im in range(0, metrics.n_im-1):
             for c in range(0, wantedNbClasses - metrics.n_cl):
                 metrics.t_is[im].append(0)
+                metrics.t_js[im].append(0)
                 metrics.n_iis[im].append(0)
             
             for c in range(0, metrics.n_cl):
@@ -256,6 +258,7 @@ def update_metrics(guess, real, metrics):
     
     # Extend for the current image
     metrics.t_is.append([0]*metrics.n_cl)
+    metrics.t_js.append([0]*metrics.n_cl)
     metrics.n_iis.append([0]*metrics.n_cl)
     metrics.n_ijs.append([[0]*metrics.n_cl]*metrics.n_cl)
     
@@ -270,6 +273,7 @@ def update_metrics(guess, real, metrics):
                 metrics.n_iis[metrics.n_im-1][ccc] = sum(sum(nij))
         metrics.n_ijs[metrics.n_im-1][ccc] = tmpNIJ
         metrics.t_is[metrics.n_im-1][ccc] = sum(sum((real == ccc)))
+        metrics.t_js[metrics.n_im-1][ccc] = sum(sum((guess == ccc)))
 
 
 def compute_metrics(metrics):
@@ -334,7 +338,7 @@ if __name__ == '__main__':
         cv2.namedWindow("Output")
     
     # Init the structure for storing the metrics
-    metrics = Metric([], [], [], [], [], 0, False, 0, [], [], [], [], [], [])
+    metrics = Metric([], [], [], [], [], 0, False, 0, [], [], [], [], [], [], [])
 
     # Create the appropriate iterator
     imageIterator = None
