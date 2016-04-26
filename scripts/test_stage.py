@@ -9,20 +9,36 @@ import stage
 import caffeUtils
 
 TEST_NET_FILE = '../test_cases/train.prototxt'
+TEST_MODEL_FILE = ''  # TODO fill this in
+
+
+class TestIgnore(unittest.TestCase):
+
+    def tearDown(self):
+        # abusing the tearDown method here to avoid code duplication
+        outModel = stage.ignoreModelLayers(self.ignoreLayers, TEST_MODEL_FILE)
+        self.helper_assetIgnored(self.ignoreLayers, TEST_MODEL_FILE, outModel)
+        os.remove(outModel)
+
+    def helper_assertIgnored(self, ignoreLayers, oldModelFile, newModelFile):
+        oldModel = caffeUtils.readCaffeModel(oldModelFile)
+        oldLayerNames = [layer.name for layer in oldModel.layer]
+        newModel = caffeUtils.readCaffeModel(oldModelFile)
+        newLayerNames = [layer.name for layer in newModel.layer]
+        for name in oldLayerNames:
+            if name in ignoreLayers:
+                self.assertNotIn(name, newLayerNames)
+            else:
+                self.assertIn(name, newLayerNames)
 
 
 class TestFreeze(unittest.TestCase):
-
-    def setUp(self):
-        self.outFile = None
 
     def tearDown(self):
         # abusing the tearDown method here to avoid code duplication
         outFile = stage.freezeNetworkLayers(self.freezeLayers, TEST_NET_FILE)
         self.helper_assertFrozen(self.freezeLayers, outFile)
-        if self.outFile:
-            os.remove(self.outFile)
-        self.outFile = None
+        os.remove(outFile)
 
     def helper_assertFrozen(self, freezeLayers, netFile):
         net = caffe_pb2.NetParameter()
@@ -32,7 +48,7 @@ class TestFreeze(unittest.TestCase):
                 self.assertTrue(len(layer.param) > 0)
                 for p in layer.param:
                     self.assertTrue(p.HasField(stage.LR_MULT_FIELD))
-                    self.assertEqual(p.lr_mult, 0)
+                    self.assertEqual(p.lr_mult, 0.0)
 
     # freezing a single layer with an lr_mult already defined
     def test_freezeSingleMult(self):
@@ -58,5 +74,8 @@ class TestFreeze(unittest.TestCase):
                              'conv4_2', 'conv4_3']  # zero-valued lr_mult
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestFreeze)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    suite = unittest.TestSuite([TestIgnore(), TestFreeze()])
+    # suite = unittest.TestLoader().loadTestsFromTestCase(TestFreeze)
+    # unittest.TextTestRunner(verbosity=2).run(suite)
+    suite.run()
+    
