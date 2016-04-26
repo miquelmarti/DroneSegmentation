@@ -1,14 +1,16 @@
 import os
+import subprocess
 import caffe
 from caffe.proto import caffe_pb2
 import caffeUtils
-import subprocess
 
 LR_MULT_FIELD = 'lr_mult'
 LAYER_PARAM_FIELD = 'param'
 TEMP_FILE_SUFFIX = '.tmp'
 IGNORE_LAYER_SUFFIX = '-ignore'
 MODEL_SUFFIX = '.caffemodel'
+
+TEST = True
 
 
 def swapFiles(filename1, filename2):
@@ -27,10 +29,9 @@ def freezeNetworkLayers(freezeList, trainNetFilename):
     for layer in trainNet.layer:
         # freeze desired layers
         if layer.name in freezeList:
-            if layer.HasField(LAYER_PARAM_FIELD):
-                for p in layer.param:
-                    if p.HasField(LR_MULT_FIELD):
-                        p.lr_mult = 0
+            for p in layer.param:
+                if p.HasField(LR_MULT_FIELD):
+                    p.lr_mult = 0
             else:
                 p = layer.param.add()
                 p.lr_mult = 0
@@ -54,19 +55,20 @@ def ignoreModelLayers(ignoreList, modelFilename):
         f.write(model.SerializeToString())
     return tmpModelFilename
 
-    
-class Stage(object):
-    """
-    Constructor for the Stage class.
 
-    Arguments:
-    name -- The name of this stage
-    freezeList -- a list of names of layers to be frozen while training
-    ignoreList -- a list of names of layers in the model to be ignored
-    trainNetFilename -- a prototxt file describing the training network
-    """
+class Stage(object):
 
     def __init__(self, name, freezeList, ignoreList, trainNetFilename=None):
+        """
+        Constructor for the Stage class.
+
+        Arguments:
+        name -- The name of this stage
+        freezeList -- a list of names of layers to be frozen while training
+        ignoreList -- a list of names of layers in the model to be ignored
+        trainNetFilename -- a prototxt file describing the training network
+        """
+
         self.name = name
         self.freezeList = freezeList
         self.ignoreList = ignoreList
@@ -130,15 +132,7 @@ class PrototxtStage(Stage):
         solver = caffe.get_solver(str(solverFilename))
         if modelFilename:
             solver.net.copy_from(modelFilename)
-        freezeNames = [layer.name for layer in self.freezeList]
-        sample = freezeNames[0]
-        # TODO remove this test code
-        frozenPre = solver.net.params[sample][0].data
-        print "frozen before:", solver.net.params[sample][0].data
         solver.solve()
-        frozenPost = solver.net.params[sample][0].data
-        print "frozen after:", solver.net.params[sample][0].data
-
         outModelFilename = self.name + MODEL_SUFFIX
         solver.net.save(outModelFilename)
         # remove temporary files
