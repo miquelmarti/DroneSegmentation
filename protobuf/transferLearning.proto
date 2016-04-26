@@ -17,10 +17,34 @@ message Stage {
     // optional string dataset = ;
     // TODO a partial model file to be integrated into the main file
     // optional string partialModel = ;
+    enum SolverType {
+        // Can specify a solver.prototxt file...
+        PROTOTXT = 0;
+        // ...or a bash command to run.
+        COMMAND = 1;
+    }
     
-    // The solver model used in this stage
-    optional string solver = 2;
-    // Specifies layers to freeze turing training, as a list
+    message PrototxtSolver {
+        optional string filename = 1;
+    }
+
+    message CommandSolver {
+        required string command = 1;
+        // name of the output model file
+        required string out_model_filename = 2;
+        // Needed to make freeze layers work
+        optional string net_filename = 3;
+        // Needed to make ignore layers work
+        optional string in_model_filename = 4;
+    }
+
+    // Choose the type of solver used in this stage.
+    required SolverType type = 5;
+    // Provide only one of the two.
+    optional PrototxtSolver prototxt_solver = 6;
+    optional CommandSolver cmd_solver = 7;
+    
+    // Specifies layers to freeze during training, as a list
     repeated string freeze = 3;
     // Specifies layers to reinitialize with random values
     repeated string ignore = 4;

@@ -8,10 +8,12 @@ import caffe
 import argparse
 import os
 import caffeUtils
-from stage import Stage
+from stage import PrototxtStage, CommandStage
 
 
-SOLVER_FIELD = 'solver'
+FILENAME_FIELD = 'filename'
+NET_FILENAME_FIELD = 'net_filename'
+SOLVE_CMD_FIELD = 'command'
 
 
 def getArguments():
@@ -42,22 +44,32 @@ def getStagesFromMsgs(stageMsgs, solverFilename=None, trainNetFilename=None):
     stages = []
     for stageMsg in stageMsgs:
         # unpack values
-        if stageMsg.HasField(SOLVER_FIELD):
-            solverFilename = stageMsg.solver
-        elif solverFilename is None:
-            # No solver is defined for this stage!
-            raise Exception('First layer provides no solver file')
-        # execute stage
-        stages.append(Stage(stageMsg.name, solverFilename, stageMsg.freeze,
-                            stageMsg.ignore, trainNetFilename))
+        newStage = None
+        if stageMsg.type == transferLearning_pb2.Stage.PROTOTXT:
+            if stageMsg.prototxt_solver.HasField(FILENAME_FIELD):
+                solverFilename = stageMsg.prototxt_solver.filename
+            elif solverFilename is None:
+                raise Exception('First training stage provides no solver file')
+            newStage = PrototxtStage(stageMsg.name, solverFilename,
+                                     stageMsg.freeze, stageMsg.ignore,
+                                     trainNetFilename)
+        elif stageMsg.type == transferLearning_pb2.Stage.COMMAND:
+            trainNetFilename = None
+            if stageMsg.cmd_solver.HasField(NET_FILENAME_FIELD):
+                trainNetFilename = stageMsg.cmd_solver.net_filename
+            newStage = CommandStage(stageMsg.name, stageMsg.cmd_solver.command,
+                                    stageMsg.cmd_solver.out_model_filename,
+                                    trainNetFilename, stageMsg.freeze,
+                                    stageMsg.ignore)
+        stages.append(newStage)
     return stages
 
 
-def executeListOfStages(stages, firstModelFile, clean):
-    model = firstModelFile
+def executeListOfStages(stages, firstModel, clean):
+    model = firstModel
     for stage in stages:
         newModel = stage.execute(model)
-        if clean and model != firstModelFile:
+        if clean and model != firstModel:
             os.remove(model)
         model = newModel
     return model

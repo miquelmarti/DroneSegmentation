@@ -1,19 +1,22 @@
 stage {
     name: "train_fcn-32"
-    solver: "examples/train_fcn/fcn32/solver.prototxt"
+    # solver: "examples/train_fcn/fcn32/solver.prototxt"
+    solve_command: "/home/andrew/models/caffe/solve.sh /home/andrew/models/caffe/VGG_ILSVRC_16_layers.caffemodel /home/andrew/models/caffe/FCN-32"
     freeze: "upscore"
     ignore: "fc6"
     ignore: "fc7"
 }
 stage {
     name: "train_fcn-16"
-    solver: "examples/train_fcn/fcn16/solver.prototxt"
+    # solver: "examples/train_fcn/fcn16/solver.prototxt"
+    solve_command: "/home/andrew/models/caffe/solve.sh /home/andrew/models/caffe/FCN-32/train_iter_100000.caffemodel /home/andrew/models/caffe/FCN-16"
     freeze: "upscore2"
     freeze: "upscore16"
 }
 stage {
     name: "train_fcn-8"
-    solver: "examples/train_fcn/fcn8/solver.prototxt"
+    # solver: "examples/train_fcn/fcn8/solver.prototxt"
+    solve_command: "/home/andrew/models/caffe/solve.sh /home/andrew/models/caffe/FCN-16/train_iter_100000.caffemodel /home/andrew/models/caffe/FCN-8"
     freeze: "upscore2"
     freeze: "upscore_pool4"
     freeze: "upscore8"    
