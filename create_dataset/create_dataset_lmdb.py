@@ -1,11 +1,6 @@
 # Create the dataset with images in the file_with_paths
 # python create_dataset_lmdb.py --W 480 --H 360 --output_path /home/pierre/camvid/val_gt_lmdb/ --input_images /home/shared/datasets/CamVid/val_lab.txt --nb_classes 13 --labels True
 
-# TODO : permits it to create rge four LMDB in one time (train, train_gt, val and val_gt)
-# TODO : merge with Youssef codes for labels in .mat format (see pascal_context_files/)
-# TODO : check the reshape question for labels
-
-
 import caffe
 import lmdb
 from PIL import Image
@@ -13,7 +8,6 @@ import numpy as np
 import glob
 from random import shuffle
 import argparse
-
 
 def get_arguments():
     # Import arguments
@@ -33,22 +27,19 @@ def get_arguments():
                                     help=   'Precise if dealing with labels and not RGB')
     return parser.parse_args()
 
-
 def main(args):
     
     # Get all options
     args = get_arguments()
     
-    # Open the output LMDB
     in_db = lmdb.open(args.output_path, map_size=int(1e12))
     with in_db.begin(write=True) as in_txn:
         for in_idx, in_ in enumerate(open(args.input_images)):
             print 'Loading image ', str(in_idx), ' : ', in_.rstrip()
             
-            # Load image:
+            # load image:
             im = np.array(Image.open(in_.rstrip()))
-            
-            # Save type
+            # save type
             Dtype = im.dtype
             
             if args.labels:
@@ -57,7 +48,10 @@ def main(args):
                 Limg = Limg.resize([args.W, args.H],Image.NEAREST)
                 im = np.array(Limg,Dtype)
                 # Convert from HxWxC (C=3) to HxWxC (C=1)
-                #im = im.reshape(im.shape[0],im.shape[1],1)
+                #for i in range(0, im.shape[0]):
+                #    for j in range(0, im.shape[1]):
+                #        if im[i][j][0] != 0:
+                #            print im[i][j]
                 im = im[:,:,0].reshape(im.shape[0],im.shape[1],1)
             else:
                 # RGB to BGR
