@@ -50,10 +50,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.image:
-        convertSegmentsToBoundaries(args.image, OUT_PREFIX + args.image)
+        convertSegmentsToBoundaries(args.image, args.out_location)
     elif args.images:
         images = os.listdir(args.images)
         for image in images:
+            print 'converting', image
             outPath = os.path.join(args.out_location, image)
             imagePath = os.path.join(args.images, image)
             convertSegmentsToBoundaries(imagePath, outPath)
