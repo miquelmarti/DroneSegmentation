@@ -4,26 +4,41 @@
 import unittest
 import os
 from caffe.proto import caffe_pb2
-# import transfer
 import stage
 import caffeUtils
+import urllib2
 
-TEST_NET_FILE = '../test_cases/train.prototxt'
-TEST_MODEL_FILE = ''  # TODO fill this in
+TEST_DIR = '../test_cases'
+TEST_NET_FILE = 'train.prototxt'
+TEST_MODEL_URL_FILE = 'caffemodel-url'
+TEST_MODEL_FILE = 'fcn8s-heavy-pascal.caffemodel'
 
 
 class TestIgnore(unittest.TestCase):
+    def setUp(self):
+        caffeUrlPath = os.path.join(TEST_DIR, TEST_MODEL_URL_FILE)
+        with open(caffeUrlPath, 'r') as urlFile:
+            url = urlFile.read()
+            modelName = os.path.basename(url)
+            modelPath = os.path.join(TEST_DIR, modelName)
+            if not os.path.isfile(modelPath):
+                print 'Downloading test caffemodel from', url
+                response = urllib2.urlopen(url)
+                with open(modelPath, 'w') as f:
+                    f.write(response.read())
+                print 'Download of', modelPath, 'complete'
 
     def tearDown(self):
         # abusing the tearDown method here to avoid code duplication
-        outModel = stage.ignoreModelLayers(self.ignoreLayers, TEST_MODEL_FILE)
-        self.helper_assetIgnored(self.ignoreLayers, TEST_MODEL_FILE, outModel)
+        modelFilePath = os.path.join(TEST_DIR, TEST_MODEL_FILE)
+        outModel = stage.ignoreModelLayers(self.ignoreLayers, modelFilePath)
+        self.helper_assertIgnored(self.ignoreLayers, modelFilePath, outModel)
         os.remove(outModel)
 
     def helper_assertIgnored(self, ignoreLayers, oldModelFile, newModelFile):
         oldModel = caffeUtils.readCaffeModel(oldModelFile)
         oldLayerNames = [layer.name for layer in oldModel.layer]
-        newModel = caffeUtils.readCaffeModel(oldModelFile)
+        newModel = caffeUtils.readCaffeModel(newModelFile)
         newLayerNames = [layer.name for layer in newModel.layer]
         for name in oldLayerNames:
             if name in ignoreLayers:
@@ -31,12 +46,35 @@ class TestIgnore(unittest.TestCase):
             else:
                 self.assertIn(name, newLayerNames)
 
+    # TODO write test methods
+    # ignore one convolutional layer
+    def test_ignoreConvLayer(self):
+        self.ignoreLayers = ['conv3_2']
+
+    # ignore one relu layer
+    def test_ignoreReluLayer(self):
+        self.ignoreLayers = ['relu2_1']
+
+    # ignore one softmax loss layer
+    def test_ignoreLossLayer(self):
+        self.ignoreLayers = ['loss']
+        
+    # ignore multiple layers of various types
+    def test_ignoreVariousLayers(self):
+        self.ignoreLayers = ['conv1_1', 'conv1_1', 'relu2_1', 'conv3_3',
+                             'relu1_2', 'relu5_1']
+
+    # ignore no layers
+    def test_ignoreNoLayers(self):
+        self.ignoreLayers = []
+
 
 class TestFreeze(unittest.TestCase):
 
     def tearDown(self):
         # abusing the tearDown method here to avoid code duplication
-        outFile = stage.freezeNetworkLayers(self.freezeLayers, TEST_NET_FILE)
+        testNetPath = os.path.join(TEST_DIR, TEST_NET_FILE)
+        outFile = stage.freezeNetworkLayers(self.freezeLayers, testNetPath)
         self.helper_assertFrozen(self.freezeLayers, outFile)
         os.remove(outFile)
 
@@ -74,8 +112,7 @@ class TestFreeze(unittest.TestCase):
                              'conv4_2', 'conv4_3']  # zero-valued lr_mult
 
 if __name__ == '__main__':
-    suite = unittest.TestSuite([TestIgnore(), TestFreeze()])
-    # suite = unittest.TestLoader().loadTestsFromTestCase(TestFreeze)
-    # unittest.TextTestRunner(verbosity=2).run(suite)
-    suite.run()
+    for case in [TestFreeze, TestIgnore]:
+        suite = unittest.TestLoader().loadTestsFromTestCase(case)
+        unittest.TextTestRunner(verbosity=2).run(suite)
     

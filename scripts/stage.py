@@ -44,9 +44,9 @@ def freezeNetworkLayers(freezeList, trainNetFilename):
 
 def ignoreModelLayers(ignoreList, modelFilename):
     model = caffeUtils.readCaffeModel(modelFilename)
-    ignoreNames = [layer.name for layer in ignoreList]
+    # ignoreNames = [layer.name for layer in ignoreList]
     for layer in model.layer:
-        if layer.name in ignoreNames:
+        if layer.name in ignoreList:
             # rename layers to force Caffe to ignore them
             layer.name = layer.name + IGNORE_LAYER_SUFFIX
     # write the model back out to a temporary file
@@ -71,6 +71,11 @@ class Stage(object):
 
         self.name = name
         self.freezeList = freezeList
+        # if len(freezeList) > 0 and type(freezeList[0]) is not str:
+        #     self.freezeList = [layer.name for layer in freezeList]
+        # else:
+        #     self.freezeList = freezeList
+        # if len(ignoreList) > 0 and type(ignoreList[0]) is not str:
         self.ignoreList = ignoreList
         self.trainNetFilename = trainNetFilename
 
