@@ -1645,29 +1645,8 @@ layer {
   top: "loss"
   softmax_param {engine: CAFFE}
   loss_param: {
-    weight_by_label_freqs: true
+    weight_by_label_freqs: false
     ignore_label: 21
-    class_weighting: 0.2719
-    class_weighting: 1.5830
-    class_weighting: 3.0120
-    class_weighting: 1.6572
-    class_weighting: 1.7892
-    class_weighting: 1.7815
-    class_weighting: 0.5962
-    class_weighting: 1.2053
-    class_weighting: 0.6740
-    class_weighting: 1.8299
-    class_weighting: 0.9166
-    class_weighting: 0.8532
-    class_weighting: 0.8935
-    class_weighting: 0.9973
-    class_weighting: 0.9742
-    class_weighting: 1.1778
-    class_weighting: 1.9162
-    class_weighting: 1.0000
-    class_weighting: 0.8758
-    class_weighting: 0.7225
-    class_weighting: 1.3287
   }
 }
 layer {

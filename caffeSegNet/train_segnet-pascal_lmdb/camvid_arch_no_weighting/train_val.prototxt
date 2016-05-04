@@ -12,7 +12,7 @@ layer {
     mean_value: 122.67892
   }
   data_param {
-    source: "/home/shared/datasets/VOCdevkit/VOC2012/LMDB_500x500/train_lmdb"
+    source: "/home/shared/datasets/VOCdevkit/VOC2012/LMDB_224x224/train_lmdb"
     batch_size: 2
     backend: LMDB
   }
@@ -25,7 +25,7 @@ layer {
     phase: TRAIN
   }
   data_param {
-    source: "/home/shared/datasets/VOCdevkit/VOC2012/LMDB_500x500/train_gt_lmdb"
+    source: "/home/shared/datasets/VOCdevkit/VOC2012/LMDB_224x224/train_gt_lmdb"
     batch_size: 2
     backend: LMDB
   }
@@ -43,7 +43,7 @@ layer {
     mean_value: 122.67892
   }
   data_param {
-    source: "/home/shared/datasets/VOCdevkit/VOC2012/LMDB_500x500/val_lmdb"
+    source: "/home/shared/datasets/VOCdevkit/VOC2012/LMDB_224x224/val_lmdb"
     batch_size: 2
     backend: LMDB
   }
@@ -56,7 +56,7 @@ layer {
     phase: TEST
   }
   data_param {
-    source: "/home/shared/datasets/VOCdevkit/VOC2012/LMDB_500x500/val_gt_lmdb"
+    source: "/home/shared/datasets/VOCdevkit/VOC2012/LMDB_224x224/val_gt_lmdb"
     batch_size: 2
     backend: LMDB
   }
@@ -844,8 +844,6 @@ layer {
   bottom: "pool5_mask"
   upsample_param {
     scale: 2
-    upsample_w: 32
-    upsample_h: 32
   }
 }
 layer {
@@ -1022,8 +1020,6 @@ layer {
   bottom: "pool4_mask"
   upsample_param {
     scale: 2
-    upsample_w: 63
-    upsample_h: 63
   }
 }
 layer {
@@ -1199,8 +1195,6 @@ layer {
   bottom: "pool3_mask"
   upsample_param {
     scale: 2
-    upsample_w: 125
-    upsample_h: 125
   }
 }
 layer {

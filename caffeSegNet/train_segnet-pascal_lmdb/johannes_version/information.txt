@@ -1,7 +1,0 @@
-SOLVER 1 - SEGNET - /VOC2012/LMDB/ - Batch size 1
-One night of training, 80 000 iterations. Loss went down from 4.212 to 0.172.
-Fine-tuned from VGG-16 layers
-
-Command :
-/home/shared/caffeSegNet/build/tools/caffe train --solver /home/johannes/project/models/segnet/solver-1.prototxt --weights /home/johannes/project/models/segnet/VGG_ILSVRC_16_layers.caffemodel -gpu 0
-

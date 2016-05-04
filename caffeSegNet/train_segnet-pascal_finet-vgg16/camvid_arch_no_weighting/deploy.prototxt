@@ -2,8 +2,8 @@ name: "VGG_ILSVRC_16_layer"
 input: "data"
 input_dim: 1
 input_dim: 3
-input_dim: 500
-input_dim: 500
+input_dim: 224
+input_dim: 224
 layer {
   bottom: "data"
   top: "conv1_1"
@@ -787,8 +787,6 @@ layer {
   bottom: "pool5_mask"
   upsample_param {
     scale: 2
-    upsample_w: 32
-    upsample_h: 32
   }
 }
 layer {
@@ -965,8 +963,6 @@ layer {
   bottom: "pool4_mask"
   upsample_param {
     scale: 2
-    upsample_w: 63
-    upsample_h: 63
   }
 }
 layer {
@@ -1142,8 +1138,6 @@ layer {
   bottom: "pool3_mask"
   upsample_param {
     scale: 2
-    upsample_w: 125
-    upsample_h: 125
   }
 }
 layer {
@@ -1498,7 +1492,7 @@ layer {
 }
 layer {
   bottom: "conv1_2_D"
-  top: "conv1_1_D"
+  top: "conv1_1_D-v2"
   name: "conv1_1_D-v2"
   type: "Convolution"
   param {
@@ -1524,13 +1518,7 @@ layer {
 layer {
   name: "prob"
   type: "Softmax"
-  bottom: "conv1_1_D"
+  bottom: "conv1_1_D-v2"
   top: "prob"
   softmax_param {engine: CAFFE}
-}
-layer {
-  name: "argmax"
-  type: "ArgMax"
-  bottom: "prob"
-  top: "argmax"
 }

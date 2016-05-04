@@ -10,4 +10,5 @@ python /home/pierre/hgRepos/caffeTools/runSegmentation.py                       
                 --colours   ${DATASET_PATH}/colours/pascal_voc_21_colours.png       \
                 --output    prob                                                    \
                 --PASCAL                                                            \
-                --labels    ${DATASET_PATH}/lists/val_img_lab.txt
+                --resize                                                            \
+                --labels    ${DATASET_PATH}/lists/seg11_img_lab.txt
