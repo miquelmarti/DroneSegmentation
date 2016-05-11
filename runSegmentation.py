@@ -5,6 +5,7 @@
 
 # TODO ; check if the video mode work
 # TODO ; add the --folder option, that takes a folder as input and segment each image in it
+# TODO ; n_cl can be get with net.blobs[layer].channels
 
 
 
@@ -171,6 +172,9 @@ if __name__ == '__main__':
     numb_cla = output_blob.channels
     hist = np.zeros((numb_cla, numb_cla))
     
+    # Variable for time values
+    times = []
+    
     # Video recording
     if args.record != '':
         fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
@@ -201,6 +205,9 @@ if __name__ == '__main__':
     # Main loop, for each image to process
     for _input, real_label in imageIterator:
         
+        # Get the current time
+        start = time.time()
+        
         # New image
         n_im += 1
         if args.record != '' or args.hide:
@@ -227,6 +234,9 @@ if __name__ == '__main__':
         elif len(guessed_labels.shape) != 2:
             print 'Unknown output shape'
             break
+        
+        # Get the time after the network process
+        times.append(time.time() - start)
         
         # Read the colours of the classes
         label_colours = cv2.imread(args.colours).astype(np.uint8)
@@ -299,6 +309,9 @@ if __name__ == '__main__':
         labels.release()
     elif args.hide == False:
         cv2.destroyAllWindows()
+    
+    # Time elapsed
+    print "Average time elapsed when processing one image :\t", sum(times) / float(len(times))
     
     # Display the metrics
     if args.labels is not None:
