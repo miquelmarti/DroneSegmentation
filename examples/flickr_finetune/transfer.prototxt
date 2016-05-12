@@ -1,6 +1,9 @@
 stage {
     name: "flickr_finetune_test"
-    solver: "examples/flickr_finetune/solver.prototxt"
+    type: PROTOTXT
+    prototxt_solver {
+        filename: "examples/flickr_finetune/solver.prototxt"
+    }
     # freeze: "conv1"
     # freeze: "conv2"
     # freeze: "conv3"

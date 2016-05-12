@@ -29,8 +29,8 @@ def freezeNetworkLayers(freezeList, trainNetFilename):
     for layer in trainNet.layer:
         # freeze desired layers
         if layer.name in freezeList:
-            for p in layer.param:
-                if p.HasField(LR_MULT_FIELD):
+            if len(layer.param) > 0:
+                for p in layer.param:
                     p.lr_mult = 0
             else:
                 p = layer.param.add()
@@ -114,7 +114,7 @@ class PrototxtStage(Stage):
                 solverFilename)
 
     def execute(self, modelFilename=None):
-        """Executes this learning stage in caffe."""
+        """Carries out this learning stage in caffe."""
 
         # read in the provided caffe config files
         tmpFilenames = []
@@ -123,7 +123,7 @@ class PrototxtStage(Stage):
         if modelFilename and len(self.freezeList) > 0:
             trainNetFilename = freezeNetworkLayers(self.freezeList,
                                                    trainNetFilename)
-            solverSpec = caffeUtils.readSolver()
+            solverSpec = caffeUtils.readSolver(str(solverFilename))
             solverSpec.net = trainNetFilename
             solverFilename = solverFilename + TEMP_FILE_SUFFIX
             caffeUtils.writeToPrototxt(solverSpec, solverFilename)
@@ -136,10 +136,10 @@ class PrototxtStage(Stage):
         # run caffe with the provided network description and solver info
         solver = caffe.get_solver(str(solverFilename))
         if modelFilename:
-            solver.net.copy_from(modelFilename)
+            solver.net.copy_from(str(modelFilename))
         solver.solve()
         outModelFilename = self.name + MODEL_SUFFIX
-        solver.net.save(outModelFilename)
+        solver.net.save(str(outModelFilename))
         # remove temporary files
         map(os.remove, tmpFilenames)
         return outModelFilename

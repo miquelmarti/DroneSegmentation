@@ -34,7 +34,7 @@ def writeToPrototxt(message, filename):
 def readFromPrototxt(message, filename):
     filename = os.path.abspath(filename)
     with open(filename, 'r') as f:
-        google.protobuf.text_format.Merge(str(f.read()), message)
+        google.protobuf.text_format.Merge(f.read(), message)
 
 
 def readCaffeModel(modelFilename):
