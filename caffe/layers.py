@@ -5,6 +5,7 @@ from PIL import Image
 
 import random
 
+
 class VOCSegDataLayer(caffe.Layer):
     """
     Load (input image, label image) pairs from PASCAL VOC
