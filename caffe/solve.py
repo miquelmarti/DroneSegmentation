@@ -19,8 +19,7 @@ parser.add_argument('--weights', type=str,
 parser.add_argument('--learn_dir', type=str,
                     help='Directory containing training .prototxt files')
 parser.add_argument('--device', type=int, default=0,
-                    help='ID of the GPU device to train.  Will attempt to use \
-                    all GPUs if this argument is not provided.')
+                    help='ID of the GPU device to train.')
 args = parser.parse_args()
 
 # init

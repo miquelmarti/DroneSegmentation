@@ -111,7 +111,7 @@ class VOCSegDataLayer(caffe.Layer):
         Load label image as 1 x height x width integer array of label indices.
         The leading singleton dimension is required by the loss.
         """
-        im = Image.open('{}/SegmentationClass/{}.png'.format(self.voc_dir, idx))
+        im = Image.open('{}/unused/original_labels/{}.png'.format(self.voc_dir, idx))
         label = np.array(im, dtype=np.uint8)
         label = label[np.newaxis, ...]
         return label
