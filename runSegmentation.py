@@ -208,11 +208,6 @@ if __name__ == '__main__':
         # Get the current time
         start = time.time()
         
-        # New image
-        n_im += 1
-        if args.record != '' or args.hide:
-            print 'img ' + str(n_im)
-        
         # Preprocess the image for the network
         frame = pre_processing(_input, input_shape, args.resize)
 
@@ -262,9 +257,15 @@ if __name__ == '__main__':
             real_label = Image.fromarray(tmpReal)
             
             # Calculate the metrics for this image
-            hist += sc.fast_hist( np.array(real_label).flatten(),
+            difference_matrix = sc.fast_hist( np.array(real_label).flatten(),
                                   np.array(guessed_labels).flatten(),
                                   numb_cla)
+            hist += difference_matrix
+            
+            # Print image number and accuracy
+            if args.record != '' or args.hide:
+                n_im += 1
+                print 'Image ', str(n_im), " accuracy: ", float(np.diag(difference_matrix).sum()) / difference_matrix.sum()
             
             # Convert the ground truth if needed into a RGB array
             show_label = np.array(real_label)
