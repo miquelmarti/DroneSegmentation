@@ -8,21 +8,13 @@
 # TODO ; n_cl can be get with net.blobs[layer].channels
 
 
-
 import numpy as np
-import time
-import matplotlib.pyplot as plt
-from scipy import misc
 from PIL import Image
 import argparse
 import time
 import cv2
-import os
-import sys
-from operator import truediv
 from utils import score as sc
 from utils import iterators
-from datetime import datetime
 
 # Caffe module need to be on python path
 import caffe
@@ -32,87 +24,77 @@ CV2_LOAD_IMAGE_UNCHANGED = -1
 # ignore divisions by zero
 np.seterr(divide='ignore', invalid='ignore')
 
-    
 
 def get_arguments():
     # Import arguments
     parser = argparse.ArgumentParser()
-    group = parser.add_mutually_exclusive_group()
-    
-    # Mandatory options
-    parser.add_argument('--model', type=str, required=True, \
-                                    help=   'Path to the model (usually [...]/deploy.prototxt)')
-    parser.add_argument('--weights', type=str, required=True, \
-                                    help=   'Path to the weights (usually [...]/xx.caffemodel)')
-    parser.add_argument('--colours', type=str, required=True, \
-                                    help=   'If the colours of the classes are provided \
-                                            (data/CamVid/colours/camvid12.png)')
-    group.add_argument('--video', type=str, \
-                                    help=   'A video file to be segmented')
-    group.add_argument('--images', type=str, \
-                                    help=   'A text file containing a list of images to segment')
-    group.add_argument('--labels', type=str, \
-                                    help=   'A text file containing space-separated pairs - the first \
-                                            item is an image to segment, the second is the ground-truth \
-                                            labelling.')
-    
-    
-    # Optional options
-    parser.add_argument('--cpu', action="store_true", \
-                                    help=   'Default false, set it for CPU mode')
-    parser.add_argument('--input', type=str, required=False, default='data', \
-                                    help=   'Default is data, change it for the name of the input \
-                                            in your network (mostly foundable as the bottom of the \
-                                            first layer in the model (prototxt))')
-    parser.add_argument('--output', type=str, required=False, default='output', \
-                                    help=   'Default is output, change it for the name of the output \
-                                            in your network (mostly foundable as the top of the last \
-                                            layer in the model (prototxt))')
-    parser.add_argument('--key', action="store_true", \
-                                    help=   'For visualization image per image (have to press the \
-                                            space button for the next image then)')
-    parser.add_argument('--PASCAL', action="store_true", \
-                                    help=   'If Pascal VOC is used, provide this flag for the mean \
-                                            subtraction.')
-    parser.add_argument('--hide', action="store_true", \
-                                    help=   'If set, won\'t display the results')
-    parser.add_argument('--record', type=str, required=False, default='', \
-                                    help=   'For recording the videos, expected the path (and prefix) \
-                                            of where to save them like /path/to/segnet_. Will create \
-                                            two or three videos, depends on if the labels are provided')
-    parser.add_argument('--old_caffe', action="store_true", \
-                                    help=   'If we use an old version of Caffe (ex. the ones used by \
-                                            CRF or DeepLab, the command to create a network in the \
-                                            C++ is slightly different.')
-    parser.add_argument('--resize', action="store_true", \
-                                    help=   'If we want to resize all pictures to the size defined \
-                                            by prototxt.')
-    
-    return parser.parse_args()
-    
+    # Mandatory arguments
+    parser.add_argument('--model', type=str, required=True, help='\
+    Path to the model (usually [...]/deploy.prototxt)')
+    parser.add_argument('--weights', type=str, required=True, help='\
+    Path to the weights (usually [...]/xx.caffemodel)')
+    parser.add_argument('--colours', type=str, required=True, help='\
+    Path to the colour definintions for each class')
+    dataFormatGroup = parser.add_mutually_exclusive_group(required=True)
+    dataFormatGroup.add_argument('--video', type=str, help='\
+    A video file to be segmented')
+    dataFormatGroup.add_argument('--images', type=str, help='\
+    A text file containing a list of images to segment')
+    dataFormatGroup.add_argument('--labels', type=str, help='\
+    A text file containing space-separated pairs of the form \
+    "DATA_IMAGE_FILE GROUND_TRUTH_IMAGE_FILE"')
 
+    # Optional arguments
+    parser.add_argument('--cpu', action="store_true", help='\
+    Default false, set it for CPU mode')
+    parser.add_argument('--input', type=str, default='data', help='\
+    The name of the input layer of the network (usually the bottom of the \
+    first layer in the model prototxt). Default is "data"')
+    parser.add_argument('--output', type=str, default='output', help='\
+    The name of the output layer of the network (usually the top of the last \
+    layer in the model prototxt.) Default is "output"')
+    parser.add_argument('--PASCAL', action="store_true", help='\
+    If Pascal VOC is used, provide this flag to perform mean subtraction.')
+    uiGroup = parser.add_mutually_exclusive_group()
+    uiGroup.add_argument('--key', action="store_true", help='\
+    Wait for user to press spacebar after displaying each segmentation.')
+    uiGroup.add_argument('--hide', action="store_true", help='\
+    Do not display the segmentations, just compute statistics on the dataset.')
+    parser.add_argument('--record', type=str, default='', help='\
+    For recording the videos, expects the path and file prefix of where to \
+    save them (eg. "/path/to/segnet_"). Will create three videos if ground \
+    truth is present, three videos if not.')
+    parser.add_argument('--old_caffe', action="store_true", help='\
+    If we use an old version of Caffe (ex. the ones used by CRF or DeepLab, \
+    the command to create a network in the C++ is slightly different.')
+    parser.add_argument('--resize', action="store_true", help='\
+    If we want to resize all pictures to the size defined by the prototxt.')
+
+    return parser.parse_args()
+
+
+# TODO refactor this to just take the arguments it needs
 def build_network(args):
-    
-    #If using an older version of Caffe, there is no caffe.set_mode_xxx() and we cannot specify caffe.TRAIN or caffe.TEST
-    if args.old_caffe: 
-            # Creation of the network
-            net = caffe.Net(args.model,      # defines the structure of the model
-                            args.weights)    # contains the trained weights
-    
+    # If using an older version of Caffe, there is no caffe.set_mode_xxx(),
+    # and we cannot specify caffe.TRAIN or caffe.TEST
+    if args.old_caffe:
+        # Creation of the network
+        net = caffe.Net(args.model,      # defines the structure of the model
+                        args.weights)    # contains the trained weights
+
     else:
-            # GPU / CPU mode
-            if args.cpu:
-                print 'Set CPU mode'
-                caffe.set_mode_cpu()
-            else:
-                print 'Set GPU mode'
-                caffe.set_mode_gpu()
-            
-            # Creation of the network
-            net = caffe.Net(args.model,      # defines the structure of the model
-                            args.weights,    # contains the trained weights
-                            caffe.TEST)      # use test mode (e.g., don't perform dropout)
-    
+        # GPU / CPU mode
+        if args.cpu:
+            print 'Set CPU mode'
+            caffe.set_mode_cpu()
+        else:
+            print 'Set GPU mode'
+            caffe.set_mode_gpu()
+
+        # Creation of the network
+        net = caffe.Net(args.model,      # defines the structure of the model
+                        args.weights,    # contains the trained weights
+                        caffe.TEST)      # test mode (don't perform dropout)
     return net
 
 
@@ -120,7 +102,7 @@ def pre_processing(img, shape, resize_img):
     # Ensure that the image has the good size
     if resize_img:
         img = img.resize((shape[3], shape[2]), Image.ANTIALIAS)
-    
+
     # Get pixel values and convert them from RGB to BGR
     frame = np.array(img, dtype=np.float32)
     frame = frame[:,:,::-1]
@@ -129,7 +111,8 @@ def pre_processing(img, shape, resize_img):
     if args.PASCAL:
         frame -= np.array((104.00698793, 116.66876762, 122.67891434))
 
-    # Reorder multi-channel image matrix from W x H x C to C x H x W expected by Caffe
+    # Reorder multi-channel image matrix from W x H x C to C x H x W expected
+    # by Caffe
     frame = frame.transpose((2,0,1))
     
     return frame
@@ -218,7 +201,8 @@ if __name__ == '__main__':
         # Run the network and take argmax for prediction
         net.forward()
         
-        # guessed_label will hold the output of the network and _output the output to display
+        # guessed_label will hold the output of the network and _output the
+        # output to display
         _output = 0
         guessed_labels = 0
         
