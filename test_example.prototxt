@@ -1,0 +1,31 @@
+ensemble_type: LOGIT
+
+input
+{
+        file: "/home/shared/datasets/VOCdevkit/VOC2012/lists/seg11_img_lab.txt"
+        type: LABELS #Type of the input file : can be VIDEO (.mp4), IMAGES (.txt) or LABELS (.txt)
+        colours: "/home/shared/datasets/VOCdevkit/VOC2012/colours/pascal_voc_21_colours.png"
+        
+        #Optional : default values are 0
+        mean {
+                r: 104.00698793
+                g: 116.66876762
+                b: 122.67891434
+        }
+        
+        #resize: true #Optional : resizes all input images to size specified by deploy.prototxt
+}
+
+model
+{
+        deploy: "/home/johannes/testModels/FCN-ResNet/deploy-152.prototxt"
+        weights: "/home/johannes/testModels/FCN-ResNet/snapshot-152/train_iter_100000.caffemodel"
+        input: "data" #Optional : name of the input blob [default = "data"]
+        output: "score" #Optional : name of the output blob [default = "score"]
+}
+
+model
+{
+        deploy: "/home/johannes/testModels/FCN-16/deploy.prototxt"
+        weights: "/home/johannes/testModels/FCN-16/snapshot-2/train_iter_100000.caffemodel"
+}

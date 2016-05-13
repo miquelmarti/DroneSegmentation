@@ -3,10 +3,11 @@
 # Code, as generic as possible, for the visualization
 # Ex : python /home/pierre/hgRepos/caffeTools/runSegmentation.py --model /home/shared/caffeSegNet/models/segnet_webcam/deploy.prototxt --weights /home/shared/caffeSegNet/models/segnet_webcam/segnet_webcam.caffemodel --colours /home/shared/datasets/CamVid/colours/camvid12.png --output argmax --labels /home/shared/datasets/CamVid/train.txt
 
-# TODO ; check if the video mode work
-# TODO ; add the --folder option, that takes a folder as input and segment each image in it
-# TODO ; n_cl can be get with net.blobs[layer].channels
+# TO DO :
+# - check if video mode works
+# - add the --folder option, that takes a folder as input and segment each image in it
 
+# - input and output blobs could be looked for automatically in deploy.prototxt instead of using default values in .proto file
 
 import numpy as np
 from PIL import Image
@@ -14,6 +15,8 @@ import argparse
 import time
 import cv2
 from utils import iterators
+import google.protobuf
+from scipy import stats
 
 # Caffe module need to be on python path
 import caffe
@@ -22,6 +25,8 @@ import caffe
 CV2_LOAD_IMAGE_UNCHANGED = -1
 # ignore divisions by zero
 np.seterr(divide='ignore', invalid='ignore')
+
+import ensemble_pb2
 
 
 # copied from shelhamer's score.py
@@ -35,32 +40,14 @@ def get_arguments():
     # Import arguments
     parser = argparse.ArgumentParser()
     # Mandatory arguments
-    parser.add_argument('--model', type=str, required=True, help='\
-    Path to the model (usually [...]/deploy.prototxt)')
-    parser.add_argument('--weights', type=str, required=True, help='\
-    Path to the weights (usually [...]/xx.caffemodel)')
-    parser.add_argument('--colours', type=str, required=True, help='\
-    Path to the colour definintions for each class')
-    dataFormatGroup = parser.add_mutually_exclusive_group(required=True)
-    dataFormatGroup.add_argument('--video', type=str, help='\
-    A video file to be segmented')
-    dataFormatGroup.add_argument('--images', type=str, help='\
-    A text file containing a list of images to segment')
-    dataFormatGroup.add_argument('--labels', type=str, help='\
-    A text file containing space-separated pairs of the form \
-    "DATA_IMAGE_FILE GROUND_TRUTH_IMAGE_FILE"')
-
+    parser.add_argument('ensemble_file', type=str, \
+                                    help=   'Link to ensemble.prototxt')
+    
     # Optional arguments
     parser.add_argument('--cpu', action="store_true", help='\
     Default false, set it for CPU mode')
-    parser.add_argument('--input', type=str, default='data', help='\
-    The name of the input layer of the network (usually the bottom of the \
-    first layer in the model prototxt). Default is "data"')
-    parser.add_argument('--output', type=str, default='output', help='\
-    The name of the output layer of the network (usually the top of the last \
-    layer in the model prototxt.) Default is "output"')
-    parser.add_argument('--PASCAL', action="store_true", help='\
-    If Pascal VOC is used, provide this flag to perform mean subtraction.')
+    parser.add_argument('--gpu_device', type=int, default=0, help='\
+    Default 0, set the GPU device to use')
     uiGroup = parser.add_mutually_exclusive_group()
     uiGroup.add_argument('--key', action="store_true", help='\
     Wait for user to press spacebar after displaying each segmentation.')
@@ -70,52 +57,36 @@ def get_arguments():
     For recording the videos, expects the path and file prefix of where to \
     save them (eg. "/path/to/segnet_"). Will create three videos if ground \
     truth is present, three videos if not.')
-    parser.add_argument('--old_caffe', action="store_true", help='\
-    If we use an old version of Caffe (ex. the ones used by CRF or DeepLab, \
-    the command to create a network in the C++ is slightly different.')
-    parser.add_argument('--resize', action="store_true", help='\
-    If we want to resize all pictures to the size defined by the prototxt.')
-
+    
     return parser.parse_args()
 
 
-# TODO refactor this to just take the arguments it needs
-def build_network(args):
-    # If using an older version of Caffe, there is no caffe.set_mode_xxx(),
-    # and we cannot specify caffe.TRAIN or caffe.TEST
-    if args.old_caffe:
-        # Creation of the network
-        net = caffe.Net(args.model,      # defines the structure of the model
-                        args.weights)    # contains the trained weights
 
-    else:
-        # GPU / CPU mode
-        if args.cpu:
-            print 'Set CPU mode'
-            caffe.set_mode_cpu()
-        else:
-            print 'Set GPU mode'
-            caffe.set_mode_gpu()
-
-        # Creation of the network
-        net = caffe.Net(args.model,      # defines the structure of the model
-                        args.weights,    # contains the trained weights
-                        caffe.TEST)      # test mode (don't perform dropout)
+def build_network(deploy, weights):
+    
+    print "Opening Network ", str(weights)
+    # Creation of the network
+    net = caffe.Net(str(deploy),      # defines the structure of the model
+                    str(weights),    # contains the trained weights
+                    caffe.TEST)      # use test mode (e.g., don't perform dropout)
+    
     return net
 
 
-def pre_processing(img, shape, resize_img):
+def pre_processing(img, shape, resize_img, mean):
     # Ensure that the image has the good size
     if resize_img:
         img = img.resize((shape[3], shape[2]), Image.ANTIALIAS)
-
+    
     # Get pixel values and convert them from RGB to BGR
     frame = np.array(img, dtype=np.float32)
     frame = frame[:,:,::-1]
 
     # Substract mean pixel values of pascal training set
-    if args.PASCAL:
-        frame -= np.array((104.00698793, 116.66876762, 122.67891434))
+    #if args.PASCAL:
+        #frame -= np.array((104.00698793, 116.66876762, 122.67891434))
+    
+    frame -= np.array((mean.r, mean.g, mean.b))
 
     # Reorder multi-channel image matrix from W x H x C to C x H x W expected
     # by Caffe
@@ -141,7 +112,38 @@ def colourSegment(labels, label_colours, input_shape, resize_img):
     cv2.LUT(segmentation_ind_3ch, label_colours, _output)
 
     return _output
-        
+
+
+def combineEnsemble(net_outputs, method):
+    output = 0
+    
+    #If there is only one model, we skip this step
+    if np.asarray(net_outputs).shape[0] == 1:
+        return np.squeeze(net_outputs)
+    
+    if method==1: #Majority voting
+            #Calculates the label (by looking at the maximum class score)
+            net_outputs = np.squeeze(np.asarray(net_outputs).argmax(axis=1))
+            
+            #Looks for the most common label for each pixel
+            output = np.squeeze(stats.mode(net_outputs, axis=0)[0]).astype(int)
+            print output.shape
+    
+    if method==2: #Logit averaging
+            output = np.zeros(net_outputs[0].shape)
+            
+            for current_net_output in net_outputs:
+                output = output + current_net_output
+    
+    if method==3: #Probability averaging
+            output = np.zeros(net_outputs[0].shape)
+            
+            for current_net_output in net_outputs:
+                output = output + softmax(current_net_output)
+    
+    
+    return output
+
 
 
 if __name__ == '__main__':
@@ -149,20 +151,48 @@ if __name__ == '__main__':
     # Get all options
     args = get_arguments()
     
-    # Set the network according to the arguments
-    net = build_network(args)
+    # GPU / CPU mode
+    if args.cpu:
+        print 'Set CPU mode'
+        caffe.set_mode_cpu()
+    else:
+        print 'Set GPU mode'
+        caffe.set_device(args.gpu_device)
+        caffe.set_mode_gpu()
     
-    # Get interesting blobs from the network
-    input_blob = net.blobs[args.input]
-    output_blob = net.blobs[args.output]
-    input_shape = input_blob.data.shape
+    #Create an Ensemble object
+    ensemble = ensemble_pb2.Ensemble()
+
+    # Read the ensemble.prototxt
+    f = open(args.ensemble_file, "rb")
+    google.protobuf.text_format.Merge(f.read(), ensemble)
+    f.close()
+    
+    if not ensemble.IsInitialized():
+        raise ValueError('Prototxt not complete (not all required fields are present)')
+    
+    
+    #Loading all neural networks
+    input_blob = []
+    output_blob = []
+    nets = []
+    nb_net = 0 #Counter of nets
+    for model in ensemble.model:
+        #Create network and add it to network list
+        nets.append(build_network(model.deploy, model.weights))
+        
+        #Get information about blobs
+        input_blob.append(nets[nb_net].blobs[model.input])
+        output_blob.append(nets[nb_net].blobs[model.output])
+        nb_net = nb_net+1
+            
+    input_shape = input_blob[0].data.shape
     
     # Histogram for evan's metrics
-    numb_cla = output_blob.channels
+    numb_cla = output_blob[0].channels
     hist = np.zeros((numb_cla, numb_cla))
     
-    # Variable for time values
-    times = []
+    times = [] #Variable for test times
     
     # Video recording
     if args.record != '':
@@ -179,17 +209,16 @@ if __name__ == '__main__':
 
     # Create the appropriate iterator
     imageIterator = None
-    if args.video is not None:
-        imageIterator = iterators.VideoIterator(args.video)
-    elif args.images is not None:
-        imageIterator = iterators.FileListIterator(args.images)
-    elif args.labels is not None:
-        imageIterator = iterators.FileListIterator(args.labels, pairs = True)
+    if ensemble.input.type == 1:
+        imageIterator = iterators.VideoIterator(ensemble.input.file)
+    elif ensemble.input.type == 2:
+        imageIterator = iterators.FileListIterator(ensemble.input.file)
+    elif ensemble.input.type == 3:
+        imageIterator = iterators.FileListIterator(ensemble.input.file, pairs = True)
     else:
-        raise Error("No data provided!  Must specify exactly one of --video, --images, or --labels")
+        raise Error("No data provided in the prototxt!")
     
-    # Counter for number of images
-    n_im = 0
+    n_im = 0 #Image counter
     
     # Main loop, for each image to process
     for _input, real_label in imageIterator:
@@ -198,22 +227,31 @@ if __name__ == '__main__':
         start = time.time()
         
         # Preprocess the image for the network
-        frame = pre_processing(_input, input_shape, args.resize)
+        frame = pre_processing(_input, input_shape, ensemble.input.resize, ensemble.input.mean)
 
-        # Shape for input (data blob is N x C x H x W), set data
-        input_blob.reshape(1, *frame.shape)
-        input_blob.data[...] = frame
         
-        # Run the network and take argmax for prediction
-        net.forward()
+        guessed_labels = []
+        nb_net = 0
+        for net in nets:
+                
+                # Shape for input (data blob is N x C x H x W), set data
+                input_blob[nb_net].reshape(1, *frame.shape)
+                input_blob[nb_net].data[...] = frame
+                
+                # Run the network
+                net.forward()
+                
+                #Get output of the network
+                guessed_labels.append(np.squeeze(output_blob[nb_net].data))
+                nb_net = nb_net+1
         
-        # guessed_label will hold the output of the network and _output the
-        # output to display
+        #Combine the outputs of each net by the chosen method (voting, averaging, etc.)
+        guessed_labels = combineEnsemble(guessed_labels, ensemble.ensemble_type)
+        
+        # guessed_label will hold the output of the network and _output the output to display
         _output = 0
-        guessed_labels = 0
         
         # Get the output of the network
-        guessed_labels = np.squeeze(output_blob.data)
         if len(guessed_labels.shape) == 3:
             guessed_labels = guessed_labels.argmax(axis=0)
         elif len(guessed_labels.shape) != 2:
@@ -224,20 +262,20 @@ if __name__ == '__main__':
         times.append(time.time() - start)
         
         # Read the colours of the classes
-        label_colours = cv2.imread(args.colours).astype(np.uint8)
+        label_colours = cv2.imread(ensemble.input.colours).astype(np.uint8)
         
         # Resize input to the same size as other
-        if args.resize:
+        if ensemble.input.resize:
             _input = _input.resize((input_shape[3], input_shape[2]), Image.ANTIALIAS)
         
         # Transform the class labels into a segmented image
-        _output = colourSegment(guessed_labels, label_colours, input_shape, args.resize)
+        _output = colourSegment(guessed_labels, label_colours, input_shape, ensemble.input.resize)
         
         # If we also have the ground truth
         if real_label is not None:
             
             # Resize to the same size as other images
-            if args.resize:
+            if ensemble.input.resize:
                 real_label = real_label.resize((input_shape[3], input_shape[2]), Image.NEAREST)
             
             # If pascal VOC, reshape the label to HxWx1s
@@ -260,7 +298,7 @@ if __name__ == '__main__':
             # Convert the ground truth if needed into a RGB array
             show_label = np.array(real_label)
             if len(show_label.shape) == 2:
-                show_label = colourSegment(show_label, label_colours, input_shape, args.resize)
+                show_label = colourSegment(show_label, label_colours, input_shape, ensemble.input.resize)
             elif len(show_label.shape) != 3:
                 print 'Unknown labels format'
             
@@ -305,7 +343,7 @@ if __name__ == '__main__':
     print "Average time elapsed when processing one image :\t", sum(times) / float(len(times))
     
     # Display the metrics
-    if args.labels is not None:
+    if ensemble.input.type == 3: #If labels exist
         
         acc = np.diag(hist).sum() / hist.sum()
         print "Average pixel accuracy :\t", acc
