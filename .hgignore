@@ -6,8 +6,10 @@ syntax: glob
 \.\#*
 
 # learned weights and learner states
-*.caffemodel*
-*.solverstate*
+*.caffemodel
+*.solverstate
+*.caffemodel.h5
+*.solverstate.h5
 
 # auto-generated "compiled" python files
 *.pyc

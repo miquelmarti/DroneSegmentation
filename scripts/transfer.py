@@ -75,6 +75,22 @@ def executeListOfStages(stages, firstModel, clean):
     return model
 
 
+def computeScore(model, valSet, scoreMetric):
+    '''
+    NOTE: score for our purposes is mean IU.
+    At some point we could extend this.
+    '''
+    if scoreMetric == transferLearning_pb2.MultiSource.MEAN_IU:
+        return 0  # TODO compute mean IU
+    elif scoreMetric == transferLearning_pb2.MultiSource.ACCURACY:
+        return 0  # TODO compute accuracy (low priority)
+    elif scoreMetric == transferLearning_pb2.MultiSource.ERROR:
+        return 0  # TODO compute NEGATIVE error (low priority)
+    else:
+        raise Exception("An invalid scoreMetric was specified: " +
+                        str(scoreMetric))
+
+
 if __name__ == "__main__":
     args = getArguments()
     if args.cpu:
@@ -82,10 +98,31 @@ if __name__ == "__main__":
     else:
         caffe.set_device(args.gpu)
         caffe.set_mode_gpu()
+    bestModel = args.model
 
     # Read in the stages and carry them out
     tlMsg = transferLearning_pb2.TransferLearning()
     caffeUtils.readFromPrototxt(tlMsg, args.stages)
     stageMsgs = tlMsg.stage
     stages = getStagesFromMsgs(stageMsgs)
-    executeListOfStages(stages, args.model, args.clean)
+    bestModel = executeListOfStages(stages, args.model, args.clean)
+    prevModel = bestModel
+    nextModel = None
+    bestScore = 0  # TODO measure performance of model
+    msMsgs = tlMsg.multiSource
+
+    for multiSource in msMsgs:
+        for i in range(multiSource.iterations):
+            nextModel = executeListOfStages(stages, prevModel, args.clean)
+            nextScore = 0  # TODO measure performance of nextModel on test set
+            # check if this is the new best model
+            if nextScore > bestScore:
+                bestModel = nextModel
+            # throw away the previous model (unless it's the best one)
+            if prevModel != bestModel:
+                os.remove(prevModel)
+            prevModel = nextModel
+
+    if nextModel is not None and nextModel != bestModel:
+        os.remove(nextModel)
+    print 'Final model stored in', bestModel
