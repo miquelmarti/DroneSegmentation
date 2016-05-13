@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from PIL import Image
+import cv2
 
 
 class FileListIterator(object):
@@ -40,7 +41,8 @@ class VideoIterator(object):
     def next(self):
         rval, frame = self.videoCapture.read()
         if rval:
-            return (Image.fromarray(frame, 'RGB'), None) # no labels for videos
+            # no labels for videos
+            return (Image.fromarray(frame, 'RGB'), None)
         else:
             raise StopIteration()
 

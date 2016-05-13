@@ -13,7 +13,6 @@ from PIL import Image
 import argparse
 import time
 import cv2
-from utils import score as sc
 from utils import iterators
 
 # Caffe module need to be on python path
@@ -23,6 +22,13 @@ import caffe
 CV2_LOAD_IMAGE_UNCHANGED = -1
 # ignore divisions by zero
 np.seterr(divide='ignore', invalid='ignore')
+
+
+# copied from shelhamer's score.py
+def fast_hist(a, b, n):
+    k = (a >= 0) & (a < n)
+    return np.bincount(n * a[k].astype(int) + b[k],
+                       minlength=n**2).reshape(n, n)
 
 
 def get_arguments():
@@ -241,7 +247,7 @@ if __name__ == '__main__':
             real_label = Image.fromarray(tmpReal)
             
             # Calculate the metrics for this image
-            difference_matrix = sc.fast_hist( np.array(real_label).flatten(),
+            difference_matrix = fast_hist( np.array(real_label).flatten(),
                                   np.array(guessed_labels).flatten(),
                                   numb_cla)
             hist += difference_matrix
