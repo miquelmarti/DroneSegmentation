@@ -17,40 +17,37 @@ message Stage {
     // optional string dataset = ;
     // TODO a partial model file to be integrated into the main file
     // optional string partialModel = ;
-    enum SolverType {
-        // Can specify a solver.prototxt file...
-        PROTOTXT = 0;
-        // ...or a bash command to run.
-        COMMAND = 1;
-    }
-    
-    message PrototxtSolver {
-        optional string filename = 1;
-    }
 
     message CommandSolver {
         required string command = 1;
-        // name of the output model file
-        required string out_model_filename = 2;
-        // Needed to make freeze layers work
-        optional string net_filename = 3;
         // Needed to make ignore layers work
-        optional string in_model_filename = 4;
+        optional string in_model_filename = 2;
     }
 
     // Choose the type of solver used in this stage.
-    required SolverType type = 5;
+    required string solver_filename = 2;
     // Provide only one of the two.
-    optional PrototxtSolver prototxt_solver = 6;
-    optional CommandSolver cmd_solver = 7;
+    optional CommandSolver cmd_solver = 3;
     
     // Specifies layers to freeze during training, as a list
-    repeated string freeze = 3;
+    repeated string freeze = 4;
     // Specifies layers to reinitialize with random values
-    repeated string ignore = 4;
+    repeated string ignore = 5;
 }
 
 // Defines a whole transfer learning cycle
 message TransferLearning {
-    repeated Stage stage = 1;
+    repeated Stage stage = 2;
+    repeated MultiSource multiSource = 3;
+}
+
+message MultiSource {
+    optional int32 iterations = 1 [default = 1];
+    repeated Stage stage = 2;
+    enum MetricType {
+        ACCURACY = 0;
+        ERROR = 1;
+        MEAN_IU = 2;
+    }
+    optional MetricType scoreMetric = 3 [default = MEAN_IU];
 }
