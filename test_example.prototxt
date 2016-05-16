@@ -1,3 +1,9 @@
+#Ensemble type is the way of combining the outputs of different models at the end
+#Possible values : 
+# - MAJORITY (majority voting, each model votes for a label)
+# - LOGIT (averaging the raw outputs of networks called logits)
+# - PROBABILITY (averaging the class probabilities, obtained by passing logits through softmax function)
+
 ensemble_type: LOGIT
 
 input

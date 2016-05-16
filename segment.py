@@ -112,7 +112,12 @@ def colourSegment(labels, label_colours, input_shape, resize_img):
     cv2.LUT(segmentation_ind_3ch, label_colours, _output)
 
     return _output
+    
 
+def softmax(x):
+    out = np.exp(x)
+    out = out/np.sum(out, axis=0)
+    return out
 
 def combineEnsemble(net_outputs, method):
     output = 0
