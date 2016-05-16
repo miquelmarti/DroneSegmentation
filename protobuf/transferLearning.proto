@@ -38,7 +38,7 @@ message Stage {
 // Defines a whole transfer learning cycle
 message TransferLearning {
     repeated Stage stage = 2;
-    repeated MultiSource multiSource = 3;
+    repeated MultiSource multi_source = 3;
 }
 
 message MultiSource {
@@ -46,8 +46,12 @@ message MultiSource {
     repeated Stage stage = 2;
     enum MetricType {
         ACCURACY = 0;
-        ERROR = 1;
+        LOSS = 1;
         MEAN_IU = 2;
     }
-    optional MetricType scoreMetric = 3 [default = MEAN_IU];
+    optional MetricType score_metric = 3 [default = MEAN_IU];
+    required string validation_set = 4;
+    required string deploy_net = 5;
+    optional string mean_file = 6;
+    repeated float mean_value = 7;
 }

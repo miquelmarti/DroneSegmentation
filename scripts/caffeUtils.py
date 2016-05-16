@@ -42,3 +42,10 @@ def readCaffeModel(modelFilename):
         net = caffe_pb2.NetParameter()
         net.ParseFromString(f.read())
         return net
+
+
+def getMeanFromBinaryproto(meanFilename):
+    with open(meanFilename, 'r') as f:
+        meanBlob = caffe_pb2.BlobProto()
+        meanBlob.ParseFromString(f.read())
+    

@@ -9,11 +9,12 @@ import argparse
 import os
 import caffeUtils
 from stage import PrototxtStage, CommandStage
-
+import score
+import numpy as np
 
 FILENAME_FIELD = 'filename'
 NET_FILENAME_FIELD = 'net_filename'
-SOLVE_CMD_FIELD = 'command'
+SOLVE_CMD_FIELD = 'cmd_solver'
 
 
 def getArguments():
@@ -45,22 +46,19 @@ def getStagesFromMsgs(stageMsgs, solverFilename=None, trainNetFilename=None):
     for stageMsg in stageMsgs:
         # unpack values
         newStage = None
-        if stageMsg.type == transferLearning_pb2.Stage.PROTOTXT:
-            if stageMsg.prototxt_solver.HasField(FILENAME_FIELD):
-                solverFilename = stageMsg.prototxt_solver.filename
-            elif solverFilename is None:
-                raise Exception('First training stage provides no solver file')
+        solverFilename = stageMsg.solver_filename
+        if not stageMsg.HasField(SOLVE_CMD_FIELD):
             newStage = PrototxtStage(stageMsg.name, solverFilename,
                                      stageMsg.freeze, stageMsg.ignore,
                                      trainNetFilename)
-        elif stageMsg.type == transferLearning_pb2.Stage.COMMAND:
-            trainNetFilename = None
-            if stageMsg.cmd_solver.HasField(NET_FILENAME_FIELD):
-                trainNetFilename = stageMsg.cmd_solver.net_filename
+        else:
+            # trainNetFilename = None
+            # if stageMsg.cmd_solver.HasField(NET_FILENAME_FIELD):
+            #     trainNetFilename = stageMsg.cmd_solver.net_filename
             newStage = CommandStage(stageMsg.name, stageMsg.cmd_solver.command,
-                                    stageMsg.cmd_solver.out_model_filename,
-                                    trainNetFilename, stageMsg.freeze,
-                                    stageMsg.ignore)
+                                    stageMsg.cmd_solver.in_model_filename,
+                                    freezeList=stageMsg.freeze,
+                                    ignoreList=stageMsg.ignore)
         stages.append(newStage)
     return stages
 
@@ -75,17 +73,15 @@ def executeListOfStages(stages, firstModel, clean):
     return model
 
 
-def computeScore(model, valSet, scoreMetric):
-    '''
-    NOTE: score for our purposes is mean IU.
-    At some point we could extend this.
-    '''
+def computeScore(deployFilename, model, valSet, mean, scoreMetric,
+                 outLayer='output'):
+    scores = score.scoreDataset(deployFilename, model, valSet, mean, outLayer)
     if scoreMetric == transferLearning_pb2.MultiSource.MEAN_IU:
-        return 0  # TODO compute mean IU
+        return scores.meanIu
     elif scoreMetric == transferLearning_pb2.MultiSource.ACCURACY:
-        return 0  # TODO compute accuracy (low priority)
-    elif scoreMetric == transferLearning_pb2.MultiSource.ERROR:
-        return 0  # TODO compute NEGATIVE error (low priority)
+        return scores.meanAcc
+    elif scoreMetric == transferLearning_pb2.MultiSource.LOSS:
+        return scores.loss
     else:
         raise Exception("An invalid scoreMetric was specified: " +
                         str(scoreMetric))
@@ -106,23 +102,41 @@ if __name__ == "__main__":
     stageMsgs = tlMsg.stage
     stages = getStagesFromMsgs(stageMsgs)
     bestModel = executeListOfStages(stages, args.model, args.clean)
-    prevModel = bestModel
-    nextModel = None
-    bestScore = 0  # TODO measure performance of model
-    msMsgs = tlMsg.multiSource
 
-    for multiSource in msMsgs:
-        for i in range(multiSource.iterations):
-            nextModel = executeListOfStages(stages, prevModel, args.clean)
-            nextScore = 0  # TODO measure performance of nextModel on test set
-            # check if this is the new best model
-            if nextScore > bestScore:
-                bestModel = nextModel
-            # throw away the previous model (unless it's the best one)
-            if prevModel != bestModel:
-                os.remove(prevModel)
-            prevModel = nextModel
+    if len(tlMsg.multi_source) > 0:
+        # Run all multi-source stage sequences
+        for ms in tlMsg.multi_source:
+            prevModel = bestModel
+            mean = None
+            # TODO implement handling mean_file:
+            if ms.mean_value:
+                mean = np.array(ms.mean_value)
+            valSet = ms.validation_set  # TODO make this one of our iterators
+            bestScore = computeScore(ms.deploy_net, bestModel, valSet, mean,
+                                     scoreMetric=ms.score_metric)
+            print "New best model's score:", bestScore
+            nextModel = None
 
-    if nextModel is not None and nextModel != bestModel:
-        os.remove(nextModel)
+            for i in range(ms.iterations):
+                # learn the next stage in the sequence
+                nextModel = executeListOfStages(stages, prevModel, args.clean)
+                nextScore = computeScore(ms.deploy_net, nextModel,
+                                         ms.validation_set, mean,
+                                         scoreMetric=ms.score_metric)
+                
+                # check if this is the new best model
+                if nextScore > bestScore:
+                    bestModel = nextModel
+                    bestScore = nextScore
+                    print "New best model's score:", bestScore
+                    
+                # previous model is no longer needed (unless it's the best one)
+                if prevModel != bestModel:
+                    os.remove(prevModel)
+                prevModel = nextModel
+
+            # clean up any remaining unneeded model
+            if nextModel is not None and nextModel != bestModel:
+                os.remove(nextModel)
+                
     print 'Final model stored in', bestModel

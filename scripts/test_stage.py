@@ -14,6 +14,27 @@ TEST_MODEL_URL_FILE = 'caffemodel-url'
 TEST_MODEL_FILE = 'fcn8s-heavy-pascal.caffemodel'
 
 
+class TestSwapFiles(unittest.TestCase):
+    def test_swapTwoFiles(self):
+        helloFilename = 'hello.txt'
+        helloTxt = 'Hello world!'
+        with open(helloFilename, 'w') as f:
+            f.write(helloTxt)
+        goodbyeFilename = 'goodbye.txt'
+        goodbyeTxt = 'Goodbye world!'
+        with open(goodbyeFilename, 'w') as f:
+            f.write(goodbyeTxt)
+
+        stage.swapFiles(helloFilename, goodbyeFilename)
+
+        with open(helloFilename, 'r') as f:
+            self.assertEquals(goodbyeTxt, f.read())
+        with open(goodbyeFilename, 'r') as f:
+            self.assertEquals(helloTxt, f.read())
+        os.remove(helloFilename)
+        os.remove(goodbyeFilename)
+
+
 class TestIgnore(unittest.TestCase):
     def setUp(self):
         caffeUrlPath = os.path.join(TEST_DIR, TEST_MODEL_URL_FILE)
@@ -37,13 +58,22 @@ class TestIgnore(unittest.TestCase):
 
     def helper_assertIgnored(self, ignoreLayers, oldModelFile, newModelFile):
         oldModel = caffeUtils.readCaffeModel(oldModelFile)
-        oldLayerNames = [layer.name for layer in oldModel.layer]
+        oldLayers = oldModel.layer
+        if len(oldModel.layer) is 0:
+            oldLayers = oldModel.layers
+        oldLayerNames = [layer.name for layer in oldLayers]
+
         newModel = caffeUtils.readCaffeModel(newModelFile)
-        newLayerNames = [layer.name for layer in newModel.layer]
+        newLayers = newModel.layer
+        if len(newModel.layer) is 0:
+            newLayers = newModel.layers
+        newLayerNames = [layer.name for layer in newLayers]
+
+        for name in ignoreLayers:
+            self.assertIn(name, oldLayerNames)
+            self.assertNotIn(name, newLayerNames)
         for name in oldLayerNames:
-            if name in ignoreLayers:
-                self.assertNotIn(name, newLayerNames)
-            else:
+            if name not in ignoreLayers:
                 self.assertIn(name, newLayerNames)
 
     # TODO write test methods
@@ -58,7 +88,7 @@ class TestIgnore(unittest.TestCase):
     # ignore one softmax loss layer
     def test_ignoreLossLayer(self):
         self.ignoreLayers = ['loss']
-        
+
     # ignore multiple layers of various types
     def test_ignoreVariousLayers(self):
         self.ignoreLayers = ['conv1_1', 'conv1_1', 'relu2_1', 'conv3_3',
@@ -112,7 +142,7 @@ class TestFreeze(unittest.TestCase):
                              'conv4_2', 'conv4_3']  # zero-valued lr_mult
 
 if __name__ == '__main__':
-    for case in [TestFreeze, TestIgnore]:
+    for case in [TestSwapFiles, TestFreeze, TestIgnore]:
         suite = unittest.TestLoader().loadTestsFromTestCase(case)
         unittest.TextTestRunner(verbosity=2).run(suite)
     

@@ -44,11 +44,17 @@ def freezeNetworkLayers(freezeList, trainNetFilename):
 
 def ignoreModelLayers(ignoreList, modelFilename):
     model = caffeUtils.readCaffeModel(modelFilename)
-    # ignoreNames = [layer.name for layer in ignoreList]
-    for layer in model.layer:
+    layers = model.layer
+
+    if len(layers) is 0:
+        # model uses the deprecated V1LayerParameter, so handle these
+        layers = model.layers
+
+    # rename layers to force Caffe to ignore them
+    for layer in layers:
         if layer.name in ignoreList:
-            # rename layers to force Caffe to ignore them
             layer.name = layer.name + IGNORE_LAYER_SUFFIX
+
     # write the model back out to a temporary file
     tmpModelFilename = modelFilename + TEMP_FILE_SUFFIX
     with open(tmpModelFilename, 'w') as f:
@@ -172,7 +178,6 @@ class CommandStage(Stage):
         tmpTrainNetFilename = None
         tmpModelFilename = None
         if modelFilename and len(self.ignoreList) > 0:
-            # apply ignore list
             tmpModelFilename = ignoreModelLayers(self.ignoreList,
                                                  modelFilename)
             swapFiles(modelFilename, tmpModelFilename)
@@ -181,14 +186,16 @@ class CommandStage(Stage):
             tmpTrainNetFilename = freezeNetworkLayers(self.freezeList,
                                                       trainNetFilename)
             swapFiles(trainNetFilename, tmpTrainNetFilename)
-        
+
         # execute the command
-        retcode = subprocess.call(self.command)
-        # restore the original network and caffemodel files
-        if tmpModelFilename and modelFilename:
-            os.rename(tmpModelFilename, modelFilename)
-        if tmpTrainNetFilename and trainNetFilename:
-            os.rename(tmpTrainNetFilename, trainNetFilename)
+        try:
+            retcode = subprocess.call(self.command, shell=True)
+        finally:
+            # restore the original network and caffemodel files
+            if tmpModelFilename and modelFilename:
+                os.rename(tmpModelFilename, modelFilename)
+            if tmpTrainNetFilename and trainNetFilename:
+                os.rename(tmpTrainNetFilename, trainNetFilename)
 
         if retcode is 0:
             return self.outModelFilename
