@@ -12,12 +12,6 @@ package transferLearning;
 // For each stage (they're in a list):
 message Stage {
     required string name = 1;
-    
-    // TODO the dataset used to learn in this stage
-    // optional string dataset = ;
-    // TODO a partial model file to be integrated into the main file
-    // optional string partialModel = ;
-
     message CommandSolver {
         required string command = 1;
         // Needed to make ignore layers work

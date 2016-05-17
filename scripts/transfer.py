@@ -2,7 +2,7 @@
 
 """Carries out transfer learning according to a provided configuration file."""
 
-# auto-generated python classes for protobuf formats
+# auto-generated python class for protobuf formats
 import transferLearning_pb2
 import caffe
 import argparse
@@ -28,7 +28,6 @@ def getArguments():
     parser.add_argument('--model', help='\
     A .caffemodel file containing the initial weights of the first stage.  \
     If not provided, the first stage will learn all weights from scratch.')
-    # TODO argument to allow user to specify version of caffe to use
     machineGroup = parser.add_mutually_exclusive_group()
     machineGroup.add_argument('--cpu', action='store_true', help='\
     If this flag is set, runs all training on the CPU.')
@@ -57,7 +56,7 @@ def getStagesFromMsgs(stageMsgs, solverFilename=None):
                 outFilename = stageMsg.cmd_solver.out_model_filename
             
             newStage = CommandStage(stageMsg.name, stageMsg.cmd_solver.command,
-                                    solverFilename, outFilename, 
+                                    solverFilename, outFilename,
                                     freezeList=stageMsg.freeze,
                                     ignoreList=stageMsg.ignore)
             
@@ -110,7 +109,7 @@ if __name__ == "__main__":
         for ms in tlMsg.multi_source:
             prevModel = bestModel
             mean = None
-            # TODO implement handling mean_file:
+            # TODO implement handling mean_file
             if ms.mean_value:
                 mean = np.array(ms.mean_value)
             valSet = ms.validation_set  # TODO make this one of our iterators
@@ -140,5 +139,7 @@ if __name__ == "__main__":
             # clean up any remaining unneeded model
             if nextModel is not None and nextModel != bestModel:
                 os.remove(nextModel)
+
+            # TODO delete intermediate snapshots from each learning stage
                 
     print 'Final model stored in', bestModel
