@@ -132,7 +132,6 @@ def combineEnsemble(net_outputs, method):
             
             #Looks for the most common label for each pixel
             output = np.squeeze(stats.mode(net_outputs, axis=0)[0]).astype(int)
-            print output.shape
     
     if method==2: #Logit averaging
             output = np.zeros(net_outputs[0].shape)
