@@ -1,0 +1,41 @@
+package ensemble;
+
+message Model {
+  required string deploy = 1;
+  required string weights = 2;
+  optional string input = 3 [default = "data"];
+  optional string output = 4 [default = "score"];
+}
+
+message Input {
+  required string file = 1;
+  
+  enum InputType {
+    VIDEO = 1;
+    IMAGES = 2;
+    LABELS = 3;
+  }
+  
+  message MeanValues {
+  required float r = 1 [default = 0.0];
+  required float g = 2 [default = 0.0];
+  required float b = 3 [default = 0.0];
+  }
+  
+  required InputType type = 2 [default = LABELS];
+  required string colours = 3;
+  optional MeanValues mean = 4;
+  optional bool resize = 5 [default = false];
+}
+
+enum EnsembleType {
+    VOTING = 1;
+    LOGIT = 2;
+    PROBABILITY = 3;
+  }
+  
+message Ensemble {
+  optional EnsembleType ensemble_type = 1 [default = VOTING];
+  repeated Model model = 2;
+  required Input input = 3;
+}
