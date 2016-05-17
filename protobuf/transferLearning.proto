@@ -21,7 +21,7 @@ message Stage {
     message CommandSolver {
         required string command = 1;
         // Needed to make ignore layers work
-        optional string in_model_filename = 2;
+        optional string out_model_filename = 2;
     }
 
     // Choose the type of solver used in this stage.

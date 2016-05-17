@@ -76,7 +76,6 @@ class TestIgnore(unittest.TestCase):
             if name not in ignoreLayers:
                 self.assertIn(name, newLayerNames)
 
-    # TODO write test methods
     # ignore one convolutional layer
     def test_ignoreConvLayer(self):
         self.ignoreLayers = ['conv3_2']

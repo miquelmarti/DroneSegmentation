@@ -40,7 +40,7 @@ def getArguments():
     return parser.parse_args()
 
 
-def getStagesFromMsgs(stageMsgs, solverFilename=None, trainNetFilename=None):
+def getStagesFromMsgs(stageMsgs, solverFilename=None):
     """Instantiates a sequence of stages from protobuf "stage" messages."""
     stages = []
     for stageMsg in stageMsgs:
@@ -49,15 +49,16 @@ def getStagesFromMsgs(stageMsgs, solverFilename=None, trainNetFilename=None):
         solverFilename = stageMsg.solver_filename
         if not stageMsg.HasField(SOLVE_CMD_FIELD):
             newStage = PrototxtStage(stageMsg.name, solverFilename,
-                                     stageMsg.freeze, stageMsg.ignore,
-                                     trainNetFilename)
+                                     stageMsg.freeze, stageMsg.ignore)
         else:
-            # trainNetFilename = None
-            # if stageMsg.cmd_solver.HasField(NET_FILENAME_FIELD):
-            #     trainNetFilename = stageMsg.cmd_solver.net_filename
+            outFilename = None
+            if stageMsg.cmd_solver.out_model_filename != "":
+                outFilename = stageMsg.cmd_solver.out_model_filename
+            else:
+                # get latest iteration from solver's snapshot dir
+                pass
             newStage = CommandStage(stageMsg.name, stageMsg.cmd_solver.command,
-                                    stageMsg.cmd_solver.in_model_filename,
-                                    freezeList=stageMsg.freeze,
+                                    outFilename, freezeList=stageMsg.freeze,
                                     ignoreList=stageMsg.ignore)
         stages.append(newStage)
     return stages

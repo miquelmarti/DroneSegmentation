@@ -64,15 +64,15 @@ def ignoreModelLayers(ignoreList, modelFilename):
 
 class Stage(object):
 
-    def __init__(self, name, freezeList, ignoreList, trainNetFilename=None):
+    def __init__(self, name, solverFilename, freezeList, ignoreList):
         """
         Constructor for the Stage class.
 
         Arguments:
         name -- The name of this stage
+        solverFilename -- filename of a solver prototxt file for this stage
         freezeList -- a list of names of layers to be frozen while training
         ignoreList -- a list of names of layers in the model to be ignored
-        trainNetFilename -- a prototxt file describing the training network
         """
 
         self.name = name
@@ -83,7 +83,7 @@ class Stage(object):
         #     self.freezeList = freezeList
         # if len(ignoreList) > 0 and type(ignoreList[0]) is not str:
         self.ignoreList = ignoreList
-        self.trainNetFilename = trainNetFilename
+        self.trainNetFilename = caffeUtils.getTrainNetFilename(solverFilename)
 
     def execute(self, modelFilename):
         """Subclasses MUST override this method with some functionality."""
@@ -98,8 +98,7 @@ class PrototxtStage(Stage):
     Allows specification of provided weight layers to freeze and to ignore.
     """
 
-    def __init__(self, name, solverFilename, freezeList, ignoreList,
-                 trainNetFilename=None):
+    def __init__(self, name, solverFilename, freezeList, ignoreList):
         """
         Constructor for the PrototxtStage class.
 
@@ -108,16 +107,9 @@ class PrototxtStage(Stage):
         solverFilename -- filename of a solver prototxt file for this stage
         freezeList -- a list of names of layers to be frozen while training
         ignoreList -- a list of names of layers in the model to be ignored
-        trainNetFilename -- overrrides network referenced in the solver file
         """
-
-        super(PrototxtStage, self).__init__(name, freezeList, ignoreList)
-        self.solverFilename = solverFilename
-        if trainNetFilename:
-            self.trainNetFilename = trainNetFilename
-        else:
-            self.trainNetFilename = caffeUtils.getTrainNetFilename(
-                solverFilename)
+        super(PrototxtStage, self).__init__(name, solverFilename, freezeList,
+                                            ignoreList)
 
     def execute(self, modelFilename=None):
         """Carries out this learning stage in caffe."""
@@ -153,7 +145,7 @@ class PrototxtStage(Stage):
 
 class CommandStage(Stage):
 
-    def __init__(self, name, command, outModelFilename, trainNetFilename=None,
+    def __init__(self, name, command, solverFilename, outModelFilename=None,
                  freezeList=[], ignoreList=[]):
         """
         Constructor for the CommandStage class.
@@ -163,13 +155,12 @@ class CommandStage(Stage):
         command -- the command to be run to carry out the learning.
         outModelFilename -- the name of the .caffemodel file output by the
         solver command.
-        trainNetFilename -- a prototxt file describing the training network
         freezeList -- a list of names of layers to be frozen while training.
         trainNetFilename must also be specified for freezeList to be applied.
         ignoreList -- a list of names of layers in the model to be ignored.
         """
-        super(CommandStage, self).__init__(name, freezeList, ignoreList,
-                                           trainNetFilename)
+        super(CommandStage, self).__init__(name, solverFilename, freezeList,
+                                           ignoreList)
         self.command = command
         self.outModelFilename = outModelFilename
 
@@ -198,6 +189,7 @@ class CommandStage(Stage):
                 os.rename(tmpTrainNetFilename, trainNetFilename)
 
         if retcode is 0:
+            # TODO if self.outModelFilename is None, look in the snapshot dir
             return self.outModelFilename
         else:
             # The provided command exited abnormally!
