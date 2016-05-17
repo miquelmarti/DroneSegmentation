@@ -9,7 +9,6 @@ TRAIN_NET_FIELD = 'train_net'
 
 
 def getTrainNetFilename(solverFilename):
-    print solverFilename
     solverSpec = readSolver(solverFilename)
     if solverSpec.HasField(NET_FIELD):
         return solverSpec.net

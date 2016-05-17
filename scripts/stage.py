@@ -9,6 +9,7 @@ LAYER_PARAM_FIELD = 'param'
 TEMP_FILE_SUFFIX = '.tmp'
 IGNORE_LAYER_SUFFIX = '-ignore'
 MODEL_SUFFIX = '.caffemodel'
+SNAPSHOT_FORMAT_FIELD = 'snapshot_format'
 
 TEST = True
 
@@ -64,7 +65,7 @@ def ignoreModelLayers(ignoreList, modelFilename):
 
 class Stage(object):
 
-    def __init__(self, name, solverFilename, freezeList, ignoreList):
+    def __init__(self, name, solverFilename, freezeList, ignoreList, trainNetFilename=None):
         """
         Constructor for the Stage class.
 
@@ -76,6 +77,7 @@ class Stage(object):
         """
 
         self.name = name
+        self.solverFilename = solverFilename
         self.freezeList = freezeList
         # if len(freezeList) > 0 and type(freezeList[0]) is not str:
         #     self.freezeList = [layer.name for layer in freezeList]
@@ -108,6 +110,7 @@ class PrototxtStage(Stage):
         freezeList -- a list of names of layers to be frozen while training
         ignoreList -- a list of names of layers in the model to be ignored
         """
+
         super(PrototxtStage, self).__init__(name, solverFilename, freezeList,
                                             ignoreList)
 
@@ -134,7 +137,7 @@ class PrototxtStage(Stage):
         # run caffe with the provided network description and solver info
         solver = caffe.get_solver(str(solverFilename))
         if modelFilename:
-            solver.net.copy_from(str(modelFilename))
+            solver.net.copy_from(str(os.path.abspath(modelFilename)))
         solver.solve()
         outModelFilename = self.name + MODEL_SUFFIX
         solver.net.save(str(outModelFilename))
@@ -190,7 +193,16 @@ class CommandStage(Stage):
 
         if retcode is 0:
             # TODO if self.outModelFilename is None, look in the snapshot dir
-            return self.outModelFilename
+            if self.outModelFilename is None:
+                solverSpec = caffeUtils.readSolver(self.solverFilename)
+                outFilename = solverSpec.snapshot_prefix + '_iter_' + str(solverSpec.max_iter) + '.caffemodel'
+                if solverSpec.HasField(SNAPSHOT_FORMAT_FIELD):
+                    # TODO Should be caffe::SolverParameter_SnapshotFormat_HDF5 instead of 0
+                    if solverSpec.snapshot_format == 0:
+                        outFilename += '.h5'
+                return outFilename
+            else:
+                return self.outModelFilename
         else:
             # The provided command exited abnormally!
             raise Exception("Solve command in stage " + self.name +

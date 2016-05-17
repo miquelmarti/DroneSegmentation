@@ -15,6 +15,7 @@ import numpy as np
 FILENAME_FIELD = 'filename'
 NET_FILENAME_FIELD = 'net_filename'
 SOLVE_CMD_FIELD = 'cmd_solver'
+OUT_MODEL_FILENAME_FIELD = 'out_model_filename'
 
 
 def getArguments():
@@ -52,14 +53,14 @@ def getStagesFromMsgs(stageMsgs, solverFilename=None):
                                      stageMsg.freeze, stageMsg.ignore)
         else:
             outFilename = None
-            if stageMsg.cmd_solver.out_model_filename != "":
+            if stageMsg.cmd_solver.HasField(OUT_MODEL_FILENAME_FIELD):
                 outFilename = stageMsg.cmd_solver.out_model_filename
-            else:
-                # get latest iteration from solver's snapshot dir
-                pass
+            
             newStage = CommandStage(stageMsg.name, stageMsg.cmd_solver.command,
-                                    outFilename, freezeList=stageMsg.freeze,
+                                    solverFilename, outFilename, 
+                                    freezeList=stageMsg.freeze,
                                     ignoreList=stageMsg.ignore)
+            
         stages.append(newStage)
     return stages
 

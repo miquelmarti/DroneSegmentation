@@ -10,10 +10,10 @@ layer {
   transform_param {
     mirror: true
     crop_size: 227
-    mean_file: "/home/shared/caffeFcn/data/ilsvrc12/imagenet_mean.binaryproto"
+    mean_file: "data/cifar10/mean.binaryproto"
   }
   image_data_param {
-    source: "/home/shared/caffeFcn/data/flickr_style/train.txt"
+    source: "data/flickr_style/train.txt"
     batch_size: 50
     new_height: 256
     new_width: 256
@@ -30,10 +30,10 @@ layer {
   transform_param {
     mirror: false
     crop_size: 227
-    mean_file: "/home/shared/caffeFcn/data/ilsvrc12/imagenet_mean.binaryproto"
+    mean_file: "data/cifar10/mean.binaryproto"
   }
   image_data_param {
-    source: "/home/shared/caffeFcn/data/flickr_style/test.txt"
+    source: "data/flickr_style/test.txt"
     batch_size: 50
     new_height: 256
     new_width: 256
