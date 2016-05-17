@@ -2,11 +2,6 @@
 # create dataset folder
 Contains many files for dealing with the providing datasets and convert them into a readable format for caffe
 
-# old files folder
-Contains some files used in the past, may be useful for the following of the project. If not, after few weeks, may be deleted
-
-
-
 ## FILES ##########################
 # classify.py
 [...]

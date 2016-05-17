@@ -7,7 +7,7 @@ import os
 
 OUT_PREFIX = 'boundary_'
 CV2_LOAD_IMAGE_UNCHANGED = -1
-BOUNDARY_PX_VAL = 255
+BOUNDARY_PX_VAL = 1
 
 
 def borderifyPixel(inImg, outImg, targetPixel, comparePixel):
