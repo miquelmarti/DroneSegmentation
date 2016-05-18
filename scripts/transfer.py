@@ -133,11 +133,6 @@ if __name__ == "__main__":
                 # previous model is no longer needed (unless it's the best one)
                 if prevModel != bestModel:
                     os.remove(prevModel)
-                # TODO delete intermediate snapshots from each learning stage
-                # get snapshot directory/prefix from solver.prototxt
-                # for each file in the directory starting with prefix:
-                    # if the file is not bestModel, delete it
-
                 prevModel = nextModel
             # clean up any remaining unneeded model
             if nextModel is not None and nextModel != bestModel:
