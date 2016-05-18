@@ -5,7 +5,7 @@ import unittest
 import os
 from caffe.proto import caffe_pb2
 import stage
-import caffeUtils
+from caffeUtils import protoUtils
 import urllib2
 
 TEST_DIR = '../test_cases'
@@ -57,13 +57,13 @@ class TestIgnore(unittest.TestCase):
         os.remove(outModel)
 
     def helper_assertIgnored(self, ignoreLayers, oldModelFile, newModelFile):
-        oldModel = caffeUtils.readCaffeModel(oldModelFile)
+        oldModel = protoUtils.readCaffeModel(oldModelFile)
         oldLayers = oldModel.layer
         if len(oldModel.layer) is 0:
             oldLayers = oldModel.layers
         oldLayerNames = [layer.name for layer in oldLayers]
 
-        newModel = caffeUtils.readCaffeModel(newModelFile)
+        newModel = protoUtils.readCaffeModel(newModelFile)
         newLayers = newModel.layer
         if len(newModel.layer) is 0:
             newLayers = newModel.layers
@@ -109,7 +109,7 @@ class TestFreeze(unittest.TestCase):
 
     def helper_assertFrozen(self, freezeLayers, netFile):
         net = caffe_pb2.NetParameter()
-        caffeUtils.readFromPrototxt(net, netFile)
+        protoUtils.readFromPrototxt(net, netFile)
         for layer in net.layer:
             if layer.name in freezeLayers:
                 self.assertTrue(len(layer.param) > 0)

@@ -2,7 +2,7 @@ import os
 import subprocess
 import caffe
 from caffe.proto import caffe_pb2
-import caffeUtils
+from caffeUtils import protoUtils
 
 LR_MULT_FIELD = 'lr_mult'
 LAYER_PARAM_FIELD = 'param'
@@ -25,7 +25,7 @@ def swapFiles(filename1, filename2):
 
 def freezeNetworkLayers(freezeList, trainNetFilename):
     trainNet = caffe_pb2.NetParameter()
-    caffeUtils.readFromPrototxt(trainNet, trainNetFilename)
+    protoUtils.readFromPrototxt(trainNet, trainNetFilename)
 
     for layer in trainNet.layer:
         # freeze desired layers
@@ -39,12 +39,12 @@ def freezeNetworkLayers(freezeList, trainNetFilename):
 
     # re-serialize modified files
     tmpTrainNetFilename = trainNetFilename + TEMP_FILE_SUFFIX
-    caffeUtils.writeToPrototxt(trainNet, tmpTrainNetFilename)
+    protoUtils.writeToPrototxt(trainNet, tmpTrainNetFilename)
     return tmpTrainNetFilename
 
 
 def ignoreModelLayers(ignoreList, modelFilename):
-    model = caffeUtils.readCaffeModel(modelFilename)
+    model = protoUtils.readCaffeModel(modelFilename)
     layers = model.layer
 
     if len(layers) is 0:
@@ -85,7 +85,7 @@ class Stage(object):
         #     self.freezeList = freezeList
         # if len(ignoreList) > 0 and type(ignoreList[0]) is not str:
         self.ignoreList = ignoreList
-        self.trainNetFilename = caffeUtils.getTrainNetFilename(solverFilename)
+        self.trainNetFilename = protoUtils.getTrainNetFilename(solverFilename)
 
     def execute(self, modelFilename):
         """Subclasses MUST override this method with some functionality."""
@@ -124,10 +124,10 @@ class PrototxtStage(Stage):
         if modelFilename and len(self.freezeList) > 0:
             trainNetFilename = freezeNetworkLayers(self.freezeList,
                                                    trainNetFilename)
-            solverSpec = caffeUtils.readSolver(str(solverFilename))
+            solverSpec = protoUtils.readSolver(str(solverFilename))
             solverSpec.net = trainNetFilename
             solverFilename = solverFilename + TEMP_FILE_SUFFIX
-            caffeUtils.writeToPrototxt(solverSpec, solverFilename)
+            protoUtils.writeToPrototxt(solverSpec, solverFilename)
             tmpFilenames += [solverFilename, trainNetFilename]
 
         if modelFilename and len(self.ignoreList) > 0:
@@ -194,7 +194,7 @@ class CommandStage(Stage):
         if retcode is 0:
             # TODO if self.outModelFilename is None, look in the snapshot dir
             if self.outModelFilename is None:
-                solverSpec = caffeUtils.readSolver(self.solverFilename)
+                solverSpec = protoUtils.readSolver(self.solverFilename)
                 outFilename = solverSpec.snapshot_prefix + '_iter_' + str(solverSpec.max_iter) + '.caffemodel'
                 if solverSpec.HasField(SNAPSHOT_FORMAT_FIELD):
                     # TODO Should be caffe::SolverParameter_SnapshotFormat_HDF5 instead of 0

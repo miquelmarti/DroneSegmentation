@@ -7,9 +7,8 @@ import transferLearning_pb2
 import caffe
 import argparse
 import os
-import caffeUtils
+from caffeUtils import protoUtils, score
 from stage import PrototxtStage, CommandStage
-import score
 import numpy as np
 
 FILENAME_FIELD = 'filename'
@@ -99,7 +98,7 @@ if __name__ == "__main__":
 
     # Read in the stages and carry them out
     tlMsg = transferLearning_pb2.TransferLearning()
-    caffeUtils.readFromPrototxt(tlMsg, args.stages)
+    protoUtils.readFromPrototxt(tlMsg, args.stages)
     stageMsgs = tlMsg.stage
     stages = getStagesFromMsgs(stageMsgs)
     bestModel = executeListOfStages(stages, args.model, args.clean)
