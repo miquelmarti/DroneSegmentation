@@ -111,8 +111,10 @@ if __name__ == "__main__":
             if ms.mean_value:
                 mean = np.array(ms.mean_value)
             valSet = iterators.FileListIterator(ms.validation_set)
-            bestScore = computeScore(ms.deploy_net, bestModel, valSet, mean,
-                                     scoreMetric=ms.score_metric)
+            bestScore = 0
+            if bestModel is not None:
+                bestScore = computeScore(ms.deploy_net, bestModel, valSet,
+                                         mean, scoreMetric=ms.score_metric)
             print "New best model's score:", bestScore
             stages = getStagesFromMsgs(ms.stage)
             for i in range(ms.iterations):
