@@ -47,4 +47,3 @@ def getMeanFromBinaryproto(meanFilename):
     with open(meanFilename, 'r') as f:
         meanBlob = caffe_pb2.BlobProto()
         meanBlob.ParseFromString(f.read())
-    
