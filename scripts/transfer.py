@@ -7,7 +7,7 @@ import transferLearning_pb2
 import caffe
 import argparse
 import os
-from caffeUtils import protoUtils, score
+from caffeUtils import protoUtils, score, iterators
 from stage import PrototxtStage, CommandStage
 import numpy as np
 
@@ -111,7 +111,7 @@ if __name__ == "__main__":
             # TODO implement handling mean_file
             if ms.mean_value:
                 mean = np.array(ms.mean_value)
-            valSet = ms.validation_set  # TODO make this one of our iterators
+            valSet = iterators.FileListIterator(ms.validation_set)
             bestScore = computeScore(ms.deploy_net, bestModel, valSet, mean,
                                      scoreMetric=ms.score_metric)
             print "New best model's score:", bestScore
