@@ -10,10 +10,11 @@ DATA_LAYER_NAME = "data"
 
 class SegScores(object):
     """A simple struct to contain the segmentation scores we compute."""
-    def __init__(self, loss, ovAcc, meanAcc, meanIu, fwavacc):
+    def __init__(self, loss, ovAcc, meanAcc, iu, meanIu, fwavacc):
         self.loss = loss
         self.overallAcc = ovAcc
         self.meanAcc = meanAcc
+        self.iu = iu
         self.meanIu = meanIu
         self.fwavacc = fwavacc
 
@@ -46,8 +47,9 @@ def fast_hist(a, b, n):
     return bincount.reshape(n, n)
 
 
-def segmentImage(net, image, outLayer, mean=None, groundTruthImage=None):
-    image = preProcessing(image, mean)
+def segmentImage(net, image, inLayer, outLayer, mean=None,
+                 groundTruthImage=None, newShape=None):
+    image = preProcessing(image, mean, newShape)
     net.blobs[DATA_LAYER_NAME].reshape(1, *image.shape)
     net.blobs[DATA_LAYER_NAME].data[...] = image
     net.forward()
@@ -56,10 +58,10 @@ def segmentImage(net, image, outLayer, mean=None, groundTruthImage=None):
         hist = fast_hist(np.array(groundTruthImage).flatten(),
                          net.blobs[outLayer].data[0].argmax(0).flatten(),
                          n_cl)
-        loss = net.blobs['loss'].data.flat[0]
-        return net.blobs[outLayer], hist, loss
+        loss = net.blobs[inLayer].data.flat[0]
+        return net.blobs[outLayer].data, hist, loss
     else:
-        return net.blobs[outLayer]
+        return net.blobs[outLayer].data
 
 
 def computeSegmentationScores(hist):
@@ -73,13 +75,14 @@ def computeSegmentationScores(hist):
     freq = hist.sum(1) / hist.sum()
     # not sure what this is...Shelhamer computes it, so we retain it.
     fwavacc = (freq[freq > 0] * iu[freq > 0]).sum()
-    return SegScores(None, ovAcc, meanAcc, meanIu, fwavacc)
+    return SegScores(None, ovAcc, meanAcc, iu, meanIu, fwavacc)
 
 
 def scoreDataset(deployFilename, modelFilename, dataset, mean=None,
-                 outLayer='score'):
+                 inLayer='loss', outLayer='score'):
     net = caffe.Net(deployFilename, modelFilename, caffe.TEST)
-    hlZip = [segmentImage(net, image, outLayer, mean, groundTruthImage)[1:]
+    hlZip = [segmentImage(net, image, inLayer, outLayer, mean,
+                          groundTruthImage)[1:]
              for image, groundTruthImage in dataset]
     hists, losses = zip(*hlZip)
     hist = sum(hists)
