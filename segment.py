@@ -9,40 +9,39 @@
 
 # - input and output blobs could be looked for automatically in deploy.prototxt instead of using default values in .proto file
 
+
+# Caffe module need to be on python path
+import caffe
 import numpy as np
 from PIL import Image
 import argparse
 import time
 import cv2
-from utils import iterators
 import google.protobuf
 from scipy import stats
+import ensemble_pb2
+from caffeUtils import iterators, score
 
-# Caffe module need to be on python path
-import caffe
 
 # for some reason, cv2 doesn't define this flag explicitly
 CV2_LOAD_IMAGE_UNCHANGED = -1
 # ignore divisions by zero
 np.seterr(divide='ignore', invalid='ignore')
 
-import ensemble_pb2
-
 
 # copied from shelhamer's score.py
-def fast_hist(a, b, n):
-    k = (a >= 0) & (a < n)
-    return np.bincount(n * a[k].astype(int) + b[k],
-                       minlength=n**2).reshape(n, n)
+# def fast_hist(a, b, n):
+#     k = (a >= 0) & (a < n)
+#     return np.bincount(n * a[k].astype(int) + b[k],
+#                        minlength=n**2).reshape(n, n)
 
 
 def get_arguments():
     # Import arguments
     parser = argparse.ArgumentParser()
     # Mandatory arguments
-    parser.add_argument('ensemble_file', type=str, \
-                                    help=   'Link to ensemble.prototxt')
-    
+    parser.add_argument('ensemble_file', type=str, help='\
+    Link to config.prototxt')
     # Optional arguments
     parser.add_argument('--cpu', action="store_true", help='\
     Default false, set it for CPU mode')
@@ -61,9 +60,7 @@ def get_arguments():
     return parser.parse_args()
 
 
-
 def build_network(deploy, weights):
-    
     print "Opening Network ", str(weights)
     # Creation of the network
     net = caffe.Net(str(deploy),      # defines the structure of the model
@@ -73,26 +70,26 @@ def build_network(deploy, weights):
     return net
 
 
-def pre_processing(img, shape, resize_img, mean):
-    # Ensure that the image has the good size
-    if resize_img:
-        img = img.resize((shape[3], shape[2]), Image.ANTIALIAS)
+# def pre_processing(img, shape, resize_img, mean):
+#     # Ensure that the image has the good size
+#     if resize_img:
+#         img = img.resize((shape[3], shape[2]), Image.ANTIALIAS)
     
-    # Get pixel values and convert them from RGB to BGR
-    frame = np.array(img, dtype=np.float32)
-    frame = frame[:,:,::-1]
+#     # Get pixel values and convert them from RGB to BGR
+#     frame = np.array(img, dtype=np.float32)
+#     frame = frame[:,:,::-1]
 
-    # Substract mean pixel values of pascal training set
-    #if args.PASCAL:
-        #frame -= np.array((104.00698793, 116.66876762, 122.67891434))
+#     # Substract mean pixel values of pascal training set
+#     #if args.PASCAL:
+#         #frame -= np.array((104.00698793, 116.66876762, 122.67891434))
     
-    frame -= np.array((mean.r, mean.g, mean.b))
+#     frame -= np.array((mean.r, mean.g, mean.b))
 
-    # Reorder multi-channel image matrix from W x H x C to C x H x W expected
-    # by Caffe
-    frame = frame.transpose((2,0,1))
+#     # Reorder multi-channel image matrix from W x H x C to C x H x W expected
+#     # by Caffe
+#     frame = frame.transpose((2,0,1))
     
-    return frame
+#     return frame
 
 
 def colourSegment(labels, label_colours, input_shape, resize_img):
@@ -119,6 +116,7 @@ def softmax(x):
     out = out/np.sum(out, axis=0)
     return out
 
+    
 def combineEnsemble(net_outputs, method):
     output = 0
     
@@ -149,7 +147,6 @@ def combineEnsemble(net_outputs, method):
     return output
 
 
-
 if __name__ == '__main__':
 
     # Get all options
@@ -164,96 +161,89 @@ if __name__ == '__main__':
         caffe.set_device(args.gpu_device)
         caffe.set_mode_gpu()
     
-    #Create an Ensemble object
-    ensemble = ensemble_pb2.Ensemble()
+    # Create an Ensemble object
+    config = ensemble_pb2.Ensemble()
 
     # Read the ensemble.prototxt
     f = open(args.ensemble_file, "rb")
-    google.protobuf.text_format.Merge(f.read(), ensemble)
+    google.protobuf.text_format.Merge(f.read(), config)
     f.close()
     
-    if not ensemble.IsInitialized():
-        raise ValueError('Prototxt not complete (not all required fields are present)')
+    if not config.IsInitialized():
+        raise ValueError('\
+        Prototxt not complete (not all required fields are present)')
     
-    
-    #Loading all neural networks
-    input_blob = []
-    output_blob = []
+    # Loading all neural networks
+    input_blobs = []
+    output_blobs = []
     nets = []
-    nb_net = 0 #Counter of nets
-    for model in ensemble.model:
+    for model in config.model:
         #Create network and add it to network list
         nets.append(build_network(model.deploy, model.weights))
         
-        #Get information about blobs
-        input_blob.append(nets[nb_net].blobs[model.input])
-        output_blob.append(nets[nb_net].blobs[model.output])
-        nb_net = nb_net+1
+        #Get information about input and output layers
+        input_blobs.append(model.input)
+        output_blobs.append(model.output)
             
-    input_shape = input_blob[0].data.shape
+    input_shape = nets[0].blobs[input_blobs[0]].data.shape
     
     # Histogram for evan's metrics
-    numb_cla = output_blob[0].channels
-    hist = np.zeros((numb_cla, numb_cla))
+    numb_cla = nets[0].blobs[output_blobs[0]].channels
+    totalHist = np.zeros((numb_cla, numb_cla))
     
-    times = [] #Variable for test times
+    times = []  # Variable for test times
     
     # Video recording
     if args.record != '':
-        fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
-        shape = (input_shape[3],input_shape[2])
+        fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
+        shape = (input_shape[3], input_shape[2])
         images = cv2.VideoWriter(args.record + 'img.avi', fourcc, 5.0, shape)
-        labels = cv2.VideoWriter(args.record + 'labels.avi', fourcc, 5.0, shape)
-        segmentation = cv2.VideoWriter(args.record + 'segmentation.avi', fourcc, 5.0, shape)
+        labels = cv2.VideoWriter(args.record + 'labels.avi', fourcc, 5.0,
+                                 shape)
+        segmentation = cv2.VideoWriter(args.record + 'segmentation.avi',
+                                       fourcc, 5.0, shape)
     
     # Initialize windows
-    if args.record == '' and args.hide == False:
+    if args.record == '' and not args.hide:
         cv2.namedWindow("Input")
         cv2.namedWindow("Output")
 
     # Create the appropriate iterator
     imageIterator = None
-    if ensemble.input.type == 1:
-        imageIterator = iterators.VideoIterator(ensemble.input.file)
-    elif ensemble.input.type == 2:
-        imageIterator = iterators.FileListIterator(ensemble.input.file)
-    elif ensemble.input.type == 3:
-        imageIterator = iterators.FileListIterator(ensemble.input.file, pairs = True)
+    if config.input.type == 1:
+        imageIterator = iterators.VideoIterator(config.input.file)
+    elif config.input.type == 2:
+        imageIterator = iterators.FileListIterator(config.input.file)
+    elif config.input.type == 3:
+        imageIterator = iterators.FileListIterator(config.input.file,
+                                                   pairs=True)
     else:
-        raise Error("No data provided in the prototxt!")
+        raise ValueError("No data provided in the prototxt!")
     
-    n_im = 0 #Image counter
-    
-    # Main loop, for each image to process
+    # process each image, one-by-one
+    n_im = 0  # Image counter
     for _input, real_label in imageIterator:
-        
-        # Get the current time
-        start = time.time()
-        
-        # Preprocess the image for the network
-        frame = pre_processing(_input, input_shape, ensemble.input.resize, ensemble.input.mean)
-
-        
+        n_im += 1
         guessed_labels = []
-        nb_net = 0
-        for net in nets:
-                
-                # Shape for input (data blob is N x C x H x W), set data
-                input_blob[nb_net].reshape(1, *frame.shape)
-                input_blob[nb_net].data[...] = frame
-                
-                # Run the network
-                net.forward()
-                
-                #Get output of the network
-                guessed_labels.append(np.squeeze(output_blob[nb_net].data))
-                nb_net = nb_net+1
-        
-        #Combine the outputs of each net by the chosen method (voting, averaging, etc.)
-        guessed_labels = combineEnsemble(guessed_labels, ensemble.ensemble_type)
-        
-        # guessed_label will hold the output of the network and _output the output to display
-        _output = 0
+        start = time.time()
+        for net, in_blob, out_blob in zip(nets, input_blobs, output_blobs):
+            guessed_label = None
+            newShape = None
+            mean = np.array([config.input.mean.r,
+                             config.input.mean.g,
+                             config.input.mean.b])
+            if config.input.resize:
+                newShape = input_shape
+            guessed_label = score.segmentImage(net, _input, in_blob, out_blob,
+                                               mean, newShape)
+            guessed_labels.append(np.squeeze(guessed_label))
+
+        # Combine the outputs of each net by the chosen method (voting,
+        # averaging, etc.)
+        guessed_labels = combineEnsemble(guessed_labels,
+                                         config.ensemble_type)
+        # Get the time after the network process
+        times.append(time.time() - start)
         
         # Get the output of the network
         if len(guessed_labels.shape) == 3:
@@ -261,111 +251,97 @@ if __name__ == '__main__':
         elif len(guessed_labels.shape) != 2:
             print 'Unknown output shape'
             break
-        
-        # Get the time after the network process
-        times.append(time.time() - start)
-        
+
         # Read the colours of the classes
-        label_colours = cv2.imread(ensemble.input.colours).astype(np.uint8)
+        label_colours = cv2.imread(config.input.colours).astype(np.uint8)
         
         # Resize input to the same size as other
-        if ensemble.input.resize:
-            _input = _input.resize((input_shape[3], input_shape[2]), Image.ANTIALIAS)
+        if config.input.resize:
+            _input = _input.resize((input_shape[3], input_shape[2]),
+                                   Image.ANTIALIAS)
         
         # Transform the class labels into a segmented image
-        _output = colourSegment(guessed_labels, label_colours, input_shape, ensemble.input.resize)
+        guessed_image = colourSegment(guessed_labels, label_colours,
+                                      input_shape, config.input.resize)
         
         # If we also have the ground truth
         if real_label is not None:
             
             # Resize to the same size as other images
-            if ensemble.input.resize:
-                real_label = real_label.resize((input_shape[3], input_shape[2]), Image.NEAREST)
+            if config.input.resize:
+                real_label = real_label.resize((input_shape[3],
+                                                input_shape[2]), Image.NEAREST)
             
             # If pascal VOC, reshape the label to HxWx1s
             tmpReal = np.array(real_label)
             if len(tmpReal.shape) == 3:
-                tmpReal = tmpReal[:,:,0]
+                tmpReal = tmpReal[:, :, 0]
             real_label = Image.fromarray(tmpReal)
-            
-            # Calculate the metrics for this image
-            difference_matrix = fast_hist( np.array(real_label).flatten(),
-                                  np.array(guessed_labels).flatten(),
-                                  numb_cla)
-            hist += difference_matrix
-            
+
+            # Calculate the histogram for this image
+            gtArray = np.array(real_label).flatten()
+            guessArray = np.array(guessed_labels).flatten()
+            hist = score.fast_hist(gtArray, guessArray, numb_cla)
+            totalHist += hist
+
             # Print image number and accuracy
             if args.record != '' or args.hide:
-                n_im += 1
-                print 'Image ', str(n_im), " accuracy: ", float(np.diag(difference_matrix).sum()) / difference_matrix.sum()
+                acc = score.computeSegmentationScores(hist).overallAcc
+                print 'Image ', n_im, " accuracy: ", acc
             
             # Convert the ground truth if needed into a RGB array
-            show_label = np.array(real_label)
-            if len(show_label.shape) == 2:
-                show_label = colourSegment(show_label, label_colours, input_shape, ensemble.input.resize)
-            elif len(show_label.shape) != 3:
+            gt_image = np.array(real_label)
+            if len(gt_image.shape) == 2:
+                gt_image = colourSegment(gt_image, label_colours,
+                                         input_shape, config.input.resize)
+            elif len(gt_image.shape) != 3:
                 print 'Unknown labels format'
             
             # Display the ground truth
             if args.record == '' or args.hide:
-                cv2.imshow("Labelled", show_label)
+                cv2.imshow("Labelled", gt_image)
             elif args.record != '':
-                labels.write(show_label)
-        
-        
+                labels.write(gt_image)
+                
         # Switch to RGB (PIL Image read files as BGR)
         _input = np.array(cv2.cvtColor(np.array(_input), cv2.COLOR_BGR2RGB))
         
         # Display input and output
-        if args.record == '' and args.hide == False:
+        if args.record == '' and not args.hide:
             cv2.imshow("Input", _input)
-            cv2.imshow("Output", _output)
-        elif args.record != '':
-            images.write(_input)
-            segmentation.write(_output)
-
-        # If key, wait for key press, if not, display one image per second
-        if args.record == '' and args.hide == False:
+            cv2.imshow("Output", guessed_image)
             key = 0
             if args.key:
                 key = cv2.waitKey(0)
             else:
                 key = cv2.waitKey(1000)
-            if key % 256 == 27: # exit on ESC - keycode is platform-dependent
+            if key % 256 == 27:  # exit on ESC - keycode is platform-dependent
                 break
-    
-    
+        elif args.record != '':
+            images.write(_input)
+            segmentation.write(guessed_image)
+
     # Exit properly
     if args.record != '':
         images.release()
         segmentation.release()
         labels.release()
-    elif args.hide == False:
+    elif not args.hide:
         cv2.destroyAllWindows()
     
     # Time elapsed
-    print "Average time elapsed when processing one image :\t", sum(times) / float(len(times))
+    avgImageTime = sum(times) / float(len(times))
+    print "Average time elapsed when processing one image :\t", avgImageTime
     
-    # Display the metrics
-    if ensemble.input.type == 3: #If labels exist
-        
-        acc = np.diag(hist).sum() / hist.sum()
-        print "Average pixel accuracy :\t", acc
-        
-        acc = np.diag(hist) / hist.sum(1)
-        print "Average mean accuracy :\t\t", np.nanmean(acc)
-        
-        iu = np.diag(hist) / (hist.sum(1) + hist.sum(0) - np.diag(hist))
-        print "Average mean IU score :\t\t", np.nanmean(iu)
-        
-        freq = hist.sum(1) / hist.sum()
-        print "Average frequency weighted IU :\t", (freq[freq > 0] * iu[freq > 0]).sum()
-        
-        
+    if config.input.type == ensemble_pb2.Input.LABELS:
+        # Display the metrics
+        scores = score.computeSegmentationScores(totalHist)
+        print "Average pixel accuracy :\t", scores.overallAcc
+        print "Average mean accuracy :\t\t", scores.meanAcc
+        print "Average mean IU score :\t\t", scores.meanIu
+        print "Average frequency weighted IU :\t", scores.fwavacc
+
         print
         print "Mean IU per classes : "
-        for idx, i in enumerate(iu):
+        for idx, i in enumerate(scores.iu):
             print "\tclass ", idx, " : ", i
-
-
-
