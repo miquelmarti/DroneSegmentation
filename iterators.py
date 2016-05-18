@@ -20,9 +20,10 @@ class FileListIterator(object):
         p = nextLine.partition(self.sep)
         nextImg = Image.open(p[0].strip())
         nextLabelImg = None
+        imagePath = p[0].strip()
         if self.pairs:
             nextLabelImg = Image.open(p[2].strip())
-        return (nextImg, nextLabelImg)
+        return (nextImg, nextLabelImg, imagePath)
 
     def __del__(self):
         if type(self.listFile) is file:
