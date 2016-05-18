@@ -195,7 +195,9 @@ class CommandStage(Stage):
             # TODO if self.outModelFilename is None, look in the snapshot dir
             if self.outModelFilename is None:
                 solverSpec = protoUtils.readSolver(self.solverFilename)
-                outFilename = solverSpec.snapshot_prefix + '_iter_' + str(solverSpec.max_iter) + '.caffemodel'
+                outFilename = ''.join([solverSpec.snapshot_prefix, '_iter_',
+                                       str(solverSpec.max_iter),
+                                       '.caffemodel'])
                 if solverSpec.HasField(SNAPSHOT_FORMAT_FIELD):
                     # TODO Should be caffe::SolverParameter_SnapshotFormat_HDF5 instead of 0
                     if solverSpec.snapshot_format == 0:
