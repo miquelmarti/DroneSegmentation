@@ -21,6 +21,8 @@ import google.protobuf
 from scipy import stats
 import ensemble_pb2
 from caffeUtils import iterators, score
+import os
+from os.path import basename
 
 
 # for some reason, cv2 doesn't define this flag explicitly
@@ -219,10 +221,16 @@ if __name__ == '__main__':
                                                    pairs=True)
     else:
         raise ValueError("No data provided in the prototxt!")
+        
+        
+    #If previse an output folder, create a list.txt file for summarising
+    # which numpy matrices of which images have been created
+    if config.outputFolder != "None":
+        summaryFile = open(config.outputFolder+"list.txt", 'w')
     
     # process each image, one-by-one
     n_im = 0  # Image counter
-    for _input, real_label in imageIterator:
+    for _input, real_label, imagePath in imageIterator:
         n_im += 1
         guessed_labels = []
         start = time.time()
@@ -242,6 +250,19 @@ if __name__ == '__main__':
         # averaging, etc.)
         guessed_labels = combineEnsemble(guessed_labels,
                                          config.ensemble_type)
+                                         
+        # Extracts current image name from the image path
+        imageName = basename(os.path.splitext(imagePath)[0])
+        
+        #If we precise an output folder in the prototxt
+        if config.outputFolder != "None":
+                # Saves network outputs to numpy file
+                np.save(config.outputFolder+imageName+".npy",guessed_labels)
+                # Writes down in list.txt the files that have been saved
+                summaryFile.write(imagePath+" "+config.outputFolder+imageName+".npy\n")
+
+        
+        
         # Get the time after the network process
         times.append(time.time() - start)
         
@@ -287,7 +308,7 @@ if __name__ == '__main__':
             # Print image number and accuracy
             if args.record != '' or args.hide:
                 acc = score.computeSegmentationScores(hist).overallAcc
-                print 'Image ', n_im, " accuracy: ", acc
+                print 'Image', n_im, "(", imageName ,") accuracy:", acc
             
             # Convert the ground truth if needed into a RGB array
             gt_image = np.array(real_label)
@@ -328,6 +349,10 @@ if __name__ == '__main__':
         labels.release()
     elif not args.hide:
         cv2.destroyAllWindows()
+        
+    #If we opened an output file, close it
+    if config.outputFolder != "None":
+        summaryFile.close()
     
     # Time elapsed
     avgImageTime = sum(times) / float(len(times))

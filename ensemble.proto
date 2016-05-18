@@ -38,4 +38,5 @@ message Ensemble {
   optional EnsembleType ensemble_type = 1 [default = VOTING];
   repeated Model model = 2;
   required Input input = 3;
+  optional string outputFolder = 4 [default = "None"];
 }
