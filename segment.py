@@ -47,7 +47,7 @@ def get_arguments():
     # Optional arguments
     parser.add_argument('--cpu', action="store_true", help='\
     Default false, set it for CPU mode')
-    parser.add_argument('--gpu_device', type=int, default=0, help='\
+    parser.add_argument('--gpu_device', type=int, default=None, help='\
     Default 0, set the GPU device to use')
     uiGroup = parser.add_mutually_exclusive_group()
     uiGroup.add_argument('--key', action="store_true", help='\
@@ -138,13 +138,18 @@ def combineEnsemble(net_outputs, method):
             
             for current_net_output in net_outputs:
                 output = output + current_net_output
+            
+            #Make it a mean instead of a sum of logits
+            output = output/len(net_outputs)
     
     if method==3: #Probability averaging
             output = np.zeros(net_outputs[0].shape)
             
             for current_net_output in net_outputs:
                 output = output + softmax(current_net_output)
-    
+            
+            #Make it a mean instead of a sum of probabilities
+            output = output/len(net_outputs)
     
     return output
 
@@ -160,7 +165,8 @@ if __name__ == '__main__':
         caffe.set_mode_cpu()
     else:
         print 'Set GPU mode'
-        caffe.set_device(args.gpu_device)
+        if args.gpu_device is not None:
+                caffe.set_device(args.gpu_device)
         caffe.set_mode_gpu()
     
     # Create an Ensemble object
