@@ -12,7 +12,7 @@ base_lr: 1e-10
 momentum: 0.99
 # no gradient accumulation
 iter_size: 1
-max_iter: 100000
+max_iter: 5
 weight_decay: 0.0005
 snapshot: 4000
 snapshot_prefix: "snapshot-3-camVid/train"
