@@ -116,6 +116,7 @@ if __name__ == "__main__":
             if bestModel is not None:
                 bestScore = computeScore(ms.deploy_net, bestModel, valSet,
                                          mean, scoreMetric=ms.score_metric)
+                valSet.reset()
             print "New best model's score:", bestScore
             stages = getStagesFromMsgs(ms.stage)
             for i in range(ms.iterations):
@@ -124,6 +125,7 @@ if __name__ == "__main__":
                 nextScore = computeScore(ms.deploy_net, nextModel,
                                          valSet, mean,
                                          scoreMetric=ms.score_metric)
+                valSet.reset()
                 
                 # check if this is the new best model
                 if nextScore > bestScore:
