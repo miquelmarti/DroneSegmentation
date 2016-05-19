@@ -92,7 +92,7 @@ def computeSegmentationScores(hist):
 
 def scoreDataset(deployFilename, modelFilename, dataset, mean=None,
                  lossLayer='loss', outLayer='score'):
-    net = caffe.Net(deployFilename, modelFilename, caffe.TEST)
+    net = caffe.Net(str(deployFilename), str(modelFilename), caffe.TEST)
     hlZip = [segmentImage(net, image, lossLayer, outLayer, mean,
                           groundTruthImage)[1:]
              for image, groundTruthImage in dataset]
