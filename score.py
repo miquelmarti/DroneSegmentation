@@ -47,21 +47,33 @@ def fast_hist(a, b, n):
     return bincount.reshape(n, n)
 
 
-def segmentImage(net, image, inLayer, outLayer, mean=None,
+def runNetForward(net, image=None, gtImage=None, dataLayer=DATA_LAYER_NAME,
+                  lossLayer='loss', outLayer='score', labelLayer='label'):
+    if image is not None:
+        net.blobs[dataLayer].reshape(1, *image.shape)
+        net.blobs[dataLayer].data[...] = image
+    net.forward()
+    output = net.blobs[outLayer].data
+    if gtImage is not None or labelLayer in net.blobs:
+        flatOutput = output[0].argmax(0).flatten()
+        hist = None
+        n_cl = net.blobs[outLayer].channels
+        if gtImage is not None:
+            hist = fast_hist(np.array(gtImage).flatten(), flatOutput, n_cl)
+        else:
+            hist = fast_hist(net.blobs[labelLayer].data[0, 0].flatten(),
+                             flatOutput, n_cl)
+        return output, hist, net.blobs[lossLayer].data.flat[0]
+    else:
+        return output
+
+
+def segmentImage(net, image, lossLayer, outLayer, mean=None,
                  groundTruthImage=None, newShape=None):
     image = preProcessing(image, mean, newShape)
-    net.blobs[DATA_LAYER_NAME].reshape(1, *image.shape)
-    net.blobs[DATA_LAYER_NAME].data[...] = image
-    net.forward()
-    if groundTruthImage is not None:
-        n_cl = net.blobs[outLayer].channels
-        hist = fast_hist(np.array(groundTruthImage).flatten(),
-                         net.blobs[outLayer].data[0].argmax(0).flatten(),
-                         n_cl)
-        loss = net.blobs[inLayer].data.flat[0]
-        return net.blobs[outLayer].data, hist, loss
-    else:
-        return net.blobs[outLayer].data
+    return runNetForward(net, image, gtImage=groundTruthImage,
+                         lossLayer=lossLayer, outLayer=outLayer,
+                         labelLayer=None)
 
 
 def computeSegmentationScores(hist):
@@ -79,9 +91,9 @@ def computeSegmentationScores(hist):
 
 
 def scoreDataset(deployFilename, modelFilename, dataset, mean=None,
-                 inLayer='loss', outLayer='score'):
+                 lossLayer='loss', outLayer='score'):
     net = caffe.Net(deployFilename, modelFilename, caffe.TEST)
-    hlZip = [segmentImage(net, image, inLayer, outLayer, mean,
+    hlZip = [segmentImage(net, image, lossLayer, outLayer, mean,
                           groundTruthImage)[1:]
              for image, groundTruthImage in dataset]
     hists, losses = zip(*hlZip)

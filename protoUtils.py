@@ -15,7 +15,7 @@ def getTrainNetFilename(solverFilename):
     elif solverSpec.HasField(TRAIN_NET_FIELD):
         return solverSpec.train_net
     else:
-        raise Exception('solver.prototxt provides no training network!')
+        raise Exception(solverFilename + ' provides no training network!')
 
 
 def readSolver(filename):
