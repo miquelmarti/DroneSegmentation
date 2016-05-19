@@ -5,7 +5,6 @@
 CAFFE=/home/shared/caffe
 FLICKR_DIR=examples/finetune_flickr_style/
 DATASETS_FLICKR=data/flickr_style
-DATASETS=data
 
 if ! test -d $CAFFE/$DATASETS_FLICKR; then
     cd $CAFFE
@@ -13,4 +12,4 @@ if ! test -d $CAFFE/$DATASETS_FLICKR; then
     cd -
 fi
 
-cp -r $CAFFE/data/flickr_style $DATASETS
+cp -r $CAFFE/data/flickr_style .

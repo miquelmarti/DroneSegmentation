@@ -1,5 +1,5 @@
-train_net: "train.prototxt"
-test_net: "val.prototxt"
+train_net: "examples/train_fcn/fcn16/train.prototxt"
+test_net: "examples/train_fcn/fcn16/val.prototxt"
 test_iter: 1111
 # make test net, but don't invoke it from the solver itself
 test_interval: 4000
@@ -12,8 +12,8 @@ base_lr: 1e-12
 momentum: 0.99
 # no gradient accumulation
 iter_size: 1
-max_iter: 3000
+max_iter: 200
 weight_decay: 0.0005
-snapshot: 4000
-snapshot_prefix: "train"
+snapshot: 200
+snapshot_prefix: "examples/train_fcn/fcn16/train"
 test_initialization: false

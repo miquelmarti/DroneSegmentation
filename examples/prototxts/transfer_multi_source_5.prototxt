@@ -1,0 +1,35 @@
+multi_source {
+    iterations: 5
+    
+    stage {
+        name: "ms3_fcn16"
+        solver_filename: "examples/train_fcn/fcn16/solver.prototxt"
+        cmd_solver {
+            command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn16/solver.prototxt --weights /home/shared/givenModels/fcn-32s-pascal/fcn-32s-pascal.caffemodel --nb_iter 100"
+        }
+    }
+    stage {
+        name: "ms3_fcn8"
+        solver_filename: "examples/train_fcn/fcn8/solver.prototxt"
+        cmd_solver {
+            command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn8/solver.prototxt --weights examples/train_fcn/fcn16/train_iter_100.caffemodel --nb_iter 100"
+        }
+    }
+    stage {
+        name: "ms3_fcn16_2"
+        solver_filename: "examples/train_fcn/fcn16/solver.prototxt"
+        cmd_solver {
+            command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn16/solver.prototxt --weights examples/train_fcn/fcn8/train_iter_100.caffemodel --nb_iter 100"
+        }
+    }
+    
+    # score_metric: MEAN_IU
+    
+    validation_set: "/home/shared/datasets/VOCdevkit/VOC2012/lists/seg11_img_lab_short.txt"
+    deploy_net: "examples/train_fcn/fcn16/deploy.prototxt"
+    
+    # mean_file: ""
+    # mean_value: 0
+    # mean_value: 0
+    # mean_value: 0
+}

@@ -1,4 +1,4 @@
-name: "FlickrStyleCaffeNet"
+name: "CaffeNet"
 layer {
   name: "data"
   type: "ImageData"
@@ -10,7 +10,7 @@ layer {
   transform_param {
     mirror: true
     crop_size: 227
-    mean_file: "data/cifar10/mean.binaryproto"
+    mean_file: "/home/shared/caffe/data/ilsvrc12/imagenet_mean.binaryproto"
   }
   image_data_param {
     source: "data/flickr_style/train.txt"
@@ -30,7 +30,7 @@ layer {
   transform_param {
     mirror: false
     crop_size: 227
-    mean_file: "data/cifar10/mean.binaryproto"
+    mean_file: "/home/shared/caffe/data/ilsvrc12/imagenet_mean.binaryproto"
   }
   image_data_param {
     source: "data/flickr_style/test.txt"
@@ -344,10 +344,10 @@ layer {
   }
 }
 layer {
-  name: "fc8_flickr"
+  name: "fc8"
   type: "InnerProduct"
   bottom: "fc7"
-  top: "fc8_flickr"
+  top: "fc8"
   # lr_mult is set to higher than for other layers, because this layer is starting from random while the others are already trained
   param {
     lr_mult: 10
@@ -370,19 +370,19 @@ layer {
   }
 }
 layer {
-  name: "loss"
-  type: "SoftmaxWithLoss"
-  bottom: "fc8_flickr"
-  bottom: "label"
-  top: "loss"
-}
-layer {
   name: "accuracy"
   type: "Accuracy"
-  bottom: "fc8_flickr"
+  bottom: "fc8"
   bottom: "label"
   top: "accuracy"
   include {
     phase: TEST
   }
+}
+layer {
+  name: "loss"
+  type: "SoftmaxWithLoss"
+  bottom: "fc8"
+  bottom: "label"
+  top: "loss"
 }

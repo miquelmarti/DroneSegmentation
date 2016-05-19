@@ -1,0 +1,25 @@
+stage {
+    name: "fast_stage"
+    solver_filename: "examples/cifar10/cifar10/solver.prototxt"
+    cmd_solver {
+        command: "python examples/cifar10/solve.py --solver examples/cifar10/cifar10/solver.prototxt --nb_iter 500"
+    }
+}
+stage {
+    name: "slow_stage"
+    solver_filename: "examples/cifar10/cifar10/solver_lr1.prototxt"
+    cmd_solver {
+        command: "python examples/cifar10/solve.py --solver examples/cifar10/cifar10/solver_lr1.prototxt --weights examples/cifar10/cifar10/cifar10_quick_iter_500.caffemodel --nb_iter 300"
+    }
+}
+stage {
+    name: "style_stage"
+    solver_filename: "examples/cifar10/cifar10_style/solver.prototxt"
+    cmd_solver {
+        command: "python examples/cifar10/solve.py --solver examples/cifar10/cifar10_style/solver.prototxt --weights examples/cifar10/cifar10/cifar10_quick_lr1_iter_300.caffemodel --nb_iter 100"
+    }
+    
+    freeze: "conv1"
+    freeze: "conv2"
+    ignore: "ip2"
+}

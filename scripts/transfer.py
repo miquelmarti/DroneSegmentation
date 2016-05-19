@@ -73,7 +73,7 @@ def executeListOfStages(stages, firstModel, clean):
 
 
 def computeScore(deployFilename, model, valSet, mean, scoreMetric,
-                 outLayer='output'):
+                 outLayer='score'):
     scores = score.scoreDataset(deployFilename, model, valSet, mean, outLayer)
     if scoreMetric == transferLearning_pb2.MultiSource.MEAN_IU:
         return scores.meanIu
@@ -94,7 +94,7 @@ if __name__ == "__main__":
         caffe.set_device(args.gpu)
         caffe.set_mode_gpu()
     bestModel = args.model
-
+    
     # Read in the stages and carry them out
     tlMsg = transferLearning_pb2.TransferLearning()
     protoUtils.readFromPrototxt(tlMsg, args.stages)
@@ -110,7 +110,8 @@ if __name__ == "__main__":
             mean = None
             if ms.mean_value:
                 mean = np.array(ms.mean_value)
-            valSet = iterators.FileListIterator(ms.validation_set)
+            # TODO make it flexible to different iterators (classification has <img> <nb_of_class>)
+            valSet = iterators.FileListIterator(ms.validation_set, pairs=True)
             bestScore = 0
             if bestModel is not None:
                 bestScore = computeScore(ms.deploy_net, bestModel, valSet,
@@ -121,7 +122,7 @@ if __name__ == "__main__":
                 # learn the next stage in the sequence
                 nextModel = executeListOfStages(stages, prevModel, args.clean)
                 nextScore = computeScore(ms.deploy_net, nextModel,
-                                         ms.validation_set, mean,
+                                         valSet, mean,
                                          scoreMetric=ms.score_metric)
                 
                 # check if this is the new best model
@@ -131,7 +132,7 @@ if __name__ == "__main__":
                     print "New best model's score:", bestScore
                     
                 # previous model is no longer needed (unless it's the best one)
-                if prevModel != bestModel:
+                if prevModel is not None and prevModel != bestModel:
                     os.remove(prevModel)
                 # TODO delete intermediate snapshots from each learning stage
                 # get snapshot directory/prefix from solver.prototxt

@@ -1,0 +1,19 @@
+stage {
+    name: "fast_stage"
+    solver_filename: "examples/cifar10/cifar10/solver.prototxt"
+    cmd_solver {
+        command: "python examples/cifar10/solve.py --solver examples/cifar10/cifar10/solver.prototxt"
+    }
+}
+stage {
+    name: "slow_stage"
+    solver_filename: "examples/cifar10/cifar10/solver_lr1.prototxt"
+}
+stage {
+    name: "style_stage"
+    solver_filename: "examples/cifar10/cifar10_style/solver.prototxt"
+    
+    freeze: "conv1"
+    freeze: "conv2"
+    ignore: "ip2"
+}

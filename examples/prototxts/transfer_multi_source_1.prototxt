@@ -1,0 +1,21 @@
+multi_source {
+    # iterations: 1
+    
+    stage {
+        name: "ms1_fcn8"
+        solver_filename: "examples/train_fcn/fcn8/solver.prototxt"
+        cmd_solver {
+            command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn8/solver.prototxt --weights /home/shared/givenModels/fcn-16s-pascal/fcn-16s-pascal.caffemodel --nb_iter 100"
+        }
+    }
+    
+    # score_metric: MEAN_IU
+    
+    validation_set: "/home/shared/datasets/VOCdevkit/VOC2012/lists/seg11_img_lab_short.txt"
+    deploy_net: "examples/train_fcn/fcn8/deploy.prototxt"
+    
+    # mean_file: ""
+    mean_value: 104.00699
+    mean_value: 116.66877
+    mean_value: 122.67892
+}

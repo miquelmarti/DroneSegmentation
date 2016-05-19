@@ -5,6 +5,7 @@
 CAFFE=/home/shared/caffe
 CIFAR10_DIR=examples/cifar10
 DATASETS_CIFAR=data/cifar10
+CIFAR10=cifar10
 
 if  ! test -d $CAFFE/$CIFAR10_DIR/cifar10_train_lmdb ||
         ! test -d $CAFFE/$CIFAR10_DIR/cifar10_train_lmdb; then
@@ -14,10 +15,9 @@ if  ! test -d $CAFFE/$CIFAR10_DIR/cifar10_train_lmdb ||
     cd -
 fi
 
-if [ ! -d $DATASETS_CIFAR ] 
-then
-    mkdir -p $DATASETS_CIFAR
+if [ ! -d $CIFAR10 ] ; then
+    mkdir -p $CIFAR10
 fi
 
-cp -r $CAFFE/$CIFAR10_DIR/cifar10_*_lmdb $DATASETS_CIFAR
-cp -r $CAFFE/$CIFAR10_DIR/mean.binaryproto $DATASETS_CIFAR
+cp -r $CAFFE/$CIFAR10_DIR/cifar10_*_lmdb $CIFAR10
+cp -r $CAFFE/$CIFAR10_DIR/mean.binaryproto $CIFAR10

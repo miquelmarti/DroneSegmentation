@@ -1,0 +1,6 @@
+stage {
+    name: "flickr_finetune"
+    solver_filename: "examples/flickr_finetune/solver_.prototxt"
+    
+    ignore: "fc8"
+}
