@@ -26,14 +26,14 @@ input
 
 model
 {
-        deploy: "/home/johannes/testModels/FCN-ResNet/deploy-152.prototxt"
-        weights: "/home/johannes/testModels/FCN-ResNet/snapshot-152/train_iter_100000.caffemodel"
+        deploy: "/home/andrew/models/caffe/FCN-16/deploy.prototxt"
+        weights: "/home/andrew/models/caffe/FCN-16/train_iter_100000.caffemodel"
         input: "data" #Optional : name of the input blob [default = "data"]
         output: "score" #Optional : name of the output blob [default = "score"]
 }
 
 model
 {
-        deploy: "/home/johannes/testModels/FCN-16/deploy.prototxt"
-        weights: "/home/johannes/testModels/FCN-16/snapshot-2/train_iter_100000.caffemodel"
+        deploy: "/home/andrew/models/caffe/FCN-8/deploy.prototxt"
+        weights: "/home/andrew/models/caffe/FCN-8/train_iter_100000.caffemodel"
 }
