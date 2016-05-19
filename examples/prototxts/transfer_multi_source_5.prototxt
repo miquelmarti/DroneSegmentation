@@ -12,14 +12,14 @@ multi_source {
         name: "ms3_fcn8"
         solver_filename: "examples/train_fcn/fcn8/solver.prototxt"
         cmd_solver {
-            command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn8/solver.prototxt --weights examples/train_fcn/fcn16/train_iter_100.caffemodel --nb_iter 100"
+            command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn8/solver.prototxt --weights examples/train_fcn/fcn16/fcn16_iter_100.caffemodel --nb_iter 100"
         }
     }
     stage {
         name: "ms3_fcn16_2"
         solver_filename: "examples/train_fcn/fcn16/solver.prototxt"
         cmd_solver {
-            command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn16/solver.prototxt --weights examples/train_fcn/fcn8/train_iter_100.caffemodel --nb_iter 100"
+            command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn16/solver.prototxt --weights examples/train_fcn/fcn8/fcn8_iter_100.caffemodel --nb_iter 100"
         }
     }
     

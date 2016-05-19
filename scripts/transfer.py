@@ -15,6 +15,7 @@ FILENAME_FIELD = 'filename'
 NET_FILENAME_FIELD = 'net_filename'
 SOLVE_CMD_FIELD = 'cmd_solver'
 OUT_MODEL_FILENAME_FIELD = 'out_model_filename'
+DUPPLICATE_SUFFIX = '.nw'
 
 
 def getArguments():
@@ -31,6 +32,8 @@ def getArguments():
     If this flag is set, runs all training on the CPU.')
     machineGroup.add_argument('--gpu', type=int, default=0, help='\
     Allows the user to specify which GPU training will run on.')
+    #parser.add_argument('--quiet', action='store_true', help='\
+    #None verbose version.')
 
     # required arguments
     parser.add_argument('stages', help='\
@@ -93,6 +96,10 @@ if __name__ == "__main__":
     else:
         caffe.set_device(args.gpu)
         caffe.set_mode_gpu()
+    
+    #if args.quiet:
+    #    os.environ['GLOG_minloglevel'] = '3' 
+    
     bestModel = args.model
     
     # Read in the stages and carry them out
@@ -141,5 +148,8 @@ if __name__ == "__main__":
             if nextModel is not None and nextModel != bestModel:
                 os.remove(nextModel)
 
-                
+    
+    if bestModel is not None and bestModel[-3:] == DUPPLICATE_SUFFIX:
+        os.rename(bestModel, bestModel[:-3])
+        bestModel = bestModel[:-3]
     print 'Final model stored in', bestModel

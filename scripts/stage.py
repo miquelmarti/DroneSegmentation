@@ -8,6 +8,7 @@ LR_MULT_FIELD = 'lr_mult'
 LAYER_PARAM_FIELD = 'param'
 TEMP_FILE_SUFFIX = '.tmp'
 IGNORE_LAYER_SUFFIX = '-ignore'
+DUPPLICATE_SUFFIX = '.nw'
 MODEL_SUFFIX = '.caffemodel'
 SNAPSHOT_FORMAT_FIELD = 'snapshot_format'
 ITER_PREFIX = '_iter_'
@@ -91,17 +92,18 @@ class Stage(object):
         solverSpec = protoUtils.readSolver(str(self.solverFilename))
         filePrefix = os.path.basename(solverSpec.snapshot_prefix)
         # TODO is this correct?  Do we need to include the solverSpec dir?
-        files = os.listdir(self.getSnapshotDir())
+        snapShotDir = self.getSnapshotDir()[0]
+        files = os.listdir(snapShotDir)
         for f in files:
-            if f.startswith(filePrefix) and f != keepModelFilename:
-                os.remove(f)
+            if f.startswith(filePrefix) and os.path.join(snapShotDir, f) != keepModelFilename:
+                print 'remove', f
+                os.remove(os.path.join(snapShotDir, f))
+        print 'keep', keepModelFilename
        
     def getSnapshotDir(self):
-        solverDir = os.path.dirname(self.solverFilename)
         solverSpec = protoUtils.readSolver(str(self.solverFilename))
         relSnapshotDir, filePrefix = os.path.split(solverSpec.snapshot_prefix)
-        snapshotDir = os.path.join(solverDir, relSnapshotDir)
-        return snapshotDir
+        return relSnapshotDir, filePrefix
 
 
 class PrototxtStage(Stage):
@@ -152,6 +154,8 @@ class PrototxtStage(Stage):
             solver.net.copy_from(str(os.path.abspath(modelFilename)))
         solver.solve()
         outModelFilename = self.name + MODEL_SUFFIX
+        if os.path.isfile(outModelFilename):
+            outModelFilename += DUPPLICATE_SUFFIX
         solver.net.save(str(outModelFilename))
         # remove temporary files
         map(os.remove, tmpFilenames)
@@ -203,6 +207,7 @@ class CommandStage(Stage):
                 os.rename(tmpModelFilename, modelFilename)
             if tmpTrainNetFilename and trainNetFilename:
                 os.rename(tmpTrainNetFilename, trainNetFilename)
+            # TODO if this model isn the best one, the previous one (from the previous iteration in case of multi source) is erased... not good. Need to systematically same a copy of these weights (if they are the best) in a given path
             if outModelFilename is None and retcode is 0:
                 outModelFilename = self.getLastIterModel()
             self.cleanup(outModelFilename)
@@ -215,14 +220,19 @@ class CommandStage(Stage):
                             " returned code " + str(retcode))
 
     def getLastIterModel(self):
-        snapshotDir = self.getSnapshotDir()
+        snapshotDir, snapshotPrefix = self.getSnapshotDir()
         lastModel = None
         maxIterNum = 0
+        # TODO some folders will have snapshots from different trainings, like cifar_iter_.. and cifar_lr1_iter_..., deal with them, taking the highest one is not enough
+        print self.getSnapshotDir()
         for filename in os.listdir(snapshotDir):
-            _, middle, end = filename.rpartition(ITER_PREFIX)
-            if middle == ITER_PREFIX and MODEL_SUFFIX in end:
+            begin, middle, end = filename.rpartition(ITER_PREFIX)
+            if begin == snapshotPrefix and middle == ITER_PREFIX and MODEL_SUFFIX in end:
                 iterNum = int(end.partition('.')[0])
                 if iterNum > maxIterNum:
                     maxIterNum = iterNum
                     lastModel = filename
+        print 'snapshotDir', snapshotDir
+        print 'lastModel', lastModel
+        print 'list', os.listdir(snapshotDir)
         return os.path.join(snapshotDir, lastModel)

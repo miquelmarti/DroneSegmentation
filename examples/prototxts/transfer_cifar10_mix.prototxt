@@ -1,17 +1,17 @@
 stage {
     name: "fast_stage"
-    solver_filename: "examples/cifar10/cifar10/solver.prototxt"
+    solver_filename: "examples/cifar10/solver.prototxt"
     cmd_solver {
-        command: "python examples/cifar10/solve.py --solver examples/cifar10/cifar10/solver.prototxt"
+        command: "python examples/cifar10/solve.py --solver examples/cifar10/solver.prototxt --nb_iter 300"
     }
 }
 stage {
     name: "slow_stage"
-    solver_filename: "examples/cifar10/cifar10/solver_lr1.prototxt"
+    solver_filename: "examples/cifar10/solver_lr1.prototxt"
 }
 stage {
     name: "style_stage"
-    solver_filename: "examples/cifar10/cifar10_style/solver.prototxt"
+    solver_filename: "examples/cifar10/solver_style.prototxt"
     
     freeze: "conv1"
     freeze: "conv2"
