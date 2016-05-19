@@ -7,7 +7,8 @@ import cv2
 class FileListIterator(object):
     listFile = None
 
-    def __init__(self, listFileName, pairs=False, sep=' '):
+    def __init__(self, listFileName, pairs=False, sep=' ', backup=None):
+        self.listfileName = listFileName
         self.listFile = open(listFileName, 'r')
         self.pairs = pairs
         self.sep = sep
@@ -23,6 +24,9 @@ class FileListIterator(object):
         if self.pairs:
             nextLabelImg = Image.open(p[2].strip())
         return (nextImg, nextLabelImg)
+
+    def reset(self):
+        self.__init__(self.listfileName, self.pairs, self.sep)
 
     def __del__(self):
         if type(self.listFile) is file:

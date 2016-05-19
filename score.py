@@ -80,10 +80,13 @@ def computeSegmentationScores(hist):
 
 def scoreDataset(deployFilename, modelFilename, dataset, mean=None,
                  inLayer='loss', outLayer='score'):
-    net = caffe.Net(deployFilename, modelFilename, caffe.TEST)
+    
+    net = caffe.Net(str(deployFilename), str(modelFilename), caffe.TEST)
+    print 'Segment the validation set...'
     hlZip = [segmentImage(net, image, inLayer, outLayer, mean,
                           groundTruthImage)[1:]
              for image, groundTruthImage in dataset]
+    dataset.reset()
     hists, losses = zip(*hlZip)
     hist = sum(hists)
     scores = computeSegmentationScores(hist)
