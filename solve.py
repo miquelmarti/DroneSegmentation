@@ -1,35 +1,9 @@
 #!/usr/bin/env python
 
 import caffe
-import argparse
 import datetime
-
 import score
 import protoUtils
-
-
-def getArguments():
-    '''
-    If running solve.py from command line, read in command-line arguments.
-    '''
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--modelFilename', type=str, help='\
-    Weights to use to initialize the network.')
-    parser.add_argument('--device', type=int, default=0, help='\
-    ID of the GPU device to train.')
-    parser.add_argument('--noval', action='store_true', help="\
-    Don't score on the Pascal test set.")
-    parser.add_argument('--fcn', action='store_true', help="\
-    Apply FCN-style net surgery to the network before solving.")
-    parser.add_argument('--halt_ratio', type=float, help="\
-    If the metric score on the test_net differs by less than this value \
-    between tests, halt.  If not provided, continue for iterations specified \
-    in max_iter.")
-
-    parser.add_argument('solver',
-                        help='Filename of the solver prototxt file.')
-    args = parser.parse_args()
-    return args
 
 
 def runValidation(solver, numIter, lossLayer='loss', outLayer='score',
@@ -65,7 +39,7 @@ def printScores(scores, iteration):
     
 
 def solve(solverFilename, modelFilename, preProcFun=None, device=None,
-          haltPercent=None, outModelFilename=None):
+          haltPercent=None, outModelFilename=None, silent=False):
     if device is not None:
         caffe.set_device(device)
         caffe.set_mode_gpu()
@@ -89,29 +63,23 @@ def solve(solverFilename, modelFilename, preProcFun=None, device=None,
     if haltPercent is None:
         for _ in range(maxIter):
             solver.step(testInterval)
-            printScores(runValidation(solver, testIter), solver.iter)
+            if not silent:
+                printScores(runValidation(solver, testIter), solver.iter)
     else:
         prevScore = 0  # assuming this is mean IU for now.
         newScore = 0
         while True:
             solver.step(testInterval)
             scores = runValidation(solver, testIter)
-            printScores(scores, solver.iter)
+            if not silent:
+                printScores(scores, solver.iter)
             newScore = scores.meanIu
             percentIncrease = 1. - (prevScore/newScore)
             if percentIncrease < haltPercent:
                 break
             prevScore = newScore
 
-        outStr = ' '.join(['Halting ratio', str(haltPercent),
-                           'acheived after', str(solver.iter), 'iterations.'])
-        print outStr
-
-
-if __name__ == "__main__":
-    args = getArguments()
-    preProcFun = None
-    if args.fcn:
-        import fcnSurgery
-    solve(args.solver, args.modelFilename, preProcFun, args.device,
-          args.haltPercent)
+        if not silent:
+            outStr = ' '.join(['Halting ratio', str(haltPercent),
+                               'acheived in', str(solver.iter), 'iterations.'])
+            print outStr
