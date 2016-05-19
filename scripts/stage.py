@@ -10,6 +10,7 @@ TEMP_FILE_SUFFIX = '.tmp'
 IGNORE_LAYER_SUFFIX = '-ignore'
 MODEL_SUFFIX = '.caffemodel'
 SNAPSHOT_FORMAT_FIELD = 'snapshot_format'
+ITER_PREFIX = '_iter_'
 
 TEST = True
 
@@ -65,7 +66,7 @@ def ignoreModelLayers(ignoreList, modelFilename):
 
 class Stage(object):
 
-    def __init__(self, name, solverFilename, freezeList, ignoreList, trainNetFilename=None):
+    def __init__(self, name, solverFilename, freezeList, ignoreList):
         """
         Constructor for the Stage class.
 
@@ -79,17 +80,28 @@ class Stage(object):
         self.name = name
         self.solverFilename = solverFilename
         self.freezeList = freezeList
-        # if len(freezeList) > 0 and type(freezeList[0]) is not str:
-        #     self.freezeList = [layer.name for layer in freezeList]
-        # else:
-        #     self.freezeList = freezeList
-        # if len(ignoreList) > 0 and type(ignoreList[0]) is not str:
         self.ignoreList = ignoreList
         self.trainNetFilename = protoUtils.getTrainNetFilename(solverFilename)
 
     def execute(self, modelFilename):
         """Subclasses MUST override this method with some functionality."""
         return modelFilename
+
+    def cleanup(self, keepModelFilename):
+        solverSpec = protoUtils.readSolver(str(self.solverFilename))
+        filePrefix = os.path.basename(solverSpec.snapshot_prefix)
+        # TODO is this correct?  Do we need to include the solverSpec dir?
+        files = os.listdir(self.getSnapshotDir())
+        for f in files:
+            if f.startswith(filePrefix) and f != keepModelFilename:
+                os.remove(f)
+       
+    def getSnapshotDir(self):
+        solverDir = os.path.dirname(self.solverFilename)
+        solverSpec = protoUtils.readSolver(str(self.solverFilename))
+        relSnapshotDir, filePrefix = os.path.split(solverSpec.snapshot_prefix)
+        snapshotDir = os.path.join(solverDir, relSnapshotDir)
+        return snapshotDir
 
 
 class PrototxtStage(Stage):
@@ -171,6 +183,7 @@ class CommandStage(Stage):
         trainNetFilename = self.trainNetFilename
         tmpTrainNetFilename = None
         tmpModelFilename = None
+        outModelFilename = self.outModelFilename
         if modelFilename and len(self.ignoreList) > 0:
             tmpModelFilename = ignoreModelLayers(self.ignoreList,
                                                  modelFilename)
@@ -190,22 +203,26 @@ class CommandStage(Stage):
                 os.rename(tmpModelFilename, modelFilename)
             if tmpTrainNetFilename and trainNetFilename:
                 os.rename(tmpTrainNetFilename, trainNetFilename)
+            if outModelFilename is None and retcode is 0:
+                outModelFilename = self.getLastIterModel()
+            self.cleanup(outModelFilename)
 
         if retcode is 0:
-            # TODO if self.outModelFilename is None, look in the snapshot dir
-            if self.outModelFilename is None:
-                solverSpec = protoUtils.readSolver(self.solverFilename)
-                outFilename = ''.join([solverSpec.snapshot_prefix, '_iter_',
-                                       str(solverSpec.max_iter),
-                                       '.caffemodel'])
-                if solverSpec.HasField(SNAPSHOT_FORMAT_FIELD):
-                    # TODO Should be caffe::SolverParameter_SnapshotFormat_HDF5 instead of 0
-                    if solverSpec.snapshot_format == 0:
-                        outFilename += '.h5'
-                return outFilename
-            else:
-                return self.outModelFilename
+            return outModelFilename
         else:
             # The provided command exited abnormally!
             raise Exception("Solve command in stage " + self.name +
                             " returned code " + str(retcode))
+
+    def getLastIterModel(self):
+        snapshotDir = self.getSnapshotDir()
+        lastModel = None
+        maxIterNum = 0
+        for filename in os.listdir(snapshotDir):
+            _, middle, end = filename.rpartition(ITER_PREFIX)
+            if middle == ITER_PREFIX and MODEL_SUFFIX in end:
+                iterNum = int(end.partition('.')[0])
+                if iterNum > maxIterNum:
+                    maxIterNum = iterNum
+                    lastModel = filename
+        return os.path.join(snapshotDir, lastModel)
