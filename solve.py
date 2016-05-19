@@ -61,10 +61,17 @@ def solve(solverFilename, modelFilename, preProcFun=None, device=None,
                          ").  Is it specified in " + solverFilename + "?")
         
     if haltPercent is None:
-        for _ in range(maxIter):
+        for _ in range(maxIter / testInterval):
             solver.step(testInterval)
             if not silent:
                 printScores(runValidation(solver, testIter), solver.iter)
+
+        # Finish up any remaining steps
+        if maxIter % testInterval != 0:
+            solver.step(maxIter % testInterval)
+            if not silent:
+                printScores(runValidation(solver, testIter), solver.iter)
+
     else:
         prevScore = 0  # assuming this is mean IU for now.
         newScore = 0
