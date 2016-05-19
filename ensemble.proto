@@ -30,8 +30,10 @@ message Input {
 
 enum EnsembleType {
     VOTING = 1;
-    LOGIT = 2;
-    PROBABILITY = 3;
+    LOGITARI = 2;
+    LOGITGEO = 3;
+    PROBAARI = 4;
+    PROBAGEO = 5;
   }
   
 message Ensemble {

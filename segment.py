@@ -133,7 +133,7 @@ def combineEnsemble(net_outputs, method):
             #Looks for the most common label for each pixel
             output = np.squeeze(stats.mode(net_outputs, axis=0)[0]).astype(int)
     
-    if method==2: #Logit averaging
+    if method==2: #Logit arithmetic averaging
             output = np.zeros(net_outputs[0].shape)
             
             for current_net_output in net_outputs:
@@ -141,8 +141,20 @@ def combineEnsemble(net_outputs, method):
             
             #Make it a mean instead of a sum of logits
             output = output/len(net_outputs)
+            
+    if method==3: #Logit geometric averaging
+            output = np.ones(net_outputs[0].shape)
+            
+            for current_net_output in net_outputs:
+                output = np.multiply(output, current_net_output)
+                print current_net_output
+            
+            print output
+            
+            #Make it a mean
+            output = np.power(output,float(1)/len(net_outputs))
     
-    if method==3: #Probability averaging
+    if method==4: #Probability arithmetic averaging
             output = np.zeros(net_outputs[0].shape)
             
             for current_net_output in net_outputs:
@@ -150,6 +162,15 @@ def combineEnsemble(net_outputs, method):
             
             #Make it a mean instead of a sum of probabilities
             output = output/len(net_outputs)
+    
+    if method==5: #Probability geometric averaging
+            output = np.ones(net_outputs[0].shape)
+            
+            for current_net_output in net_outputs:
+                output = np.multiply(output, softmax(current_net_output))
+            
+            #Make it a mean
+            output = np.power(output,float(1)/len(net_outputs))
     
     return output
 
@@ -331,7 +352,8 @@ if __name__ == '__main__':
                 labels.write(gt_image)
                 
         # Switch to RGB (PIL Image read files as BGR)
-        _input = np.array(cv2.cvtColor(np.array(_input), cv2.COLOR_BGR2RGB))
+        if len(np.array(_input).shape) is 3:
+                _input = np.array(cv2.cvtColor(np.array(_input), cv2.COLOR_BGR2RGB))
         
         # Display input and output
         if args.record == '' and not args.hide:
