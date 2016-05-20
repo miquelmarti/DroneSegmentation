@@ -117,7 +117,7 @@ if __name__ == "__main__":
         bestModels = [None] * len(stages)
         bestScores = [float('-inf')] * len(stages)
 
-        for i in range(ms.iterations):
+        for _ in range(ms.iterations):
             nextResults = executeListOfStages(stages, prevModel)
             nextModels, nextScores = zip(*nextResults)
             # check if these are the new best models for their stage
