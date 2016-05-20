@@ -2,25 +2,28 @@ multi_source {
     iterations: 0
     
     stage {
-        name: "ms3_fcn16"
-        solver_filename: "examples/train_fcn/fcn16/solver.prototxt"
-        cmd_solver {
-            command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn16/solver.prototxt --weights /home/shared/givenModels/fcn-32s-pascal/fcn-32s-pascal.caffemodel --nb_iter 100"
-        }
+        name: "ms6_fcn32"
+        solver_filename: "examples/train_fcn/fcn32/solver.prototxt"
+        
+        ignore: "fc6"
+        ignore: "fc7"
+        
+        fcnSurgery: true
+        # halt_percentage: 0.01
     }
     stage {
-        name: "ms3_fcn8"
+        name: "ms6_fcn16"
+        solver_filename: "examples/train_fcn/fcn16/solver.prototxt"
+        
+        fcnSurgery: true
+        # halt_percentage: 0.01
+    }
+    stage {
+        name: "ms6_fcn8"
         solver_filename: "examples/train_fcn/fcn8/solver.prototxt"
-        cmd_solver {
-            command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn8/solver.prototxt --weights examples/train_fcn/fcn16/fcn16_iter_100.caffemodel --nb_iter 100"
-        }
-    }
-    stage {
-        name: "ms3_fcn16_2"
-        solver_filename: "examples/train_fcn/fcn16/solver.prototxt"
-        cmd_solver {
-            command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn8/solver.prototxt --weights examples/train_fcn/fcn8/fcn8_iter_100.caffemodel --nb_iter 100"
-        }
+        
+        fcnSurgery: true
+        # halt_percentage: 0.01
     }
     
     # score_metric: MEAN_IU

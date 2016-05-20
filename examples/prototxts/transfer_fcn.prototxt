@@ -1,27 +1,26 @@
-#stage {
-#    name: "train_fcn-32"
-#    solver_filename: "examples/train_fcn/fcn32/solver.prototxt"
-#    cmd_solver {
-#        command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn32/solver.prototxt --weights /home/shared/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel --nb_iter 300"
-#    }
-#    
-#    ignore: "fc6"
-#    ignore: "fc7"
-#}
+stage {
+    name: "train_fcn-32"
+    solver_filename: "examples/train_fcn/fcn32/solver.prototxt"
+    
+    ignore: "fc6"
+    ignore: "fc7"
+    
+    fcnSurgery: true
+    # halt_percentage: 0.01
+}
 stage {
     name: "train_fcn-16"
     solver_filename: "examples/train_fcn/fcn16/solver.prototxt"
-    cmd_solver {
-        #command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn16/solver.prototxt --weights examples/train_fcn/fcn32/fcn32_iter_300.caffemodel --nb_iter 200"
-        command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn16/solver.prototxt --weights /home/shared/givenModels/fcn-16s-pascal/fcn-16s-pascal.caffemodel --nb_iter 200"
-    }
+    
+    fcnSurgery: true
+    # halt_percentage: 0.01
 }
 stage {
     name: "train_fcn-8"
     solver_filename: "examples/train_fcn/fcn8/solver.prototxt"
-    cmd_solver {
-        command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn8/solver.prototxt --weights examples/train_fcn/fcn16/fcn16_iter_200.caffemodel --nb_iter 100"
-    }
+    
+    fcnSurgery: true
+    # halt_percentage: 0.01
 }
 
 

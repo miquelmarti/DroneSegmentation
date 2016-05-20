@@ -4,16 +4,16 @@ multi_source {
     stage {
         name: "ms3_fcn16"
         solver_filename: "examples/train_fcn/fcn16/solver.prototxt"
-        cmd_solver {
-            command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn16/solver.prototxt --weights /home/shared/givenModels/fcn-32s-pascal/fcn-32s-pascal.caffemodel --nb_iter 100"
-        }
+        
+        fcnSurgery: true
+        # halt_percentage: 0.01
     }
     stage {
         name: "ms3_fcn8"
         solver_filename: "examples/train_fcn/fcn8/solver.prototxt"
-        cmd_solver {
-            command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn8/solver.prototxt --weights examples/train_fcn/fcn16/fcn16_iter_100.caffemodel --nb_iter 100"
-        }
+        
+        fcnSurgery: true
+        # halt_percentage: 0.01
     }
     
     # score_metric: MEAN_IU
