@@ -13,10 +13,6 @@ MODEL_SUFFIX = '.caffemodel'
 SNAPSHOT_FORMAT_FIELD = 'snapshot_format'
 ITER_PREFIX = '_iter_'
 
-# keys for returned dictionary
-OUT_MODEL_KEY = 'outModelFilename'
-SCORE_KEY = 'score'
-
 
 def swapFiles(filename1, filename2):
     tempName = filename1 + TEMP_FILE_SUFFIX
@@ -96,20 +92,21 @@ class Stage(object):
         self.haltPercentage = haltPercentage
 
     def cleanup(self, keepModelFilename):
-        solverSpec = protoUtils.readSolver(str(self.solverFilename))
-        filePrefix = os.path.basename(solverSpec.snapshot_prefix)
-        # TODO is this correct?  Do we need to include the solverSpec dir?
-        files = os.listdir(self.getSnapshotDir())
-        for f in files:
-            if f.startswith(filePrefix) and f != keepModelFilename:
-                os.remove(f)
+        snapshotDir, snapshotPrefixBase = self.getSnapshotInfo()
+        snapshotPrefix = snapshotPrefixBase + ITER_PREFIX
+        contents = os.listdir(snapshotDir)
+        for f in contents:
+            fullFilePath = os.path.join(snapshotDir, f)
+            doRemoveFile = (os.path.isfile(fullFilePath) and
+                            f.startswith(snapshotPrefix) and
+                            f != keepModelFilename)
+            if doRemoveFile:
+                os.remove(fullFilePath)
 
-    def getSnapshotDir(self):
-        solverDir = os.path.dirname(self.solverFilename)
+    def getSnapshotInfo(self):
         solverSpec = protoUtils.readSolver(str(self.solverFilename))
         relSnapshotDir, filePrefix = os.path.split(solverSpec.snapshot_prefix)
-        snapshotDir = os.path.join(solverDir, relSnapshotDir)
-        return snapshotDir
+        return relSnapshotDir, filePrefix
 
     def execute(self, modelFilename=None, usePySolver=True):
         """Carries out this learning stage in caffe."""
@@ -133,12 +130,13 @@ class Stage(object):
 
         # make sure that the output filename isn't already used
         outModelFilename = self.name + MODEL_SUFFIX
+        origOMF = outModelFilename
         i = 0
         while True:
             if not os.path.isfile(outModelFilename):
                 break
             i += 1
-            outModelFilename = '.'.join([outModelFilename, str(i)])
+            outModelFilename = '.'.join([origOMF, str(i)])
 
         # TODO allow user to specify loss layer, out layer, data layer, and
         # label layer names.
@@ -161,4 +159,4 @@ class Stage(object):
         # remove temporary files
         self.cleanup(outModelFilename)
         map(os.remove, tmpFilenames)
-        return {OUT_MODEL_KEY: outModelFilename, SCORE_KEY: scores}
+        return outModelFilename, scores

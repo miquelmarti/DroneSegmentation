@@ -19,7 +19,7 @@ message Stage {
     repeated string freeze = 4;
     // Specifies layers to reinitialize with random values
     repeated string ignore = 5;
-    optional bool fcnSurgery = 6 [default = false];
+    optional bool fcn_surgery = 6 [default = false];
     optional float halt_percentage = 7;
 }
 

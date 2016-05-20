@@ -29,6 +29,8 @@ def getArguments():
     If this flag is set, runs all training on the CPU.')
     machineGroup.add_argument('--gpu', type=int, default=0, help='\
     Allows the user to specify which GPU training will run on.')
+    parser.add_argument('--quiet', action='store_true', help='\
+    Non-verbose version.')
 
     # required arguments
     parser.add_argument('stages', help='\
@@ -55,14 +57,25 @@ def getStagesFromMsgs(stageMsgs, solverFilename=None):
     return stages
 
 
-def executeListOfStages(stages, firstModel, clean):
+def executeListOfStages(stages, firstModel, clean=False):
     model = firstModel
+    allResults = []
+    scores = None
     for s in stages:
-        newModel = s.execute(model)
-        if clean and model != firstModel:
-            os.remove(model)
+        newModel, scores = s.execute(model)
+        if clean:
+            # delete each model as soon as we're finished with it
+            if model != firstModel:
+                os.remove(model)
+        else:
+            # save the nextResults of each model
+            allResults.append((newModel, scores))
         model = newModel
-    return model
+
+    if clean:
+        # only the last was saved
+        allResults = [(model, scores)]
+    return allResults
 
 
 def getScore(scores, scoreMetric):
@@ -84,41 +97,49 @@ if __name__ == "__main__":
     else:
         caffe.set_device(args.gpu)
         caffe.set_mode_gpu()
-    bestModel = args.model
+    if args.quiet:
+        os.environ['GLOG_minloglevel'] = '3'
     
     # Read in the stages and carry them out
     tlMsg = transferLearning_pb2.TransferLearning()
     protoUtils.readFromPrototxt(tlMsg, args.stages)
     stages = getStagesFromMsgs(tlMsg.stage)
-    bestModel, scores = executeListOfStages(stages, args.model, args.clean)
-    if len(tlMsg.multi_source) > 0:
-        # initialize variables to track best model in the loop
-        prevModel = bestModel
-        nextModel = None
-        bestScore = float('-inf')
-        if scores is not None:
-            bestScore = getScore(scores, tlMsg.multi_source[0].score_metric)
+    model, scores = executeListOfStages(stages, args.model, args.clean)[-1]
+    if len(tlMsg.multi_source) is 0:
+        # We're done!
+        print 'Final model stored in', model
+        exit(0)
+        
+    # Run all multi-source stage sequences
+    prevModel = model
+    for ms in tlMsg.multi_source:
+        stages = getStagesFromMsgs(ms.stage)
+        bestModels = [None] * len(stages)
+        bestScores = [float('-inf')] * len(stages)
 
-        # Run all multi-source stage sequences
-        for ms in tlMsg.multi_source:
-            stages = getStagesFromMsgs(ms.stage)
-            for i in range(ms.iterations):
-                nextModel, nextScores = executeListOfStages(stages, prevModel,
-                                                            args.clean)
-                nextScore = getScore(nextScores, ms.score_metric)
+        for i in range(ms.iterations):
+            nextResults = executeListOfStages(stages, prevModel)
+            nextModels, nextScores = zip(*nextResults)
+            # check if these are the new best models for their stage
+            for i in range(len(bestModels)):
+                iNextScore = getScore(nextScores[i], ms.score_metric)
+                if iNextScore > bestScores[i]:
+                    bestModels[i] = nextModels[i]
+                    bestScores[i] = iNextScore
+                    msg = ''.join(["New best score for stage ", stages[i].name,
+                                   ": ", str(iNextScore)])
+                    print msg
 
-                # check if this is the new best model
-                if nextScore > bestScore:
-                    bestModel = nextModel
-                    bestScore = nextScore
-                    print "New best model's score:", bestScore
+            # previous model is no longer needed (unless it's the best one)
+            if prevModel is not None and prevModel not in bestModels:
+                os.remove(prevModel)
+            # input model of the next iteration is output of final stage
+            prevModel = nextModels[-1]
 
-                # previous model is no longer needed (unless it's the best one)
-                if prevModel is not None and prevModel != bestModel:
-                    os.remove(prevModel)
-                prevModel = nextModel
-            # clean up any remaining unneeded model
-            if nextModel is not None and nextModel != bestModel:
-                os.remove(nextModel)
-                
-    print 'Final model stored in', bestModel
+            # clean up any remaining unneeded models
+            for model in nextModels:
+                if model is not None and model not in bestModels:
+                    os.remove(model)
+
+    print 'Final models stored in', ', '.join(bestModels)
+    exit(0)

@@ -1,6 +1,5 @@
 multi_source {
     iterations: 5
-    
     stage {
         name: "ms5_fcn32"
         solver_filename: "examples/train_fcn/fcn32/solver.prototxt"
@@ -9,30 +8,19 @@ multi_source {
         ignore: "fc7"
         
         fcnSurgery: true
-        # halt_percentage: 0.01
     }
     stage {
         name: "ms5_fcn16"
         solver_filename: "examples/train_fcn/fcn16/solver.prototxt"
         
         fcnSurgery: true
-        # halt_percentage: 0.01
+        halt_percentage: 50
     }
     stage {
         name: "ms5_fcn8"
         solver_filename: "examples/train_fcn/fcn8/solver.prototxt"
         
         fcnSurgery: true
-        # halt_percentage: 0.01
-    }
-    
-    # score_metric: MEAN_IU
-    
-    validation_set: "/home/shared/datasets/VOCdevkit/VOC2012/lists/seg11_img_lab_short.txt"
-    deploy_net: "examples/train_fcn/fcn8/deploy.prototxt"
-    
-    # mean_file: ""
-    # mean_value: 0
-    # mean_value: 0
-    # mean_value: 0
+        # halt_percentage: 40
+    }    
 }
