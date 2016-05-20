@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 import caffe
-import datetime
+from datetime import datetime
 import score
 import protoUtils
 
 
-def runValidation(solver, numIter, lossLayer='loss', outLayer='score',
-                  labelLayer='label'):
+# TODO add data layer parameter
+def runValidation(solver, numIter, outLayer, lossLayer, labelLayer):
     totalHist = None
     totalLoss = 0
     # share the trained weights with the test net
@@ -36,13 +36,21 @@ def printScores(scores, iteration):
     print prefix, 'mean accuracy', scores.meanAcc
     print prefix, 'mean IU', scores.meanIu
     print prefix, 'fwavacc', scores.fwavacc
-    
 
-def solve(solverFilename, modelFilename, preProcFun=None, device=None,
-          haltPercent=None, outModelFilename=None, silent=False):
-    if device is not None:
-        caffe.set_device(device)
-        caffe.set_mode_gpu()
+
+# TODO add data layer parameter
+def validateAndPrint(solver, testIter, silent, outLayer, lossLayer,
+                     labelLayer):
+    scores = runValidation(solver, testIter, outLayer, lossLayer, labelLayer)
+    if not silent:
+        printScores(scores, solver.iter)
+    return scores
+
+    
+# TODO add data layer parameter
+def solve(solverFilename, modelFilename, outModelFilename=None,
+          preProcFun=None, haltPercent=None, silent=False,
+          outLayer='score', lossLayer='loss', labelLayer='label'):
     
     solver = caffe.get_solver(solverFilename)
     if modelFilename is not None:
@@ -55,31 +63,37 @@ def solve(solverFilename, modelFilename, preProcFun=None, device=None,
     solverSpec = protoUtils.readSolver(solverFilename)
     maxIter = solverSpec.max_iter
     testInterval = solverSpec.test_interval
-    testIter = solverSpec.test_iter
+    testIter = solverSpec.test_iter[0]
     if not testInterval > 0:
         raise ValueError("test_interval is invalid (" + str(testInterval) +
                          ").  Is it specified in " + solverFilename + "?")
-        
+
+    latestScores = None
     if haltPercent is None:
         for _ in range(maxIter / testInterval):
             solver.step(testInterval)
-            if not silent:
-                printScores(runValidation(solver, testIter), solver.iter)
-
+            latestScores = validateAndPrint(solver, testIter, silent,
+                                            outLayer='score',
+                                            lossLayer='loss',
+                                            labelLayer='label')
+            
         # Finish up any remaining steps
         if maxIter % testInterval != 0:
             solver.step(maxIter % testInterval)
-            if not silent:
-                printScores(runValidation(solver, testIter), solver.iter)
+            latestScores = validateAndPrint(solver, testIter, silent,
+                                            outLayer='score',
+                                            lossLayer='loss',
+                                            labelLayer='label')
 
     else:
         prevScore = 0  # assuming this is mean IU for now.
         newScore = 0
         while True:
             solver.step(testInterval)
-            scores = runValidation(solver, testIter)
-            if not silent:
-                printScores(scores, solver.iter)
+            scores = validateAndPrint(solver, testIter, silent,
+                                      outLayer='score',
+                                      lossLayer='loss',
+                                      labelLayer='label')
             newScore = scores.meanIu
             percentIncrease = 1. - (prevScore/newScore)
             if percentIncrease < haltPercent:
@@ -90,3 +104,9 @@ def solve(solverFilename, modelFilename, preProcFun=None, device=None,
             outStr = ' '.join(['Halting ratio', str(haltPercent),
                                'acheived in', str(solver.iter), 'iterations.'])
             print outStr
+            
+    if outModelFilename:
+        solver.net.save(str(outModelFilename))
+
+    # return the final testing results.
+    return latestScores
