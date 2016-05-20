@@ -1,18 +1,16 @@
-CIFAR10
-- Merge the solve.py with the one for FCN
-
 FLICKR_STYLE
-- The path to the weights (in transfer.prototxt) are absolute (in caffe_root) is it ok ?
-- Idem for imagenet_mean.bynaryproto (in train_val.prototxt)
+- The path to the weights (in transfer_cifar10.prototxt) are absolute (depending on caffe_root)
+- Idem for imagenet_mean.bynaryproto (in cifar10/train_val_style.prototxt)
 
 FCN
-- Correct weights problem : for FCN32, we give weights in the command line, so they are not modified by the framework (ignore or freeze). If we give the weights as arguments for transfer.py, they are not transferred as argument to the command line.
-- Deal with VOC / SBD dataset download
-- The link to VGG16 in transfer.prototxt is absolute
-- Doesn't work without layers.py (for now, it is in my PYTHONPATH)
+- Check for VOC / SBD dataset download
+- The link to VGG16's weights in transfer_fcn.prototxt is absolute
 
 MULTI-SOURCE
+- The training   set has absolute paths to SBD
 - The validation set has absolute paths to Pascal VOC
-- Deal with other scores than mean IU, for classification per example (and not pixel-wise segmentation)
-- Be more flexible with outLayer, find a way to get it from the trainNet
-- Get the weights (for FCN) from absolute paths
+- Deal with other scores than mean IU, for classification per example (and not pixel-wise segmentation anymore)
+- Be more flexible with outLayer, find a way to get it from the trainNet (not always "score" or "output")
+- The link to FCN's real weights are absolute
+
+

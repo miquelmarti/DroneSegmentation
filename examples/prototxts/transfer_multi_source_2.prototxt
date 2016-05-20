@@ -4,9 +4,9 @@ multi_source {
     stage {
         name: "ms2_fcn8"
         solver_filename: "examples/train_fcn/fcn8/solver.prototxt"
-        cmd_solver {
-            command: "examples/train_fcn/solve.py --solver examples/train_fcn/fcn8/solver.prototxt --weights /home/shared/givenModels/fcn-16s-pascal/fcn-16s-pascal.caffemodel --nb_iter 100"
-        }
+        
+        fcnSurgery: true
+        # halt_percentage: 0.01
     }
     
     # score_metric: MEAN_IU
