@@ -12,16 +12,15 @@ package transferLearning;
 // For each stage (they're in a list):
 message Stage {
     required string name = 1;
-    message CommandSolver {
-        required string command = 1;
-        // Needed to make ignore layers work
-        optional string out_model_filename = 2;
+    message PySolver {
+        optional bool fcnSurgery = 1 [default = false];
+        optional float halt_percentage = 2;
     }
 
     // Choose the type of solver used in this stage.
     required string solver_filename = 2;
-    // Provide only one of the two.
-    optional CommandSolver cmd_solver = 3;
+    // optional CommandSolver cmd_solver = 3;
+    optional PySolver py_solver = 3;
     
     // Specifies layers to freeze during training, as a list
     repeated string freeze = 4;
@@ -44,8 +43,4 @@ message MultiSource {
         MEAN_IU = 2;
     }
     optional MetricType score_metric = 3 [default = MEAN_IU];
-    required string validation_set = 4;
-    required string deploy_net = 5;
-    optional string mean_file = 6;
-    repeated float mean_value = 7;
 }
