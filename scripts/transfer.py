@@ -48,7 +48,7 @@ def getStagesFromMsgs(stageMsgs, solverFilename=None):
         if stageMsg.HasField(HALT_FIELD):
             haltPercent = stageMsg.halt_percentage
         # add a new stage to the list
-        newStage = stage.Stage(stageMsg.name, stageMsg.solverFilename,
+        newStage = stage.Stage(stageMsg.name, stageMsg.solver_filename,
                                stageMsg.freeze, stageMsg.ignore,
                                preProcFun, haltPercent)
         stages.append(newStage)

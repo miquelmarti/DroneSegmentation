@@ -159,6 +159,6 @@ class Stage(object):
             solver.net.save(str(outModelFilename))
 
         # remove temporary files
-        self.cleanup()
+        self.cleanup(outModelFilename)
         map(os.remove, tmpFilenames)
         return {OUT_MODEL_KEY: outModelFilename, SCORE_KEY: scores}
