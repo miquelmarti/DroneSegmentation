@@ -51,10 +51,9 @@ def validateAndPrint(solver, testIter, silent, outLayer, lossLayer,
 def solve(solverFilename, modelFilename, outModelFilename=None,
           preProcFun=None, haltPercent=None, silent=False,
           outLayer='score', lossLayer='loss', labelLayer='label'):
-    
-    solver = caffe.get_solver(solverFilename)
+    solver = caffe.get_solver(str(solverFilename))
     if modelFilename is not None:
-        solver.net.copy_from(modelFilename)
+        solver.net.copy_from(str(modelFilename))
 
     # surgeries
     if preProcFun is not None:
@@ -62,28 +61,34 @@ def solve(solverFilename, modelFilename, outModelFilename=None,
 
     solverSpec = protoUtils.readSolver(solverFilename)
     maxIter = solverSpec.max_iter
+    # we assume here that the user specifies separate test and train nets.
     testInterval = solverSpec.test_interval
-    testIter = solverSpec.test_iter[0]
     if not testInterval > 0:
         raise ValueError("test_interval is invalid (" + str(testInterval) +
                          ").  Is it specified in " + solverFilename + "?")
 
     latestScores = None
+    testIter = solverSpec.test_iter[0]
     if haltPercent is None:
-        for _ in range(maxIter / testInterval):
-            solver.step(testInterval)
-            latestScores = validateAndPrint(solver, testIter, silent,
-                                            outLayer='score',
-                                            lossLayer='loss',
-                                            labelLayer='label')
-            
-        # Finish up any remaining steps
-        if maxIter % testInterval != 0:
-            solver.step(maxIter % testInterval)
-            latestScores = validateAndPrint(solver, testIter, silent,
-                                            outLayer='score',
-                                            lossLayer='loss',
-                                            labelLayer='label')
+        if len(solverSpec.test_net) is 0:
+            # no test nets specified - just run the solver normally.
+            solver.solve()
+        else:
+            # run for testInterval iterations, then test
+            for _ in range(maxIter / testInterval):
+                solver.step(testInterval)
+                latestScores = validateAndPrint(solver, testIter, silent,
+                                                outLayer='score',
+                                                lossLayer='loss',
+                                                labelLayer='label')
+
+            # Finish up any remaining steps
+            if maxIter % testInterval != 0:
+                solver.step(maxIter % testInterval)
+                latestScores = validateAndPrint(solver, testIter, silent,
+                                                outLayer='score',
+                                                lossLayer='loss',
+                                                labelLayer='label')
 
     else:
         prevScore = 0  # assuming this is mean IU for now.
@@ -95,7 +100,7 @@ def solve(solverFilename, modelFilename, outModelFilename=None,
                                       lossLayer='loss',
                                       labelLayer='label')
             newScore = scores.meanIu
-            percentIncrease = 1. - (prevScore/newScore)
+            percentIncrease = (1. - (prevScore/newScore)) * 100
             if percentIncrease < haltPercent:
                 break
             prevScore = newScore
