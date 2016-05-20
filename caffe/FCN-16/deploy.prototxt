@@ -400,7 +400,7 @@ layer {
   }
 }
 layer {
-  name: "fc6_v2"
+  name: "fc6"
   type: "Convolution"
   bottom: "pool5"
   top: "fc6"
@@ -426,7 +426,7 @@ layer {
   top: "fc6"
 }
 layer {
-  name: "fc7_v2"
+  name: "fc7"
   type: "Convolution"
   bottom: "fc6"
   top: "fc7"

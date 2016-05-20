@@ -8,7 +8,7 @@ layer {
     mean_value: 122.67892
   }
   data_param {
-    source: "/home/shared/datasets/CamVid/LMDB/train_lmdb"
+    source: "/home/shared/datasets/CamVid/LMDB-v2/train_lmdb"
     batch_size: 1
     backend: LMDB
   }
@@ -18,7 +18,7 @@ layer {
   type: "Data"
   top: "label"
   data_param {
-    source: "/home/shared/datasets/CamVid/LMDB/train_gt_lmdb"
+    source: "/home/shared/datasets/CamVid/LMDB-v2/train_gt_lmdb"
     batch_size: 1
     backend: LMDB
   }
