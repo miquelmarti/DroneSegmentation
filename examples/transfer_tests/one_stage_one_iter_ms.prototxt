@@ -3,7 +3,7 @@ multi_source {
         name: "ms1_fcn8"
         solver_filename: "examples/train_fcn/fcn8/solver.prototxt"
         
-        fcnSurgery: true
+        fcn_surgery: true
         halt_percentage: 10.5
     }    
 }

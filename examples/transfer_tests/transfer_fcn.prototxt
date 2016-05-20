@@ -5,21 +5,21 @@ stage {
     ignore: "fc6"
     ignore: "fc7"
     
-    fcnSurgery: true
+    fcn_surgery: true
     halt_percentage: 10.0
 }
 stage {
     name: "train_fcn-16"
     solver_filename: "examples/train_fcn/fcn16/solver.prototxt"
     
-    fcnSurgery: true
+    fcn_surgery: true
     halt_percentage: 10.0
 }
 stage {
     name: "train_fcn-8"
     solver_filename: "examples/train_fcn/fcn8/solver.prototxt"
     
-    fcnSurgery: true
+    fcn_surgery: true
     halt_percentage: 10.0
 }
 

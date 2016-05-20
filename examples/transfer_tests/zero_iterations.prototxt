@@ -7,20 +7,20 @@ multi_source {
         ignore: "fc6"
         ignore: "fc7"
         
-        fcnSurgery: true
+        fcn_surgery: true
     }
     stage {
         name: "ms6_fcn16"
         solver_filename: "examples/train_fcn/fcn16/solver.prototxt"
         
-        fcnSurgery: true
+        fcn_surgery: true
         halt_percentage: 50
     }
     stage {
         name: "ms6_fcn8"
         solver_filename: "examples/train_fcn/fcn8/solver.prototxt"
         
-        fcnSurgery: true
+        fcn_surgery: true
         # halt_percentage: 0.01
     }
 }

@@ -3,6 +3,6 @@ multi_source {
     stage {
         name: "ms2_fcn8"
         solver_filename: "examples/train_fcn/fcn8/solver.prototxt"
-        fcnSurgery: true
+        fcn_surgery: true
     }
 }

@@ -3,13 +3,13 @@ multi_source {
         name: "ms3_fcn16"
         solver_filename: "examples/train_fcn/fcn16/solver.prototxt"
         
-        fcnSurgery: true
+        fcn_surgery: true
         halt_percentage: 25
     }
     stage {
         name: "ms3_fcn8"
         solver_filename: "examples/train_fcn/fcn8/solver.prototxt"
         
-        fcnSurgery: true
+        fcn_surgery: true
     }
 }

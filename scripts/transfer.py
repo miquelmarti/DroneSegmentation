@@ -44,7 +44,7 @@ def getStagesFromMsgs(stageMsgs, solverFilename=None):
     for stageMsg in stageMsgs:
         # unpack values
         preProcFun = None
-        if stageMsg.fcnSurgery:
+        if stageMsg.fcn_surgery:
             preProcFun = fcnSurgery.fcnInterp
         haltPercent = None
         if stageMsg.HasField(HALT_FIELD):
