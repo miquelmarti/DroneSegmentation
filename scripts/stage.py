@@ -1,18 +1,21 @@
 import os
-import subprocess
 import caffe
 from caffe.proto import caffe_pb2
-from caffeUtils import protoUtils
+from caffeUtils import protoUtils, score, solve
 
+# names of parameters in protobufs so we can check for their presence
 LR_MULT_FIELD = 'lr_mult'
 LAYER_PARAM_FIELD = 'param'
+
 TEMP_FILE_SUFFIX = '.tmp'
 IGNORE_LAYER_SUFFIX = '-ignore'
 MODEL_SUFFIX = '.caffemodel'
 SNAPSHOT_FORMAT_FIELD = 'snapshot_format'
 ITER_PREFIX = '_iter_'
 
-TEST = True
+# keys for returned dictionary
+OUT_MODEL_KEY = 'outModelFilename'
+SCORE_KEY = 'score'
 
 
 def swapFiles(filename1, filename2):
@@ -65,8 +68,15 @@ def ignoreModelLayers(ignoreList, modelFilename):
 
 
 class Stage(object):
+    """
+    A class that represents a transfer-learning stage carried out based on a
+    provided .prototxt file.
 
-    def __init__(self, name, solverFilename, freezeList, ignoreList):
+    Allows specification of provided weight layers to freeze and to ignore.
+    """
+
+    def __init__(self, name, solverFilename, freezeList, ignoreList,
+                 preProcFun=None, haltPercentage=None):
         """
         Constructor for the Stage class.
 
@@ -82,10 +92,8 @@ class Stage(object):
         self.freezeList = freezeList
         self.ignoreList = ignoreList
         self.trainNetFilename = protoUtils.getTrainNetFilename(solverFilename)
-
-    def execute(self, modelFilename):
-        """Subclasses MUST override this method with some functionality."""
-        return modelFilename
+        self.preProcFun = preProcFun
+        self.haltPercentage = haltPercentage
 
     def cleanup(self, keepModelFilename):
         solverSpec = protoUtils.readSolver(str(self.solverFilename))
@@ -95,7 +103,7 @@ class Stage(object):
         for f in files:
             if f.startswith(filePrefix) and f != keepModelFilename:
                 os.remove(f)
-       
+
     def getSnapshotDir(self):
         solverDir = os.path.dirname(self.solverFilename)
         solverSpec = protoUtils.readSolver(str(self.solverFilename))
@@ -103,30 +111,7 @@ class Stage(object):
         snapshotDir = os.path.join(solverDir, relSnapshotDir)
         return snapshotDir
 
-
-class PrototxtStage(Stage):
-    """
-    A class that represents a transfer-learning stage carried out based on a
-    provided .prototxt file.
-
-    Allows specification of provided weight layers to freeze and to ignore.
-    """
-
-    def __init__(self, name, solverFilename, freezeList, ignoreList):
-        """
-        Constructor for the PrototxtStage class.
-
-        Arguments:
-        name -- The name of this stage
-        solverFilename -- filename of a solver prototxt file for this stage
-        freezeList -- a list of names of layers to be frozen while training
-        ignoreList -- a list of names of layers in the model to be ignored
-        """
-
-        super(PrototxtStage, self).__init__(name, solverFilename, freezeList,
-                                            ignoreList)
-
-    def execute(self, modelFilename=None):
+    def execute(self, modelFilename=None, usePySolver=True):
         """Carries out this learning stage in caffe."""
 
         # read in the provided caffe config files
@@ -146,83 +131,34 @@ class PrototxtStage(Stage):
             modelFilename = ignoreModelLayers(self.ignoreList, modelFilename)
             tmpFilenames.append(modelFilename)
 
-        # run caffe with the provided network description and solver info
-        solver = caffe.get_solver(str(solverFilename))
-        if modelFilename:
-            solver.net.copy_from(str(os.path.abspath(modelFilename)))
-        solver.solve()
+        # make sure that the output filename isn't already used
         outModelFilename = self.name + MODEL_SUFFIX
-        solver.net.save(str(outModelFilename))
-        # remove temporary files
-        map(os.remove, tmpFilenames)
-        return outModelFilename
+        i = 0
+        while True:
+            if not os.path.isfile(outModelFilename):
+                break
+            i += 1
+            outModelFilename = '.'.join([outModelFilename, str(i)])
 
-
-class CommandStage(Stage):
-
-    def __init__(self, name, command, solverFilename, outModelFilename=None,
-                 freezeList=[], ignoreList=[]):
-        """
-        Constructor for the CommandStage class.
-
-        Arguments:
-        name -- The name of this stage
-        command -- the command to be run to carry out the learning.
-        outModelFilename -- the name of the .caffemodel file output by the
-        solver command.
-        freezeList -- a list of names of layers to be frozen while training.
-        trainNetFilename must also be specified for freezeList to be applied.
-        ignoreList -- a list of names of layers in the model to be ignored.
-        """
-        super(CommandStage, self).__init__(name, solverFilename, freezeList,
-                                           ignoreList)
-        self.command = command
-        self.outModelFilename = outModelFilename
-
-    def execute(self, modelFilename=None):
-        trainNetFilename = self.trainNetFilename
-        tmpTrainNetFilename = None
-        tmpModelFilename = None
-        outModelFilename = self.outModelFilename
-        if modelFilename and len(self.ignoreList) > 0:
-            tmpModelFilename = ignoreModelLayers(self.ignoreList,
-                                                 modelFilename)
-            swapFiles(modelFilename, tmpModelFilename)
-        if modelFilename and trainNetFilename and len(self.freezeList) > 0:
-            # apply freeze list
-            tmpTrainNetFilename = freezeNetworkLayers(self.freezeList,
-                                                      trainNetFilename)
-            swapFiles(trainNetFilename, tmpTrainNetFilename)
-
-        # execute the command
-        try:
-            retcode = subprocess.call(self.command, shell=True)
-        finally:
-            # restore the original network and caffemodel files
-            if tmpModelFilename and modelFilename:
-                os.rename(tmpModelFilename, modelFilename)
-            if tmpTrainNetFilename and trainNetFilename:
-                os.rename(tmpTrainNetFilename, trainNetFilename)
-            if outModelFilename is None and retcode is 0:
-                outModelFilename = self.getLastIterModel()
-            self.cleanup(outModelFilename)
-
-        if retcode is 0:
-            return outModelFilename
+        # TODO allow user to specify loss layer, out layer, data layer, and
+        # label layer names.
+        scores = None
+        if usePySolver:
+            scores = solve.solve(solverFilename, modelFilename,
+                                 outModelFilename, self.preProcFun,
+                                 self.haltPercentage)
         else:
-            # The provided command exited abnormally!
-            raise Exception("Solve command in stage " + self.name +
-                            " returned code " + str(retcode))
+            solver = caffe.get_solver(str(solverFilename))
+            if modelFilename:
+                solver.net.copy_from(str(os.path.abspath(modelFilename)))
+            solver.solve()
+            solverSpec = protoUtils.readSolver(str(self.solverFilename))
+            scores = solve.runValidation(solver, solverSpec.testIter[0],
+                                         outLayer='score', lossLayer='loss',
+                                         labelLayer='label')
+            solver.net.save(str(outModelFilename))
 
-    def getLastIterModel(self):
-        snapshotDir = self.getSnapshotDir()
-        lastModel = None
-        maxIterNum = 0
-        for filename in os.listdir(snapshotDir):
-            _, middle, end = filename.rpartition(ITER_PREFIX)
-            if middle == ITER_PREFIX and MODEL_SUFFIX in end:
-                iterNum = int(end.partition('.')[0])
-                if iterNum > maxIterNum:
-                    maxIterNum = iterNum
-                    lastModel = filename
-        return os.path.join(snapshotDir, lastModel)
+        # remove temporary files
+        self.cleanup()
+        map(os.remove, tmpFilenames)
+        return {OUT_MODEL_KEY: outModelFilename, SCORE_KEY: scores}

@@ -12,20 +12,15 @@ package transferLearning;
 // For each stage (they're in a list):
 message Stage {
     required string name = 1;
-    message PySolver {
-        optional bool fcnSurgery = 1 [default = false];
-        optional float halt_percentage = 2;
-    }
-
     // Choose the type of solver used in this stage.
     required string solver_filename = 2;
-    // optional CommandSolver cmd_solver = 3;
-    optional PySolver py_solver = 3;
     
     // Specifies layers to freeze during training, as a list
     repeated string freeze = 4;
     // Specifies layers to reinitialize with random values
     repeated string ignore = 5;
+    optional bool fcnSurgery = 6 [default = false];
+    optional float halt_percentage = 7;
 }
 
 // Defines a whole transfer learning cycle
