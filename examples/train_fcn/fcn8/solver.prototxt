@@ -15,5 +15,5 @@ iter_size: 1
 max_iter: 100
 weight_decay: 0.0005
 snapshot: 100
-snapshot_prefix: "examples/train_fcn/fcn8/train"
+snapshot_prefix: "examples/train_fcn/fcn8/fcn8"
 test_initialization: false

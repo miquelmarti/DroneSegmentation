@@ -7,7 +7,7 @@ import transferLearning_pb2
 import caffe
 import argparse
 import os
-from caffeUtils import protoUtils, score, fcnSurgery
+from caffeUtils import protoUtils, fcnSurgery
 import stage
 
 FILENAME_FIELD = 'filename'

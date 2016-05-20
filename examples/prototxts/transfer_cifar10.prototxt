@@ -1,14 +1,14 @@
 stage {
     name: "fast_stage"
-    solver_filename: "examples/cifar10/cifar10/solver.prototxt"
+    solver_filename: "examples/cifar10/solver.prototxt"
 }
 stage {
     name: "slow_stage"
-    solver_filename: "examples/cifar10/cifar10/solver_lr1.prototxt"
+    solver_filename: "examples/cifar10/solver_lr1.prototxt"
 }
 stage {
     name: "style_stage"
-    solver_filename: "examples/cifar10/cifar10_style/solver.prototxt"
+    solver_filename: "examples/cifar10/solver_style.prototxt"
     
     freeze: "conv1"
     freeze: "conv2"
