@@ -2,9 +2,11 @@
 
 import argparse
 import os
+import caffe
 from caffeUtils import solve, fcnSurgery
 
 SOLVER_FILENAME = 'solver.prototxt'
+
 
 def getArguments():
     '''
@@ -35,6 +37,10 @@ if __name__ == "__main__":
     if args.fcn:
         preProcFun = fcnSurgery.fcnInterp
         
+    if args.device is not None:
+        caffe.set_device(args.device)
+        caffe.set_mode_gpu()
+        
     os.chdir(args.learn_dir)
-    solve.solve(SOLVER_FILENAME, args.weights, preProcFun, args.device,
-                args.halt_percent, silent=False)
+    solve.solve(SOLVER_FILENAME, args.weights, preProcFun=preProcFun,
+                haltPercent=args.halt_percent)
