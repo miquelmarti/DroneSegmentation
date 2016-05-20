@@ -4,11 +4,8 @@
 
 # auto-generated python class for protobuf formats
 import transferLearning_pb2
-import caffe
 import argparse
 import os
-from caffeUtils import protoUtils, fcnSurgery
-import stage
 
 FILENAME_FIELD = 'filename'
 NET_FILENAME_FIELD = 'net_filename'
@@ -92,13 +89,19 @@ def getScore(scores, scoreMetric):
 
 if __name__ == "__main__":
     args = getArguments()
+    if args.quiet:
+        os.environ['GLOG_minloglevel'] = '3'
+        
+    # must change log level prior to importing caffe
+    import caffe
+    from caffeUtils import protoUtils, fcnSurgery
+    import stage
+    
     if args.cpu:
         caffe.set_mode_cpu()
     else:
         caffe.set_device(args.gpu)
         caffe.set_mode_gpu()
-    if args.quiet:
-        os.environ['GLOG_minloglevel'] = '3'
     
     # Read in the stages and carry them out
     tlMsg = transferLearning_pb2.TransferLearning()
