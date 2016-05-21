@@ -1,6 +1,8 @@
-stage {
-    name: "flickr_finetune"
-    solver_filename: "examples/flickr_finetune/solver.prototxt"
-    
-    ignore: "fc8"
+multi_source {
+    stage {
+        name: "flickr_finetune"
+        solver_filename: "examples/flickr_finetune/solver.prototxt"
+
+        ignore: "fc8"
+    }
 }

@@ -2,35 +2,33 @@ syntax = "proto2";
 
 package transferLearning;
 
-/*
- Represents a single stage of transfer learning, in which we initialize weights
- and learning rates from some pre-defined set of weights (or not) and learn on
- a new dataset.
-*/
-
-// FIELDS
-// For each stage (they're in a list):
-message Stage {
-    required string name = 1;
-    // Choose the type of solver used in this stage.
-    required string solver_filename = 2;
-    
-    // Specifies layers to freeze during training, as a list
-    repeated string freeze = 4;
-    // Specifies layers to reinitialize with random values
-    repeated string ignore = 5;
-    optional bool fcn_surgery = 6 [default = false];
-    optional float halt_percentage = 7;
-}
-
 // Defines a whole transfer learning cycle
 message TransferLearning {
-    repeated Stage stage = 2;
-    repeated MultiSource multi_source = 3;
+    repeated MultiSource multi_source = 1;
 }
 
 message MultiSource {
     optional int32 iterations = 1 [default = 1];
+
+    // For each stage (they're in a list):    
+    message Stage {
+        /*
+          Represents a single stage of transfer learning, in which we
+          initialize weights and learning rates from some pre-defined set of
+          weights (or not) and learn on a new dataset.
+        */
+        required string name = 1;
+        // Choose the type of solver used in this stage.
+        required string solver_filename = 2;
+    
+        // Specifies layers to freeze during training, as a list
+        repeated string freeze = 3;
+        // Specifies layers to reinitialize with random values
+        repeated string ignore = 4;
+        optional bool fcn_surgery = 5 [default = false];
+        optional float halt_percentage = 6;
+    }
+
     repeated Stage stage = 2;
     enum MetricType {
         ACCURACY = 0;

@@ -92,29 +92,22 @@ if __name__ == "__main__":
     if args.quiet:
         os.environ['GLOG_minloglevel'] = '3'
         
-    # must change log level prior to importing caffe
+    # Must change log level prior to importing caffe
     import caffe
     from caffeUtils import protoUtils, fcnSurgery
     import stage
-    
+
+    # Set the caffe device
     if args.cpu:
         caffe.set_mode_cpu()
     else:
         caffe.set_device(args.gpu)
         caffe.set_mode_gpu()
-    
-    # Read in the stages and carry them out
+
+    # Read in and execute all multi_source stage sequences in order
     tlMsg = transferLearning_pb2.TransferLearning()
     protoUtils.readFromPrototxt(tlMsg, args.stages)
-    stages = getStagesFromMsgs(tlMsg.stage)
-    model, scores = executeListOfStages(stages, args.model, args.clean)[-1]
-    if len(tlMsg.multi_source) is 0:
-        # We're done!
-        print 'Final model stored in', model
-        exit(0)
-        
-    # Run all multi-source stage sequences
-    prevModel = model
+    prevModel = args.model
     for ms in tlMsg.multi_source:
         stages = getStagesFromMsgs(ms.stage)
         bestModels = [None] * len(stages)
@@ -125,15 +118,19 @@ if __name__ == "__main__":
             nextModels, nextScores = zip(*nextResults)
             # check if these are the new best models for their stage
             for i in range(len(bestModels)):
-                iNextScore = getScore(nextScores[i], ms.score_metric)
-                if iNextScore > bestScores[i]:
+                if nextScores[i] is None:
+                    # no scores given, so just assume it's better
                     bestModels[i] = nextModels[i]
-                    bestScores[i] = iNextScore
-                    msg = ''.join(["New best score for stage ", stages[i].name,
-                                   ": ", str(iNextScore)])
-                    print msg
+                else:
+                    # Save each stage's model if it's better than the previous
+                    iNextScore = getScore(nextScores[i], ms.score_metric)
+                    if iNextScore > bestScores[i]:
+                        bestModels[i] = nextModels[i]
+                        bestScores[i] = iNextScore
+                        print ''.join(["New best score for stage ",
+                                       stages[i].name, ": ", str(iNextScore)])
 
-            # previous model is no longer needed (unless it's the best one)
+            # previous model is no longer needed (unless it's a best one)
             if prevModel is not None and prevModel not in bestModels:
                 os.remove(prevModel)
             # input model of the next iteration is output of final stage

@@ -1,7 +1,7 @@
 import os
 import caffe
 from caffe.proto import caffe_pb2
-from caffeUtils import protoUtils, score, solve
+from caffeUtils import protoUtils, solve
 
 # names of parameters in protobufs so we can check for their presence
 LR_MULT_FIELD = 'lr_mult'
