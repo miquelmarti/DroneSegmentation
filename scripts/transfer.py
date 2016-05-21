@@ -18,7 +18,7 @@ def getArguments():
     # optional arguments
     parser.add_argument('--clean', action="store_true", help='\
     Cleans up intermediate files as the script finishes with them.')
-    parser.add_argument('--model', help='\
+    parser.add_argument('--weights', help='\
     A .caffemodel file containing the initial weights of the first stage.  \
     If not provided, the first stage will learn all weights from scratch.')
     machineGroup = parser.add_mutually_exclusive_group()
@@ -27,7 +27,9 @@ def getArguments():
     machineGroup.add_argument('--gpu', type=int, default=0, help='\
     Allows the user to specify which GPU training will run on.')
     parser.add_argument('--quiet', action='store_true', help='\
-    Non-verbose version.')
+    Run in non-verbose mode.')
+    parser.add_argument('-o', '--out_dir', help='\
+    A directory in which to store the output caffe models.')
 
     # required arguments
     parser.add_argument('stages', help='\
@@ -35,7 +37,7 @@ def getArguments():
     return parser.parse_args()
 
 
-def getStagesFromMsgs(stageMsgs, solverFilename=None):
+def getStagesFromMsgs(stageMsgs, outDir):
     """Instantiates a sequence of stages from protobuf "stage" messages."""
     stages = []
     for stageMsg in stageMsgs:
@@ -49,7 +51,7 @@ def getStagesFromMsgs(stageMsgs, solverFilename=None):
         # add a new stage to the list
         newStage = stage.Stage(stageMsg.name, stageMsg.solver_filename,
                                stageMsg.freeze, stageMsg.ignore,
-                               preProcFun, haltPercent)
+                               preProcFun, haltPercent, outDir)
         stages.append(newStage)
     return stages
 
@@ -104,12 +106,20 @@ if __name__ == "__main__":
         caffe.set_device(args.gpu)
         caffe.set_mode_gpu()
 
-    # Read in and execute all multi_source stage sequences in order
+    # Read in the configuration file
     tlMsg = transferLearning_pb2.TransferLearning()
     protoUtils.readFromPrototxt(tlMsg, args.stages)
-    prevModel = args.model
+    
+    # Command-line out dir takes priority
+    outDir = args.out_dir
+    if outDir is None:
+        # then config file out dir, relative to config file's location
+        outDir = os.path.join(os.path.dirname(args.stages), tlMsg.out_dir)
+
+    # Execute all multi_source stage sequences in order
+    prevModel = args.weights
     for ms in tlMsg.multi_source:
-        stages = getStagesFromMsgs(ms.stage)
+        stages = getStagesFromMsgs(ms.stage, outDir)
         bestModels = [None] * len(stages)
         bestScores = [float('-inf')] * len(stages)
 

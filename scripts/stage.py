@@ -72,7 +72,7 @@ class Stage(object):
     """
 
     def __init__(self, name, solverFilename, freezeList, ignoreList,
-                 preProcFun=None, haltPercentage=None):
+                 preProcFun=None, haltPercentage=None, outDir=''):
         """
         Constructor for the Stage class.
 
@@ -90,6 +90,7 @@ class Stage(object):
         self.trainNetFilename = protoUtils.getTrainNetFilename(solverFilename)
         self.preProcFun = preProcFun
         self.haltPercentage = haltPercentage
+        self.outModelFilename = os.path.join(outDir, self.name + MODEL_SUFFIX)
 
     def cleanup(self, keepModelFilename):
         snapshotDir, snapshotPrefixBase = self.getSnapshotInfo()
@@ -129,14 +130,13 @@ class Stage(object):
             tmpFilenames.append(modelFilename)
 
         # make sure that the output filename isn't already used
-        outModelFilename = self.name + MODEL_SUFFIX
-        origOMF = outModelFilename
+        outModelFilename = self.outModelFilename
         i = 0
         while True:
             if not os.path.isfile(outModelFilename):
                 break
             i += 1
-            outModelFilename = '.'.join([origOMF, str(i)])
+            outModelFilename = '.'.join([self.outModelFilename, str(i)])
 
         # TODO allow user to specify loss layer, out layer, data layer, and
         # label layer names.

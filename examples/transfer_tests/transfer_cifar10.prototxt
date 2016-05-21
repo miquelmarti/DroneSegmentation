@@ -1,3 +1,4 @@
+out_dir: 'snapshots'
 multi_source {
     stage {
         name: "fast_stage"

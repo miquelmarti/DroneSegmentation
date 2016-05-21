@@ -4,7 +4,8 @@ package transferLearning;
 
 // Defines a whole transfer learning cycle
 message TransferLearning {
-    repeated MultiSource multi_source = 1;
+    optional string out_dir = 1;
+    repeated MultiSource multi_source = 2;
 }
 
 message MultiSource {
