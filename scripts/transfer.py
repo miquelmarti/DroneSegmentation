@@ -29,7 +29,8 @@ def getArguments():
     parser.add_argument('--quiet', action='store_true', help='\
     Run in non-verbose mode.')
     parser.add_argument('-o', '--out_dir', help='\
-    A directory in which to store the output caffe models.')
+    A directory in which to store the output caffe models.  Overrides \
+    out_dir specified in configuration file, if any.')
 
     # required arguments
     parser.add_argument('stages', help='\
