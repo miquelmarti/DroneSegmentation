@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+#  imported so that we can train with these python layers.
+from fcnLayers import *
 import argparse
 import os
 import caffe
