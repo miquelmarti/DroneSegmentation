@@ -1,3 +1,4 @@
+out_dir: "three_stage_five_iter"
 multi_source {
     iterations: 5
     stage {

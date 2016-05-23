@@ -1,8 +1,10 @@
 out_dir: 'snapshots'
 multi_source {
+    iterations: 5
     stage {
         name: "fast_stage"
         solver_filename: "examples/cifar10/solver.prototxt"
+        ignore: "ip2"
     }
     stage {
         name: "slow_stage"

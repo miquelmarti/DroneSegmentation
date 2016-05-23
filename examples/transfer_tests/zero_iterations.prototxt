@@ -1,3 +1,4 @@
+out_dir: "zero_iterations"
 multi_source {
     iterations: 0
     stage {
