@@ -146,17 +146,13 @@ if __name__ == "__main__":
                         print 'next score of', i, 'is better than previous'
                         
             # input model of the next iteration is the best last-stage model
-            prevModel = bestModels[-1]
-            if prevModel not in nextModels:
-                # TODO should we just stop in this case?
-                print 'WARNING: No improvement in multi-source iteration', j
-
+            prevModel = nextModels[-1]
+            
             # delete any models that are no longer needed
-            deletionCandidates = nextModels + [prevModel]
-            for model in deletionCandidates:
+            for model in nextModels:
                 shouldDelete = (model is not None and
                                 model not in bestModels and
-                                model != args.model)
+                                model != prevModel)
                 if shouldDelete:
                     os.remove(model)
                 

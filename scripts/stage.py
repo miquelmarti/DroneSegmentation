@@ -142,6 +142,8 @@ class Stage(object):
         # label layer names.
         scores = None
         if usePySolver:
+            # presently this branch is unused, but in case we miss some
+            # feature of caffe in our own solve.py, we will need this.
             scores = solve.solve(solverFilename, modelFilename,
                                  outModelFilename, self.preProcFun,
                                  self.haltPercentage)
@@ -151,7 +153,7 @@ class Stage(object):
                 solver.net.copy_from(str(os.path.abspath(modelFilename)))
             solver.solve()
             solverSpec = protoUtils.readSolver(str(self.solverFilename))
-            scores = solve.runValidation(solver, solverSpec.testIter[0],
+            scores = solve.runValidation(solver, solverSpec.test_iter[0],
                                          outLayer='score', lossLayer='loss',
                                          labelLayer='label')
             solver.net.save(str(outModelFilename))

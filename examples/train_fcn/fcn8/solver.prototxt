@@ -2,7 +2,7 @@ train_net: "examples/train_fcn/fcn8/train.prototxt"
 test_net: "examples/train_fcn/fcn8/val.prototxt"
 test_iter: 1111
 # make test net, but don't invoke it from the solver itself
-test_interval: 4000
+test_interval: 100
 display: 20
 average_loss: 20
 lr_policy: "fixed"
@@ -12,7 +12,7 @@ base_lr: 1e-14
 momentum: 0.99
 # no gradient accumulation
 iter_size: 1
-max_iter: 100
+max_iter: 550
 weight_decay: 0.0005
 snapshot: 100
 snapshot_prefix: "examples/train_fcn/fcn8/fcn8"
