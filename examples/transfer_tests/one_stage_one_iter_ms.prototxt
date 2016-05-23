@@ -1,3 +1,4 @@
+init_weights: "/home/shared/givenModels/fcn-16s-pascal/fcn-16s-pascal.caffemodel"
 multi_source {
     stage {
         name: "ms1_fcn8"

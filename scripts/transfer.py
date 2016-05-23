@@ -10,6 +10,7 @@ import os
 FILENAME_FIELD = 'filename'
 NET_FILENAME_FIELD = 'net_filename'
 HALT_FIELD = 'halt_percentage'
+INIT_STAGE_FIELD = 'init_stage'
 
 
 def getArguments():
@@ -33,28 +34,32 @@ def getArguments():
     out_dir specified in configuration file, if any.')
 
     # required arguments
-    parser.add_argument('stages', help='\
+    parser.add_argument('config', help='\
     A .prototxt file defining the transfer learning stages to be performed.')
     return parser.parse_args()
 
 
-def getStagesFromMsgs(stageMsgs, outDir):
+def getStageFromMsg(stageMsg, outDir):
+    # unpack values
+    preProcFun = None
+    if stageMsg.fcn_surgery:
+        preProcFun = fcnSurgery.fcnInterp
+    haltPercent = None
+    if stageMsg.HasField(HALT_FIELD):
+        haltPercent = stageMsg.halt_percentage
+    return stage.Stage(stageMsg.name, stageMsg.solver_filename,
+                       stageMsg.freeze, stageMsg.ignore, preProcFun,
+                       haltPercent, outDir)
+    
+
+def getStagesFromMsgs(multiSourceMsg, outDir):
     """Instantiates a sequence of stages from protobuf "stage" messages."""
-    stages = []
-    for stageMsg in stageMsgs:
-        # unpack values
-        preProcFun = None
-        if stageMsg.fcn_surgery:
-            preProcFun = fcnSurgery.fcnInterp
-        haltPercent = None
-        if stageMsg.HasField(HALT_FIELD):
-            haltPercent = stageMsg.halt_percentage
-        # add a new stage to the list
-        newStage = stage.Stage(stageMsg.name, stageMsg.solver_filename,
-                               stageMsg.freeze, stageMsg.ignore,
-                               preProcFun, haltPercent, outDir)
-        stages.append(newStage)
-    return stages
+    stages = [getStageFromMsg(stageMsg, outDir)
+              for stageMsg in multiSourceMsg.stage]
+    initStage = None
+    if multiSourceMsg.HasField(INIT_STAGE_FIELD):
+        getStageFromMsg(multiSourceMsg.init_stage, outDir)
+    return initStage, stages
 
 
 def executeListOfStages(stages, firstModel, clean=False):
@@ -109,25 +114,45 @@ if __name__ == "__main__":
 
     # Read in the configuration file
     tlMsg = transferLearning_pb2.TransferLearning()
-    protoUtils.readFromPrototxt(tlMsg, args.stages)
+    protoUtils.readFromPrototxt(tlMsg, args.config)
     
     # Command-line out dir takes priority
     outDir = args.out_dir
     if outDir is None:
+        if os.path.isabs(tlMsg.out_dir):
+            prevModel = tlMsg.out_dir
         # then config file out dir, relative to config file's location
-        outDir = os.path.join(os.path.dirname(args.stages), tlMsg.out_dir)
+        outDir = os.path.join(os.path.dirname(args.config), tlMsg.out_dir)
+
+    # Command-line init weights take priority
+    prevModel = args.weights
+    if prevModel is None:
+        if os.path.isabs(tlMsg.init_weights):
+            prevModel = tlMsg.init_weights
+        else:
+            prevModel = os.path.join(os.path.dirname(args.config),
+                                     tlMsg.init_weights)
 
     # Execute all multi_source stage sequences in order
     prevModel = args.weights
-    for ms in tlMsg.multi_source:
-        stages = getStagesFromMsgs(ms.stage, outDir)
+    for msMsg in tlMsg.multi_source:
+        initStage, stages = getStagesFromMsgs(msMsg, outDir)
+        if initStage is not None:
+            pass  # TODO implement this!
         bestModels = [None] * len(stages)
         bestScores = [float('-inf')] * len(stages)
 
-        for j in range(ms.iterations):
+        for j in range(msMsg.iterations):
             print "starting iteration from", prevModel
-            nextResults = executeListOfStages(stages, prevModel)
+            nextResults = None
+            if initStage is not None and j is 0:
+                # on the first iteration, run initStage instead of first stage
+                firstStages = [initStage] + stages[1:]
+                nextResults = executeListOfStages(firstStages, prevModel)
+            else:
+                nextResults = executeListOfStages(stages, prevModel)
             nextModels, nextScores = zip(*nextResults)
+
             # check if these are the new best models for their stage
             for i in range(len(bestModels)):
                 if nextScores[i] is None:
@@ -136,7 +161,7 @@ if __name__ == "__main__":
                     bestModels[i] = nextModels[i]
                 else:
                     # Save each stage's model if it's better than the previous
-                    iNextScore = getScore(nextScores[i], ms.score_metric)
+                    iNextScore = getScore(nextScores[i], msMsg.score_metric)
                     if iNextScore > bestScores[i]:
                         bestModels[i] = nextModels[i]
                         bestScores[i] = iNextScore

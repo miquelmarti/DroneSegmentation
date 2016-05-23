@@ -6,6 +6,7 @@ package transferLearning;
 message TransferLearning {
     optional string out_dir = 1;
     repeated MultiSource multi_source = 2;
+    optional string init_weights = 3;
 }
 
 message MultiSource {
@@ -37,4 +38,7 @@ message MultiSource {
         MEAN_IU = 2;
     }
     optional MetricType score_metric = 3 [default = MEAN_IU];
+    // In some cases, we may wish to ignore or freeze layers from the input
+    // weights, but not from the weights in the final stage (or vice versa).
+    optional Stage init_stage = 4;
 }

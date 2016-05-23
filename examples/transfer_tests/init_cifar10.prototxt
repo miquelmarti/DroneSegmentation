@@ -1,0 +1,27 @@
+out_dir: "snapshots"
+init_weights: "fast_cifar10.caffemodel"
+multi_source {
+    iterations: 3
+    init_stage {
+        name: "fast_stage"
+        solver_filename: "examples/cifar10/solver.prototxt"
+    }
+    
+    stage {
+        name: "fast_stage"
+        solver_filename: "examples/cifar10/solver.prototxt"
+        ignore: "ip2"
+    }
+    stage {
+        name: "slow_stage"
+        solver_filename: "examples/cifar10/solver_lr1.prototxt"
+    }
+    stage {
+        name: "style_stage"
+        solver_filename: "examples/cifar10/solver_style.prototxt"
+    
+        freeze: "conv1"
+        freeze: "conv2"
+        ignore: "ip2"
+    }
+}
