@@ -1,6 +1,6 @@
 net: "examples/flickr_finetune/train_val.prototxt"
 test_iter: 100
-test_interval: 1000
+test_interval: 500
 # lr for fine-tuning should be lower than when starting from scratch
 base_lr: 0.001
 lr_policy: "step"
@@ -11,7 +11,7 @@ display: 20
 max_iter: 500
 momentum: 0.9
 weight_decay: 0.0005
-snapshot: 500
+snapshot: 100
 snapshot_prefix: "examples/flickr_finetune/finetune_flickr"
 # uncomment the following to default to CPU mode solving
 # solver_mode: CPU
