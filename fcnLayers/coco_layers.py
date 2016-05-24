@@ -55,8 +55,12 @@ class SemSegDataLayer(caffe.Layer):
         in_ = self.load_image(self.samples[self.idx])
         # cast to float
         in_ = np.array(in_, dtype=np.float32)
-        # switch channels RGB -> BGR
-        in_ = in_[:, :, ::-1]
+        if len(in_.shape) == 2:
+            # add a third dimension to grayscale images
+            in_ = in_[:, :, np.newaxis]
+        else:
+            # switch channels RGB -> BGR
+            in_ = in_[:, :, ::-1]
         # subtract mean
         in_ -= self.mean
         # transpose to channel x height x width order
