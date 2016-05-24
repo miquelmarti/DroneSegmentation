@@ -5,6 +5,13 @@ from datetime import datetime
 import score
 import protoUtils
 
+# Add the path to the layers to sys.path so caffe's code can import them
+import fcnLayers
+import inspect
+import sys
+import os
+sys.path.append(os.path.dirname(inspect.getfile(fcnLayers)))
+
 
 # TODO add data layer parameter
 def runValidation(solver, numIter, outLayer, lossLayer, labelLayer):
@@ -68,13 +75,13 @@ def solve(solverFilename, modelFilename, outModelFilename=None,
                          ").  Is it specified in " + solverFilename + "?")
 
     latestScores = None
-    testIter = solverSpec.test_iter[0]
     if haltPercent is None:
         if len(solverSpec.test_net) is 0:
             # no test nets specified - just run the solver normally.
             solver.solve()
         else:
             # run for testInterval iterations, then test
+            testIter = solverSpec.test_iter[0]
             for _ in range(maxIter / testInterval):
                 solver.step(testInterval)
                 latestScores = validateAndPrint(solver, testIter, silent,

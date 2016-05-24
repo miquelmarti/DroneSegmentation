@@ -44,6 +44,9 @@ def preProcessing(image, mean=None, newShape=None):
 def fast_hist(a, b, n):
     k = (a >= 0) & (a < n)
     bincount = np.bincount(n * a[k].astype(int) + b[k], minlength=n**2)
+    # Element (i,j) of the returned array is the number of pixels with label
+    # i in a and label j in b.  So the diagonal element (i,i) is the number of
+    # pixels in class i that were correctly labelled.
     return bincount.reshape(n, n)
 
 
