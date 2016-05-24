@@ -4,7 +4,7 @@ init_weights: "/home/shared/caffe/models/bvlc_reference_caffenet/bvlc_reference_
 multi_source {
     stage {
         name: "flickr_finetune"
-        solver_filename: "examples/flickr_finetune/solver.prototxt"
+        solver_filename: "../flickr_finetune/solver.prototxt"
 
         ignore: "fc8"
     }

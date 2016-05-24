@@ -5,7 +5,7 @@ multi_source {
     iterations: 5
     stage {
         name: "ms2_fcn8"
-        solver_filename: "examples/train_fcn/fcn8/solver.prototxt"
+        solver_filename: "../train_fcn/fcn8/solver.prototxt"
         
         fcn_surgery: true
         #halt_percentage: 10.5

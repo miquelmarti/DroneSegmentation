@@ -85,12 +85,16 @@ class Stage(object):
 
         self.name = name
         self.solverFilename = solverFilename
+        learnDir = os.path.dirname(solverFilename)
+        trainNetBasename = protoUtils.getTrainNetFilename(solverFilename)
+        self.trainNetFilename = os.path.join(learnDir, trainNetBasename)
+        print "Train net filename:", self.trainNetFilename
+        self.outModelFilename = os.path.join(outDir, self.name + MODEL_SUFFIX)
+        
         self.freezeList = freezeList
         self.ignoreList = ignoreList
-        self.trainNetFilename = protoUtils.getTrainNetFilename(solverFilename)
         self.preProcFun = preProcFun
         self.haltPercentage = haltPercentage
-        self.outModelFilename = os.path.join(outDir, self.name + MODEL_SUFFIX)
 
     def cleanup(self, keepModelFilename):
         snapshotDir, snapshotPrefixBase = self.getSnapshotInfo()

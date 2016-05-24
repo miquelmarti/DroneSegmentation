@@ -5,7 +5,7 @@ green=`tput setaf 2`
 reset=`tput sgr0`
 
 
-EXAMPLES_DIR="examples/transfer_tests"
+EXAMPLES_DIR="../transfer_tests"
 OUTPUT_DIR="$EXAMPLES_DIR/results"
 
 
