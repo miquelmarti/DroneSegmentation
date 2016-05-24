@@ -1,0 +1,15 @@
+out_dir: "job1Weights"
+init_weights: "/home/shared/givenModels/fcn-8s-pascal/fcn-8s-pascal.caffemodel"
+
+multi_source {
+    iterations: 4
+    # don't need to perform surgery, as FCN-8 weights already has it
+    stage {
+        name: "ms_coco_21"
+        solver_filename: "fcn8s_coco21/solver.prototxt"
+    }
+    stage {
+        name: "pascal"
+        solver_filename: "fcn8s_pascal/solver.prototxt"
+    }
+}
