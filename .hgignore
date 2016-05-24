@@ -4,6 +4,7 @@ syntax: glob
 *~
 \#*
 \.\#*
+*.orig
 
 # learned weights and learner states
 *.caffemodel*
