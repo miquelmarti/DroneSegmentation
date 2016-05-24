@@ -1,0 +1,22 @@
+out_dir: "bndFcnWeights"
+init_weights: "/home/shared/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel"
+
+multi_source {
+    stage {
+        name: "bnd_fcn32"
+        solver_filename: "bnd_FCN-32_camvid/solver.prototxt"
+        fcn_surgery: true
+        ignore: "fc6"
+        ignore: "fc7"
+    }
+    stage {
+        name: "bnd_fcn16"
+        solver_filename: "bnd_FCN-16_camvid/solver.prototxt"
+        fcn_surgery: true
+    }
+    stage {
+        name: "bnd_fcn8"
+        solver_filename: "bnd_FCN-8_camvid/solver.prototxt"
+        fcn_surgery: true
+    }
+}
