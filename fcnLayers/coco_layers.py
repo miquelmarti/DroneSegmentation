@@ -146,9 +146,9 @@ class IndexFileDataLayer(SemSegDataLayer):
         """
         # config
         params = eval(self.param_str)
+        super(IndexFileDataLayer, self).setup(bottom, top)
         self.data_dir = params['data_dir']
         self.label_dir = params['label_dir']
-        super(IndexFileDataLayer, self).setup(bottom, top)
 
     def load_image(self, idx):
         """
@@ -187,30 +187,6 @@ class ImageIdxDataLayer(IndexFileDataLayer):
 class MatIdxDataLayer(IndexFileDataLayer):
     
     """
-    Load (input image, label image) pairs from the SBDD extended labeling
-    of PASCAL VOC for semantic segmentation
-    one-at-a-time while reshaping the net to preserve dimensions.
-
-    Use this to feed data to a fully convolutional network.
-
-    Setup data layer according to parameters:
-
-        - sbdd_dir: path to SBDD `dataset` dir
-    - image_list: train / seg11valid
-    - mean: tuple of mean values to subtract
-    - randomize: load in random order (default: True)
-    - seed: seed for randomization (default: None / current time)
-
-    for SBDD semantic segmentation.
-
-    N.B.segv11alid is the set of segval11 that does not intersect with SBDD.
-    Find it here: https://gist.github.com/shelhamer/edb330760338892d511e.
-
-    example
-
-    params = dict(sbdd_dir="/path/to/SBDD/dataset",
-        mean=(104.00698793, 116.66876762, 122.67891434),
-        image_list="valid")
     """
     
     def load_label(self, idx):

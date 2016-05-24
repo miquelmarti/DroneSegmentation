@@ -58,6 +58,11 @@ def validateAndPrint(solver, testIter, silent, outLayer, lossLayer,
 def solve(solverFilename, modelFilename, outModelFilename=None,
           preProcFun=None, haltPercent=None, silent=False,
           outLayer='score', lossLayer='loss', labelLayer='label'):
+    # pycaffe requires we be in the directory where solver.prototxt lives
+    startDir = os.getcwd()
+    os.chdir(os.path.dirname(solverFilename))
+    solverFilename = os.path.basename(solverFilename)
+    
     solver = caffe.get_solver(str(solverFilename))
     if modelFilename is not None:
         solver.net.copy_from(str(modelFilename))
@@ -75,13 +80,15 @@ def solve(solverFilename, modelFilename, outModelFilename=None,
                          ").  Is it specified in " + solverFilename + "?")
 
     latestScores = None
-    if haltPercent is None:
-        if len(solverSpec.test_net) is 0:
-            # no test nets specified - just run the solver normally.
-            solver.solve()
-        else:
+    if len(solverSpec.test_net) is 0:
+        # no test nets specified - just run the solver normally.
+        solver.solve()
+
+    # test nets were specified, so behave accordingly
+    else:
+        testIter = solverSpec.test_iter[0]
+        if haltPercent is None:
             # run for testInterval iterations, then test
-            testIter = solverSpec.test_iter[0]
             for _ in range(maxIter / testInterval):
                 solver.step(testInterval)
                 latestScores = validateAndPrint(solver, testIter, silent,
@@ -97,28 +104,31 @@ def solve(solverFilename, modelFilename, outModelFilename=None,
                                                 lossLayer='loss',
                                                 labelLayer='label')
 
-    else:
-        prevScore = 0  # assuming this is mean IU for now.
-        newScore = 0
-        while True:
-            solver.step(testInterval)
-            scores = validateAndPrint(solver, testIter, silent,
-                                      outLayer='score',
-                                      lossLayer='loss',
-                                      labelLayer='label')
-            newScore = scores.meanIu
-            percentIncrease = (1. - (prevScore/newScore)) * 100
-            if percentIncrease < haltPercent:
-                break
-            prevScore = newScore
+        else:
+            # stop when the mean IU improvement drops below given percentage.
+            prevScore = 0  # assuming this is mean IU for now.
+            newScore = 0
+            while True:
+                solver.step(testInterval)
+                scores = validateAndPrint(solver, testIter, silent,
+                                          outLayer='score',
+                                          lossLayer='loss',
+                                          labelLayer='label')
+                newScore = scores.meanIu
+                percentIncrease = (1. - (prevScore/newScore)) * 100
+                if percentIncrease < haltPercent:
+                    print percentIncrease, ' is less than ', haltPercent
+                    break
+                prevScore = newScore
 
-        if not silent:
-            outStr = ' '.join(['Halting ratio', str(haltPercent),
-                               'acheived in', str(solver.iter), 'iterations.'])
-            print outStr
+            if not silent:
+                print ' '.join(['Halting ratio', str(haltPercent),
+                                'acheived in', str(solver.iter),
+                                'iterations.'])
             
     if outModelFilename:
         solver.net.save(str(outModelFilename))
 
-    # return the final testing results.
+    # Clean up environment and return the final testing results.
+    os.chdir(startDir)
     return latestScores
