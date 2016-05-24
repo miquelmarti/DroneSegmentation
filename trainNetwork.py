@@ -6,8 +6,6 @@ import argparse
 import caffe
 from caffeUtils import solve, fcnSurgery
 
-SOLVER_FILENAME = 'solver.prototxt'
-
 
 def getArguments():
     '''
@@ -26,11 +24,9 @@ def getArguments():
     If the metric score on the test_net differs by less than this percentage \
     value between tests, halt.  If not provided, continue for iterations \
     specified by solver file's max_iter.")
-    parser.add_argument('--solver', help="\
-    The name of the solver file in learn_dir.  If omitted, we assume the name \
-    is solver.prototxt.")
-    parser.add_argument('learn_dir', type=str,
-                        help="Directory containing training .prototxt files")
+    parser.add_argument('solver', help="\
+    The name of the solver prototxt file.  If omitted, we assume the name is \
+    solver.prototxt.")
     args = parser.parse_args()
     return args
 
@@ -45,9 +41,5 @@ if __name__ == "__main__":
         caffe.set_device(args.device)
         caffe.set_mode_gpu()
         
-    os.chdir(args.learn_dir)
-    solver = SOLVER_FILENAME
-    if args.solver is not None:
-        solver = args.solver
-    solve.solve(solver, args.weights, preProcFun=preProcFun,
+    solve.solve(args.solver, args.weights, preProcFun=preProcFun,
                 haltPercent=args.halt_percent)
