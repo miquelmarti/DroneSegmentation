@@ -57,8 +57,8 @@ class SemSegDataLayer(caffe.Layer):
         in_ = np.array(in_, dtype=np.float32)
         if len(in_.shape) == 2:
             # add a third dimension to grayscale images
-            in_ = in_[:, :, np.newaxis]
             in_ -= np.mean(self.mean)
+            in_ = in_[:, :, np.newaxis].repeat(repeats=3, axis=2)
         else:
             # switch channels RGB -> BGR
             in_ = in_[:, :, ::-1]
@@ -117,9 +117,11 @@ class ImgPairFileDataLayer(SemSegDataLayer):
         return label
         
     def load_image_helper(self, filename):
-        if os.path.isabs(filename):
-            filename = filename[1:]
-        filename = os.path.join(self.dataset_dir, filename)
+        if self.dataset_dir is not None:
+            # treat the filename as relative
+            if os.path.isabs(filename):
+                filename = filename[1:]
+            filename = os.path.join(self.dataset_dir, filename)
         return Image.open(filename)
 
 
