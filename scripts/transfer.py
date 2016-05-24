@@ -6,6 +6,8 @@
 import transferLearning_pb2
 import argparse
 import os
+import warnings
+import logging
 
 FILENAME_FIELD = 'filename'
 NET_FILENAME_FIELD = 'net_filename'
@@ -66,7 +68,11 @@ def executeListOfStages(stages, firstModel, clean=False):
     model = firstModel
     allResults = []
     scores = None
+    
+    print 'Will execute the following stages :', [s.name for s in stages]
+    
     for s in stages:
+        print '-> Execute stage', s.name
         newModel, scores = s.execute(model)
         if clean:
             # delete each model as soon as we're finished with it
@@ -76,6 +82,7 @@ def executeListOfStages(stages, firstModel, clean=False):
             # save the nextResults of each model
             allResults.append((newModel, scores))
         model = newModel
+        print '-> Produce the model', model
 
     if clean:
         # only the last was saved
@@ -99,6 +106,8 @@ if __name__ == "__main__":
     args = getArguments()
     if args.quiet:
         os.environ['GLOG_minloglevel'] = '3'
+        warnings.filterwarnings("ignore")
+        logging.basicConfig(level=logging.INFO)
         
     # Must change log level prior to importing caffe
     import caffe
@@ -119,9 +128,8 @@ if __name__ == "__main__":
     # Command-line out dir takes priority
     outDir = args.out_dir
     if outDir is None:
-        if os.path.isabs(tlMsg.out_dir):
-            prevModel = tlMsg.out_dir
         # then config file out dir, relative to config file's location
+        # TODO ; if tlMsg.out_dir, then get it as a full path, else, get the dirname of args.stages
         outDir = os.path.join(os.path.dirname(args.config), tlMsg.out_dir)
 
     # Command-line init weights take priority
@@ -136,6 +144,9 @@ if __name__ == "__main__":
     # Execute all multi_source stage sequences in order
     prevModel = args.weights
     for msMsg in tlMsg.multi_source:
+        if not msMsg.iterations > 0:
+            raise Exception("The number of iterations should be superior to zero.")
+		
         initStage, stages = getStagesFromMsgs(msMsg, outDir)
         if initStage is not None:
             pass  # TODO implement this!
@@ -180,6 +191,7 @@ if __name__ == "__main__":
                                 model != prevModel)
                 if shouldDelete:
                     os.remove(model)
-                
+    
     print 'Final models stored in', ', '.join(bestModels)
-    exit(0)
+    raise SystemExit
+    

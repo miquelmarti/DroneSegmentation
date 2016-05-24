@@ -1,4 +1,6 @@
-out_dir: "two_stage_five_iter"
+#out_dir: "snapshots"
+init_weights: "/home/shared/givenModels/fcn-32s-pascal/fcn-32s-pascal.caffemodel"
+
 multi_source {
     iterations: 5
     stage {
@@ -11,7 +13,7 @@ multi_source {
         solver_filename: "examples/train_fcn/fcn8/solver.prototxt"
         
         fcn_surgery: true
-        halt_percentage: 50.0
+        #halt_percentage: 50.0
     }
 
 }

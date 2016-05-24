@@ -1,6 +1,8 @@
-out_dir: 'snapshots'
+#out_dir: "snapshots"
+#init_weights: "fast_cifar10.caffemodel"
+
 multi_source {
-    iterations: 5
+    iterations: 1
     stage {
         name: "fast_stage"
         solver_filename: "examples/cifar10/solver.prototxt"
