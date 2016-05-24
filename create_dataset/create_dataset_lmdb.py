@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Create the dataset with images in the file_with_paths
 # python create_dataset_lmdb.py --W 480 --H 360 --output_path /home/pierre/camvid/val_gt_lmdb/ --input_images /home/shared/datasets/CamVid/val_lab.txt --nb_classes 13 --labels
 

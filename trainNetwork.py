@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
 #  imported so that we can train with these python layers.
-from fcnLayers import *
-import argparse
 import os
+import argparse
 import caffe
 from caffeUtils import solve, fcnSurgery
 
@@ -15,10 +14,10 @@ def getArguments():
     If running solve.py from command line, read in command-line arguments.
     '''
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', type=str, help='\
-    Weights to use to initialize the network.')
-    parser.add_argument('--device', type=int, default=0, help='\
-    ID of the GPU device to train.')
+    parser.add_argument('--weights', type=str, help="\
+    Weights to use to initialize the network.")
+    parser.add_argument('--device', type=int, default=0, help="\
+    ID of the GPU device to train.")
     parser.add_argument('--noval', action='store_true', help="\
     Don't score on the Pascal test set.")
     parser.add_argument('--fcn', action='store_true', help="\
@@ -27,8 +26,11 @@ def getArguments():
     If the metric score on the test_net differs by less than this percentage \
     value between tests, halt.  If not provided, continue for iterations \
     specified by solver file's max_iter.")
+    parser.add_argument('--solver', help="\
+    The name of the solver file in learn_dir.  If omitted, we assume the name \
+    is solver.prototxt.")
     parser.add_argument('learn_dir', type=str,
-                        help='Directory containing training .prototxt files')
+                        help="Directory containing training .prototxt files")
     args = parser.parse_args()
     return args
 
@@ -44,5 +46,8 @@ if __name__ == "__main__":
         caffe.set_mode_gpu()
         
     os.chdir(args.learn_dir)
-    solve.solve(SOLVER_FILENAME, args.weights, preProcFun=preProcFun,
+    solver = SOLVER_FILENAME
+    if args.solver is not None:
+        solver = args.solver
+    solve.solve(solver, args.weights, preProcFun=preProcFun,
                 haltPercent=args.halt_percent)
