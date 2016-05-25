@@ -88,7 +88,6 @@ class Stage(object):
         learnDir = os.path.dirname(solverFilename)
         trainNetBasename = protoUtils.getTrainNetFilename(solverFilename)
         self.trainNetFilename = os.path.join(learnDir, trainNetBasename)
-        print "Train net filename:", self.trainNetFilename
         self.outModelFilename = os.path.join(outDir, self.name + MODEL_SUFFIX)
         
         self.freezeList = freezeList
@@ -144,13 +143,12 @@ class Stage(object):
 
         # TODO allow user to specify loss layer, out layer, data layer, and
         # label layer names.
-        scores = None
+        outNet, scores = None, None
         if usePySolver:
             # presently this branch is unused, but in case we miss some
             # feature of caffe in our own solve.py, we will need this.
-            scores = solve.solve(solverFilename, modelFilename,
-                                 outModelFilename, self.preProcFun,
-                                 self.haltPercentage)
+            outNet, scores = solve.solve(solverFilename, modelFilename,
+                                         self.preProcFun, self.haltPercentage)
         else:
             solver = caffe.get_solver(str(solverFilename))
             if modelFilename:
@@ -160,7 +158,9 @@ class Stage(object):
             scores = solve.runValidation(solver, solverSpec.test_iter[0],
                                          outLayer='score', lossLayer='loss',
                                          labelLayer='label')
-            solver.net.save(str(outModelFilename))
+            outNet = solver.net
+        # Save the results    
+        outNet.save(str(outModelFilename))
 
         # remove temporary files
         self.cleanup(outModelFilename)

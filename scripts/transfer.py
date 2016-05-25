@@ -70,8 +70,6 @@ def executeListOfStages(stages, firstModel, clean=False):
     allResults = []
     scores = None
     
-    print 'Will execute the following stages :', [s.name for s in stages]
-    
     for s in stages:
         print '-> Execute stage', s.name
         newModel, scores = s.execute(model)
