@@ -55,37 +55,41 @@ def validateAndPrint(solver, testIter, silent, outLayer, lossLayer,
 
     
 # TODO add data layer parameter
-def solve(solverFilename, modelFilename, outModelFilename=None,
-          preProcFun=None, haltPercent=None, silent=False,
-          outLayer='score', lossLayer='loss', labelLayer='label'):
+def solve(solverFilename, modelFilename=None, preProcFun=None,
+          haltPercent=None, outLayer='score', lossLayer='loss',
+          labelLayer='label', silent=False):
+    # use the absolute path, since we change the directory later
+    if modelFilename is not None:
+        modelFilename = os.path.abspath(modelFilename)
+    
     # pycaffe requires we be in the directory where solver.prototxt lives
     startDir = os.getcwd()
     os.chdir(os.path.dirname(solverFilename))
     solverFilename = os.path.basename(solverFilename)
     
+    # load the weights
     solver = caffe.get_solver(str(solverFilename))
     if modelFilename is not None:
         solver.net.copy_from(str(modelFilename))
-
+    
     # surgeries
     if preProcFun is not None:
         preProcFun(solver.net)
 
     solverSpec = protoUtils.readSolver(solverFilename)
     maxIter = solverSpec.max_iter
-    # we assume here that the user specifies separate test and train nets.
     testInterval = solverSpec.test_interval
     if not testInterval > 0:
         raise ValueError("test_interval is invalid (" + str(testInterval) +
                          ").  Is it specified in " + solverFilename + "?")
 
     latestScores = None
-    if len(solverSpec.test_net) is 0:
-        # no test nets specified - just run the solver normally.
+    # we assume here that the user specifies separate test and train nets.
+    if len(solverSpec.test_net) is 0 or testInterval is 0:
         solver.solve()
 
-    # test nets were specified, so behave accordingly
     else:
+        # a test net was specified, so run it at the given interval
         testIter = solverSpec.test_iter[0]
         if haltPercent is None:
             # run for testInterval iterations, then test
@@ -126,9 +130,6 @@ def solve(solverFilename, modelFilename, outModelFilename=None,
                                 'acheived in', str(solver.iter),
                                 'iterations.'])
             
-    if outModelFilename:
-        solver.net.save(str(outModelFilename))
-
     # Clean up environment and return the final testing results.
     os.chdir(startDir)
-    return latestScores
+    return solver.net, latestScores
