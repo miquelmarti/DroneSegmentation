@@ -1,0 +1,80 @@
+1	15	person
+2	2	bicycle
+3	7	car
+4	14	motorcycle
+5	1	airplane
+6	6	bus
+7	19	train
+8	0	truck
+9	4	boat
+10	0	traffic light
+11	0	fire hydrant
+13	0	stop sign
+14	0	parking meter
+15	0	bench
+16	3	bird
+17	8	cat
+18	12	dog
+19	13	horse
+20	17	sheep
+21	10	cow
+22	0	elephant
+23	0	bear
+24	0	zebra
+25	0	giraffe
+27	0	backpack
+28	0	umbrella
+31	0	handbag
+32	0	tie
+33	0	suitcase
+34	0	frisbee
+35	0	skis
+36	0	snowboard
+37	0	sports ball
+38	0	kite
+39	0	baseball bat
+40	0	baseball glove
+41	0	skateboard
+42	0	surfboard
+43	0	tennis racket
+44	5	bottle
+46	0	wine glass
+47	0	cup
+48	0	fork
+49	0	knife
+50	0	spoon
+51	0	bowl
+52	0	banana
+53	0	apple
+54	0	sandwich
+55	0	orange
+56	0	broccoli
+57	0	carrot
+58	0	hot dog
+59	0	pizza
+60	0	donut
+61	0	cake
+62	9	chair
+63	18	couch
+64	16	potted plant
+65	0	bed
+67	11	dining table
+70	0	toilet
+72	20	tv
+73	0	laptop
+74	0	mouse
+75	0	remote
+76	0	keyboard
+77	0	cell phone
+78	0	microwave
+79	0	oven
+80	0	toaster
+81	0	sink
+82	0	refrigerator
+84	0	book
+85	0	clock
+86	0	vase
+87	0	scissors
+88	0	teddy bear
+89	0	hair drier
+90	0	toothbrush
