@@ -109,8 +109,11 @@ class Stage(object):
 
     def getSnapshotInfo(self):
         solverSpec = protoUtils.readSolver(str(self.solverFilename))
-        relSnapshotDir, filePrefix = os.path.split(solverSpec.snapshot_prefix)
-        return relSnapshotDir, filePrefix
+        solverDir = os.path.dirname(self.solverFilename)
+        solverRelSnapshotDir, filePrefix = os.path.split(
+            solverSpec.snapshot_prefix)
+        snapshotDir = os.path.join(solverDir, solverRelSnapshotDir)
+        return snapshotDir, filePrefix
 
     def execute(self, modelFilename=None, usePySolver=True):
         """Carries out this learning stage in caffe."""
