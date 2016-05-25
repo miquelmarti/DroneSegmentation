@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 #  imported so that we can train with these python layers.
-import os
 import argparse
 import caffe
 from caffeUtils import solve, fcnSurgery
@@ -41,5 +40,4 @@ if __name__ == "__main__":
         caffe.set_device(args.device)
         caffe.set_mode_gpu()
         
-    solve.solve(args.solver, args.weights, preProcFun=preProcFun,
-                haltPercent=args.halt_percent)
+    solve.solve(args.solver, args.weights, preProcFun, args.halt_percent)
