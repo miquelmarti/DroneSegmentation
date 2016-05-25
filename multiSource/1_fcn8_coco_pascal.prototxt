@@ -6,9 +6,13 @@ multi_source {
     stage {
         name: "ms_coco_21"
         solver_filename: "fcn8s_coco21/solver.prototxt"
+        
+        fcn_surgery: true
     }
     stage {
         name: "pascal"
         solver_filename: "fcn8s_pascal/solver.prototxt"
+        
+        fcn_surgery: true
     }
 }

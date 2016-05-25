@@ -1,0 +1,12 @@
+out_dir: "job2Weights"
+init_weights: "/home/shared/givenModels/fcn-8s-pascal/fcn-8s-pascal.caffemodel"
+
+multi_source {
+    stage {
+        name: "fcn8_cocopascal"
+        solver_filename: "fcn8s_coco21pascal/solver.prototxt"
+        
+        fcn_surgery: true
+        #halt_percentage: 10.5
+    }
+}
