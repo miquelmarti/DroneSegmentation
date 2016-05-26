@@ -1,5 +1,6 @@
 package ensemble;
 
+//MODEL
 message Model {
   required string deploy = 1;
   required string weights = 2;
@@ -7,6 +8,12 @@ message Model {
   optional string output = 4 [default = "score"];
 }
 
+//MODEL OUTPUT
+message ModelOutput {
+  required string folder = 1;
+}
+
+//INPUT
 message Input {
   required string file = 1;
   
@@ -28,17 +35,20 @@ message Input {
   optional bool resize = 5 [default = false];
 }
 
-enum EnsembleType {
-    VOTING = 1;
-    LOGITARI = 2;
-    LOGITGEO = 3;
-    PROBAARI = 4;
-    PROBAGEO = 5;
+//ENSEMBLE
+enum EnsembleType { //Which method is used to combine outputs of models?
+    VOTING = 1; // Majority voting of labels
+    LOGITARI = 2; //Arithmetic average of logits
+    LOGITGEO = 3; //Geometric average of logits
+    PROBAARI = 4; //Arithmetic average of probabilities (logits through softmax)
+    PROBAGEO = 5; //Geometric average of probabilities (logits through softmax)
   }
   
+// MAIN MESSAGE
 message Ensemble {
   optional EnsembleType ensemble_type = 1 [default = VOTING];
   repeated Model model = 2;
-  required Input input = 3;
-  optional string outputFolder = 4 [default = "None"];
+  repeated ModelOutput modelOutput = 3;
+  required Input input = 4;
+  optional string outputFolder = 5 [default = "None"];
 }
