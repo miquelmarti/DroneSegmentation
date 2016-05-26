@@ -47,7 +47,7 @@ class VideoIterator(object):
         rval, frame = self.videoCapture.read()
         if rval:
             # no labels for videos
-            return (Image.fromarray(frame, 'RGB'), None)
+            return (Image.fromarray(frame, 'RGB'), None, None)
         else:
             raise StopIteration()
 
