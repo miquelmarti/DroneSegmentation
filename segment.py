@@ -113,7 +113,7 @@ def colourSegment(labels, label_colours, input_shape, resize_img):
     return _output
     
 
-def softmax(x):
+def softmax(x): #Softmax function, transforming logits into probabilities
     out = np.exp(x)
     out = out/np.sum(out, axis=0)
     return out
@@ -287,12 +287,13 @@ if __name__ == '__main__':
                 guessed_labels.append(np.squeeze(guessed_label))
                 continue
             
-            if config.input.resize:
+            if config.input.resize: #Set new shape to shape defined by .prototxt
                 newShape = input_shape
                 
+            #Run the network
             guessed_label = score.segmentImage(net, _input, in_blob, out_blob,
                                                mean, newShape)
-            guessed_labels.append(np.squeeze(guessed_label))
+            guessed_labels.append(np.squeeze(guessed_label)) #Add network output to list
 
         # Combine the outputs of each net by the chosen method (voting,
         # averaging, etc.)
