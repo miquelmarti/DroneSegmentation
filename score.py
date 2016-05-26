@@ -28,6 +28,8 @@ def preProcessing(image, mean=None, newShape=None):
 
     # Get pixel values and convert them from RGB to BGR
     image = np.array(image, dtype=np.float32)
+    if len(image.shape) is 2:
+                image = np.resize(image, (image.shape[0],image.shape[1],3))
     image = image[:, :, ::-1]
 
     # Substract mean pixel values of pascal training set
@@ -73,6 +75,7 @@ def runNetForward(net, image=None, gtImage=None, dataLayer=DATA_LAYER_NAME,
 
 def segmentImage(net, image, lossLayer, outLayer, mean=None,
                  groundTruthImage=None, newShape=None):
+    
     image = preProcessing(image, mean, newShape)
     return runNetForward(net, image, gtImage=groundTruthImage,
                          lossLayer=lossLayer, outLayer=outLayer,
