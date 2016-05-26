@@ -11,4 +11,4 @@ python /home/pierre/hgRepos/caffeTools/runSegmentation.py                       
                 --output    prob                                                    \
                 --PASCAL                                                            \
                 --resize                                                            \
-                --labels    ${DATASET_PATH}/lists/val_img_lab.txt
+                --labels    ${DATASET_PATH}/lists/seg11_img_lab.txt

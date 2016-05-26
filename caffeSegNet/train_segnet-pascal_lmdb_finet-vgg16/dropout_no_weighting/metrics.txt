@@ -1,0 +1,28 @@
+Average time elapsed when processing one image :	0.0743747787631
+Average pixel accuracy :	0.747129574109
+Average mean accuracy :		0.253320258154
+Average mean IU score :		0.143482265437
+Average frequency weighted IU :	0.662791096147
+
+Mean IU per classes : 
+	class  0  :  0.847358325862
+	class  1  :  0.237903017512
+	class  2  :  0.0
+	class  3  :  0.0412966026071
+	class  4  :  0.0159756581842
+	class  5  :  0.0803726697273
+	class  6  :  0.319950830295
+	class  7  :  0.168943097522
+	class  8  :  0.241854196299
+	class  9  :  0.00658821247565
+	class  10  :  4.52593132352e-05
+	class  11  :  0.0
+	class  12  :  0.00828518311021
+	class  13  :  2.81412691712e-05
+	class  14  :  0.131224019314
+	class  15  :  0.385660401406
+	class  16  :  0.000595785904577
+	class  17  :  0.0
+	class  18  :  0.109782924472
+	class  19  :  0.227228400928
+	class  20  :  0.190034847967
