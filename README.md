@@ -18,3 +18,4 @@ Used for the visualization.
 # view_weights.py
 Visualize the weights of a layer from the caffemodel of a given iteration.
 
+We have some changes to permissions...
