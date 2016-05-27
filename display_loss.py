@@ -5,7 +5,6 @@
 
 
 import argparse
-import numpy as np
 import matplotlib.pyplot as plt
 import string
 
@@ -31,6 +30,8 @@ TAGS_TO_ARGS = {LOSS_TAG: TST_LOSS_ARG,
 TRAIN_LOSS_TAGS = [ITER_TAG, LOSS_TAG]
 SEG_TEST_PREFIX = '>>>'
 SEG_TEST_AVOID = '.cpp'
+MS_ITER_START_STR = 'starting multi-source iteration'
+STAGE_START_STR = '-> Execute stage'
 
 
 def getIterNum(line):
@@ -54,10 +55,10 @@ def getTestStats(lines):
             MEAN_ACC_TAG,
             MEAN_IU_TAG,
             FWAVACC_TAG]
-    stats = { tag: [] for tag in tags }
+    stats = {tag: [] for tag in tags}
     # accumulate statistic values in the tags dict
     for l in lines:
-        tagsInLine = filter(lambda tag : tag in l, tags)
+        tagsInLine = filter(lambda tag: tag in l, tags)
         if len(tagsInLine) == 0:
             continue
         tagVals = {tag: getTaggedValue(l, tag) for tag in tagsInLine}
@@ -73,6 +74,21 @@ def plotXAndY(x, y, title):
     plt.plot(x, y)
     plt.title(title)
     plt.show()
+
+
+def plotLearningLogs(lossLines, segTestLines, displayTagDict, prefix=''):
+    if msIter is not None:
+        prefix = 'MS iteratation ' + str(msIter) + ':'
+    iterNums = map(getIterNum, lossLines)
+    losses = [float(l.strip().rpartition(' ')[2]) for l in lossLines]
+    if displayTagDict[LOSS_TAG]:
+        plotXAndY(iterNums, losses, prefix + 'training loss')
+
+    testStats = getTestStats(segTestLines)
+    for tag in testStats:
+        if displayTagDict[tag]:
+            iterations, stats = zip(*testStats[tag])
+            plotXAndY(iterations, stats, prefix + tag)
     
     
 parser = argparse.ArgumentParser(description="\
@@ -83,40 +99,53 @@ parser.add_argument('log_file', type=str,
                     help='Path to the Caffe output log file')
 disp_group = parser.add_argument_group('Graphs to display')
 disp_group.add_argument('--' + TRN_LOSS_ARG, action="store_true",
-                    help='Display the training loss.')
+                        help='Display the training loss.')
 disp_group.add_argument('--' + TST_LOSS_ARG, action="store_true",
-                    help='Display the validation loss.')
+                        help='Display the validation loss.')
 disp_group.add_argument('--' + OV_ACC_ARG, action="store_true",
-                    help='Display the overall validation accuracy.')
+                        help='Display the overall validation accuracy.')
 disp_group.add_argument('--' + MEAN_ACC_ARG, action="store_true",
-                    help='Display the mean validation accuracy.')
+                        help='Display the mean validation accuracy.')
 disp_group.add_argument('--' + MEAN_IU_ARG, action="store_true",
-                    help='Display the validation mean IU.')
+                        help='Display the validation mean IU.')
 disp_group.add_argument('--' + FWAVACC_ARG, action="store_true",
-                    help='Display the fwavacc (?) on the validation set.')
+                        help='Display the fwavacc (?) on the validation set.')
 args = parser.parse_args()
 
+# if no display arguments given, display all the plots
 argVars = vars(args)
-displayArgVals = [argVars[arg] for tag, arg in TAGS_TO_ARGS.iteritems()]
-displayAll = not reduce(lambda x,y: x or y, displayArgVals)
+displayAll = not any([argVars[arg] for _, arg in TAGS_TO_ARGS.iteritems()])
+displayTagDict = None
+if displayAll:
+    displayTagDict = {tag: True for tag, arg in TAGS_TO_ARGS.iteritems()}
+else:
+    displayTagDict = {tag: argVars[arg]
+                      for tag, arg in TAGS_TO_ARGS.iteritems()}
 
 with open(args.log_file, 'r') as f:
     lossLines = []
     segTestLines = []
+    msIter = None
+    prefix = ''
+
     for l in f:
+        if MS_ITER_START_STR in l:
+            postStr = l.partition(MS_ITER_START_STR)[2]
+            prefix = 'MS iter. ' + postStr.split()[0]
+        if STAGE_START_STR in l:
+            prefix += l.partition(STAGE_START_STR)[2]
+            # display the values computed up to this point
+            if len(lossLines) > 0 and len(segTestLines) > 0:
+                plotLearningLogs(lossLines, segTestLines, displayTagDict,
+                                 prefix)
+                lossLines = []
+                segTestLines = []
         if not (l.startswith(SEG_TEST_PREFIX) or SEG_TEST_AVOID in l):
-            continue # ignore badly-formatted lines
+            continue  # ignore badly-formatted lines
         elif l.startswith(SEG_TEST_PREFIX) and SEG_TEST_AVOID not in l:
             segTestLines.append(l)
-        elif reduce(lambda x,y: x and y, [t in l for t in TRAIN_LOSS_TAGS]):
+        elif all([t in l for t in TRAIN_LOSS_TAGS]):
             lossLines.append(l)
-    iterNums = map(getIterNum, lossLines)
-    losses = [float(l.strip().rpartition(' ')[2]) for l in lossLines]
-    if args.train_loss or displayAll:
-        plotXAndY(iterNums, losses, 'training loss')
 
-    testStats = getTestStats(segTestLines)
-    for tag in testStats:
-        if displayAll or argVars[TAGS_TO_ARGS[tag]]:
-            iterations, stats = zip(*testStats[tag])
-            plotXAndY(iterations, stats, tag)
+    # display the remaining collected values
+    plotLearningLogs(lossLines, segTestLines, displayTagDict, prefix)
