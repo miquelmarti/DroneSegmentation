@@ -5,8 +5,9 @@ green=`tput setaf 2`
 reset=`tput sgr0`
 
 
-EXAMPLES_DIR="../transfer_tests"
-OUTPUT_DIR="$EXAMPLES_DIR/results"
+TLF_PATH="/home/pierre/hgRepos/transferLearningFramework"
+EXAMPLES_DIR="$TLF_PATH/examples/transfer_tests"
+OUTPUT_DIR="$TLF_PATH/$EXAMPLES_DIR/results"
 
 
 # Create results directory if doesn't already exist
@@ -30,7 +31,7 @@ for test in $( ls $EXAMPLES_DIR/*.prototxt ); do
     echo "${green}[Test the $(basename $test) file]${reset}"
     echo "Run the training (may be long)..."
     
-    python scripts/transfer.py $test --clean --quiet --out_dir $OUTPUT_DIR
+    python $TLF_PATH/scripts/transfer.py $test --clean --quiet --out_dir $OUTPUT_DIR
     ret=$?
     if [ $ret -ne 0 ]; then
         echo "${red}This test failed...${reset}"
