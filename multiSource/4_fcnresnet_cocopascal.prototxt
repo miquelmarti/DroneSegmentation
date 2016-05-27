@@ -4,7 +4,7 @@ init_weights: "/home/shared/givenModels/fcn-resnet/ResNet-152-model.caffemodel"
 multi_source {
     stage {
         name: "fcnResnet_cocopascal"
-        solver_filename: "fcnResNet_coco21pascal/solver.prototxt"
+        solver_filename: "fcnResNet_coco21pascal/solver-152.prototxt"
         
         fcn_surgery: true
         #halt_percentage: 10.5
