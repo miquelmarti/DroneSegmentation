@@ -6,7 +6,7 @@ layer {
   python_param {
     module: "coco_layers"
     layer: "ImgPairFileDataLayer"
-      param_str: "{\'seed\': 1337, \'image_list\': \'/home/shared/datasets/PascalCoco/val.txt\', \'mean\': (104.008, 116.669, 122.675),\'randomize\': False}"
+      param_str: "{\'seed\': 1337, \'image_list\': \'/home/shared/datasets/PascalCoco/train.txt\', \'mean\': (104.008, 116.669, 122.675),\'randomize\': True}"
   }
 }
 layer {
@@ -403,7 +403,7 @@ layer {
   }
 }
 layer {
-  name: "fc6"
+  name: "fc6-v2"
   type: "Convolution"
   bottom: "pool5"
   top: "fc6"
@@ -420,6 +420,14 @@ layer {
     pad: 0
     kernel_size: 7
     stride: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.005
+    }
+    bias_filler {
+      type: "constant"
+      value: 1
+    }
   }
 }
 layer {
@@ -429,7 +437,7 @@ layer {
   top: "fc6"
 }
 layer {
-  name: "fc7"
+  name: "fc7-v2"
   type: "Convolution"
   bottom: "fc6"
   top: "fc7"
@@ -446,6 +454,14 @@ layer {
     pad: 0
     kernel_size: 1
     stride: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.005
+    }
+    bias_filler {
+      type: "constant"
+      value: 1
+    }
   }
 }
 layer {
@@ -471,142 +487,40 @@ layer {
     num_output: 21
     pad: 0
     kernel_size: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.005
+    }
+    bias_filler {
+      type: "constant"
+      value: 1
+    }
   }
 }
 layer {
-  name: "upscore2"
+  name: "upscore"
   type: "Deconvolution"
   bottom: "score_fr"
-  top: "upscore2"
+  top: "upscore"
   param {
     lr_mult: 0
   }
   convolution_param {
     num_output: 21
     bias_term: false
-    kernel_size: 4
-    stride: 2
-  }
-}
-layer {
-  name: "score_pool4"
-  type: "Convolution"
-  bottom: "pool4"
-  top: "score_pool4"
-  param {
-    lr_mult: 1
-    decay_mult: 1
-  }
-  param {
-    lr_mult: 2
-    decay_mult: 0
-  }
-  convolution_param {
-    num_output: 21
-    pad: 0
-    kernel_size: 1
-  }
-}
-layer {
-  name: "score_pool4c"
-  type: "Crop"
-  bottom: "score_pool4"
-  bottom: "upscore2"
-  top: "score_pool4c"
-  crop_param {
-    axis: 2
-    offset: 5
-  }
-}
-layer {
-  name: "fuse_pool4"
-  type: "Eltwise"
-  bottom: "upscore2"
-  bottom: "score_pool4c"
-  top: "fuse_pool4"
-  eltwise_param {
-    operation: SUM
-  }
-}
-layer {
-  name: "upscore_pool4"
-  type: "Deconvolution"
-  bottom: "fuse_pool4"
-  top: "upscore_pool4"
-  param {
-    lr_mult: 0
-  }
-  convolution_param {
-    num_output: 21
-    bias_term: false
-    kernel_size: 4
-    stride: 2
-  }
-}
-layer {
-  name: "score_pool3"
-  type: "Convolution"
-  bottom: "pool3"
-  top: "score_pool3"
-  param {
-    lr_mult: 1
-    decay_mult: 1
-  }
-  param {
-    lr_mult: 2
-    decay_mult: 0
-  }
-  convolution_param {
-    num_output: 21
-    pad: 0
-    kernel_size: 1
-  }
-}
-layer {
-  name: "score_pool3c"
-  type: "Crop"
-  bottom: "score_pool3"
-  bottom: "upscore_pool4"
-  top: "score_pool3c"
-  crop_param {
-    axis: 2
-    offset: 9
-  }
-}
-layer {
-  name: "fuse_pool3"
-  type: "Eltwise"
-  bottom: "upscore_pool4"
-  bottom: "score_pool3c"
-  top: "fuse_pool3"
-  eltwise_param {
-    operation: SUM
-  }
-}
-layer {
-  name: "upscore8"
-  type: "Deconvolution"
-  bottom: "fuse_pool3"
-  top: "upscore8"
-  param {
-    lr_mult: 0
-  }
-  convolution_param {
-    num_output: 21
-    bias_term: false
-    kernel_size: 16
-    stride: 8
+    kernel_size: 64
+    stride: 32
   }
 }
 layer {
   name: "score"
   type: "Crop"
-  bottom: "upscore8"
+  bottom: "upscore"
   bottom: "data"
   top: "score"
   crop_param {
     axis: 2
-    offset: 31
+    offset: 19
   }
 }
 layer {

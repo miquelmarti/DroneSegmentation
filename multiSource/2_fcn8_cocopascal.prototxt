@@ -1,12 +1,22 @@
 out_dir: "job2Weights"
-init_weights: "/home/shared/givenModels/fcn-8s-pascal/fcn-8s-pascal.caffemodel"
+init_weights: "/home/shared/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel"
 
 multi_source {
     stage {
+        name: "fcn32_cocopascal"
+        solver_filename: "fcn32s_coco21pascal/solver.prototxt"
+        fcn_surgery: true
+        ignore: "fc6"
+        ignore: "fc7"
+    }
+    stage {
+        name: "fcn16_cocopascal"
+        solver_filename: "fcn16s_coco21pascal/solver.prototxt"
+        fcn_surgery: true
+    }
+    stage {
         name: "fcn8_cocopascal"
         solver_filename: "fcn8s_coco21pascal/solver.prototxt"
-        
         fcn_surgery: true
-        #halt_percentage: 10.5
     }
 }

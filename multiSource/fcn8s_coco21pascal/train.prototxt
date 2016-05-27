@@ -6,7 +6,7 @@ layer {
   python_param {
     module: "coco_layers"
     layer: "ImgPairFileDataLayer"
-      param_str: "{\'dataset_dir\': \'/home/shared/datasets/PascalCoco\', \'seed\': 1337, \'image_list\': \'train.txt\', \'mean\': (104.008, 116.669, 122.675),\'randomize\': True}"
+      param_str: "{\'seed\': 1337, \'image_list\': \'/home/shared/datasets/PascalCoco/train.txt\', \'mean\': (104.008, 116.669, 122.675),\'randomize\': True}"
   }
 }
 layer {
