@@ -162,7 +162,7 @@ class Stage(object):
                                          outLayer='score', lossLayer='loss',
                                          labelLayer='label')
             outNet = solver.net
-        # Save the results    
+        # Save the results
         outNet.save(str(outModelFilename))
 
         # remove temporary files

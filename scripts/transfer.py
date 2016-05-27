@@ -75,7 +75,7 @@ def executeListOfStages(stages, firstModel, clean=False):
         newModel, scores = s.execute(model)
         if clean:
             # delete each model as soon as we're finished with it
-            if model != firstModel:
+            if model != firstModel and clean:
                 os.remove(model)
         else:
             # save the nextResults of each model
@@ -148,20 +148,20 @@ if __name__ == "__main__":
             raise Exception("The number of iterations should be > 0.")
 
         initStage, stages = getStagesFromMsgs(msMsg, configDir, outDir)
-        if initStage is not None:
-            pass  # TODO implement this!
         bestModels = [None] * len(stages)
         bestScores = [float('-inf')] * len(stages)
 
         for j in range(msMsg.iterations):
-            print "starting iteration from", prevModel
+            print "starting multi-source iteration", j, "from", prevModel
             nextResults = None
             if initStage is not None and j is 0:
                 # on the first iteration, run initStage instead of first stage
                 firstStages = [initStage] + stages[1:]
-                nextResults = executeListOfStages(firstStages, prevModel)
+                nextResults = executeListOfStages(firstStages, prevModel,
+                                                  args.clean)
             else:
-                nextResults = executeListOfStages(stages, prevModel)
+                nextResults = executeListOfStages(stages, prevModel,
+                                                  args.clean)
             nextModels, nextScores = zip(*nextResults)
 
             # check if these are the new best models for their stage
@@ -186,10 +186,8 @@ if __name__ == "__main__":
             
             # delete any models that are no longer needed
             for model in nextModels:
-                shouldDelete = (model is not None and
-                                model not in bestModels and
-                                model != prevModel)
-                if shouldDelete:
+                notNeeded = model not in bestModels and model != prevModel
+                if model is not None and notNeeded and args.clean:
                     os.remove(model)
     
     print 'Final models stored in', ', '.join(bestModels)
