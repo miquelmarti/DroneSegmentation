@@ -41,7 +41,7 @@ def build_network(args, caffemodel):
     # GPU / CPU mode
     if args.cpu:
         print 'Set CPU mode'
-        #caffe.set_mode_cpu()
+        #caffe.set_mode_cpu() 
     else:
         print 'Set GPU mode'
         caffe.set_mode_gpu()

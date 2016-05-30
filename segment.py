@@ -112,7 +112,7 @@ def colourSegment(labels, label_colours, input_shape, resize_img):
     return _output
     
 
-def softmax(x):
+def softmax(x): #Softmax function, transforming logits into probabilities
     out = np.exp(x)
     out = out/np.sum(out, axis=0)
     return out
@@ -205,13 +205,21 @@ if __name__ == '__main__':
     input_blobs = []
     output_blobs = []
     nets = []
-    for model in config.model:
+    for model in config.model: #Load all networks from the different models specified in .proto
         #Create network and add it to network list
         nets.append(build_network(model.deploy, model.weights))
         
         #Get information about input and output layers
         input_blobs.append(model.input)
         output_blobs.append(model.output)
+        
+    for model in config.modelOutput: #Load all model output folders specified in .proto
+        #Create network and add it to network list
+        nets.append(None)
+        
+        #Get information about input and output layers
+        input_blobs.append(None)
+        output_blobs.append(model.folder)
             
     input_shape = nets[0].blobs[input_blobs[0]].data.shape
     
@@ -256,29 +264,41 @@ if __name__ == '__main__':
     
     # process each image, one-by-one
     n_im = 0  # Image counter
+    
+    mean = np.array([config.input.mean.r,
+                     config.input.mean.g,
+                     config.input.mean.b])
+                     
     for _input, real_label, imagePath in imageIterator:
         n_im += 1
         guessed_labels = []
         start = time.time()
+        
+        # Extracts current image name from the image path
+        imageName = basename(os.path.splitext(imagePath)[0])
+        
         for net, in_blob, out_blob in zip(nets, input_blobs, output_blobs):
             guessed_label = None
             newShape = None
-            mean = np.array([config.input.mean.r,
-                             config.input.mean.g,
-                             config.input.mean.b])
-            if config.input.resize:
+            
+            if net is None: #If no net is provided, it means the outputs are in .npy files
+                guessed_label = np.load(out_blob+imageName+'.npy')
+                guessed_labels.append(np.squeeze(guessed_label))
+                continue
+            
+            if config.input.resize: #Set new shape to shape defined by .prototxt
                 newShape = input_shape
+                
+            #Run the network
             guessed_label = score.segmentImage(net, _input, in_blob, out_blob,
                                                mean, newShape)
-            guessed_labels.append(np.squeeze(guessed_label))
+            guessed_labels.append(np.squeeze(guessed_label)) #Add network output to list
 
         # Combine the outputs of each net by the chosen method (voting,
         # averaging, etc.)
         guessed_labels = combineEnsemble(guessed_labels,
                                          config.ensemble_type)
                                          
-        # Extracts current image name from the image path
-        imageName = basename(os.path.splitext(imagePath)[0])
         
         #If we precise an output folder in the prototxt
         if config.outputFolder != "None":
@@ -287,7 +307,6 @@ if __name__ == '__main__':
                 # Writes down in list.txt the files that have been saved
                 summaryFile.write(imagePath+" "+config.outputFolder+imageName+".npy\n")
 
-        
         
         # Get the time after the network process
         times.append(time.time() - start)

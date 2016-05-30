@@ -6,12 +6,16 @@
 # - PROBAGEP (arithmetic averaging the class probabilities, obtained by passing logits through softmax function)
 # - PROBAGEO (geometric averaging the class probabilities, obtained by passing logits through softmax function)
 
+
 ensemble_type: LOGITARI
+
+
+#outputFolder: "/home/johannes/Distilled_Data_VOC/"     #Optional: stores outputs of each image into .npy files in the following directory:
 
 input
 {
         file: "/home/shared/datasets/VOCdevkit/VOC2012/lists/seg11_img_lab.txt"
-        type: LABELS #Type of the input file : can be VIDEO (.mp4), IMAGES (.txt) or LABELS (.txt)
+        type: LABELS            #Type of the input file : can be VIDEO (.mp4), IMAGES (.txt) or LABELS (.txt)
         colours: "/home/shared/datasets/VOCdevkit/VOC2012/colours/pascal_voc_21_colours.png"
         
         #Optional : default values are 0
@@ -37,3 +41,8 @@ model
         deploy: "/home/andrew/models/caffe/FCN-8/deploy.prototxt"
         weights: "/home/andrew/models/caffe/FCN-8/train_iter_100000.caffemodel"
 }
+
+
+# If the outputs of networks have already been computed and stored into .npy files, we can include these models into the ensemble. The arrays must have been computed for the same test dataset as inputted now. Specify the folder containing .npy files:
+# modelOutput { folder: "/home/johannes/Outputs_model_1/" }
+# modelOutput { folder: "/home/johannes/Outputs_model_2/" }
