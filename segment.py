@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 # Code, as generic as possible, for the visualization
-# Ex : python /home/pierre/hgRepos/caffeTools/runSegmentation.py --model /home/shared/caffeSegNet/models/segnet_webcam/deploy.prototxt --weights /home/shared/caffeSegNet/models/segnet_webcam/segnet_webcam.caffemodel --colours /home/shared/datasets/CamVid/colours/camvid12.png --output argmax --labels /home/shared/datasets/CamVid/train.txt
 
 # TO DO :
 # - check if video mode works
