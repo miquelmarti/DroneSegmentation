@@ -62,7 +62,8 @@ def getStagesFromMsgs(multiSourceMsg, configDir, outDir):
               for stageMsg in multiSourceMsg.stage]
     initStage = None
     if multiSourceMsg.HasField(INIT_STAGE_FIELD):
-        getStageFromMsg(multiSourceMsg.init_stage, configDir, outDir)
+        initStage = getStageFromMsg(multiSourceMsg.init_stage, configDir,
+                                    outDir)
     return initStage, stages
 
 
