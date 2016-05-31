@@ -1,5 +1,5 @@
 out_dir: "fcnWeights"
-init_weights: "/home/shared/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel"
+init_weights: "/home/shared/data/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel"
 
 multi_source {
     stage {
