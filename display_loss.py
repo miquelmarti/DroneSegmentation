@@ -120,6 +120,9 @@ def plotSegTests(segTestLines, prefix=''):
 def plotSmoothedLossCurves(logList, avgOverLast=10, interval=1,
                            title='Loss curves'):
     allSmoothIters, allSmoothLosses, allNames = [], [], []
+    if avgOverLast < interval:
+        # always smooth at least over all the unviewed points
+        avgOverLast = interval
     for logFile in logList:
         with open(logFile, 'r') as f:
             # extract the loss values and their iterations
