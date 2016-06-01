@@ -1,11 +1,24 @@
 """A collection of utility functions for protocol buffers and caffe."""
 
+# TODO: Should be flexible to other way to specify train / test
+# TODO: (see caffe proto)
+
 import google.protobuf
 from caffe.proto import caffe_pb2
 import os
 
 NET_FIELD = 'net'
 TRAIN_NET_FIELD = 'train_net'
+
+
+def replaceTrainNetFilename(solverSpec, newTrainNet):
+    if solverSpec.HasField(NET_FIELD):
+        solverSpec.net = newTrainNet
+    elif solverSpec.HasField(TRAIN_NET_FIELD):
+        solverSpec.train_net = newTrainNet
+    else:
+        raise Exception('No training network provided.')
+    return solverSpec
 
 
 def getTrainNetFilename(solverFilename):

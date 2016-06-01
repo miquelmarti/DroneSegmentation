@@ -5,8 +5,6 @@ import numpy as np
 import caffe
 from PIL import Image
 
-DATA_LAYER_NAME = "data"
-
 
 class SegScores(object):
     """A simple struct to contain the segmentation scores we compute."""
@@ -52,13 +50,18 @@ def fast_hist(a, b, n):
     return bincount.reshape(n, n)
 
 
-def runNetForward(net, image=None, gtImage=None, dataLayer=DATA_LAYER_NAME,
+# TODO: Deal with classification (here, only pixel-wise)
+# TODO: What about those without the labelLayer ?
+def runNetForward(net, image=None, gtImage=None, dataLayer='data',
                   lossLayer='loss', outLayer='score', labelLayer='label'):
     if image is not None:
         net.blobs[dataLayer].reshape(1, *image.shape)
         net.blobs[dataLayer].data[...] = image
+    
     net.forward()
+    
     output = net.blobs[outLayer].data
+    
     if gtImage is not None or labelLayer in net.blobs:
         flatOutput = output[0].argmax(0).flatten()
         hist = None
@@ -70,7 +73,7 @@ def runNetForward(net, image=None, gtImage=None, dataLayer=DATA_LAYER_NAME,
                              flatOutput, n_cl)
         return output, hist, net.blobs[lossLayer].data.flat[0]
     else:
-        return output
+        return output, None, 0
 
 
 def segmentImage(net, image, lossLayer, outLayer, mean=None,
@@ -83,6 +86,10 @@ def segmentImage(net, image, lossLayer, outLayer, mean=None,
 
 
 def computeSegmentationScores(hist):
+    # Often happens in case of classification (instead of semantic segmentation)
+    if hist is None:
+        return SegScores(None, 0, 0, 0, 0, 0)
+    
     # overall accuracy
     ovAcc = np.diag(hist).sum() / hist.sum()
     # per-class accuracy
@@ -91,7 +98,7 @@ def computeSegmentationScores(hist):
     iu = np.diag(hist) / (hist.sum(1) + hist.sum(0) - np.diag(hist))
     meanIu = np.nanmean(iu)
     freq = hist.sum(1) / hist.sum()
-    # not sure what this is...Shelhamer computes it, so we retain it.
+    # weighted average of the IU (better in case of imbalanced classes)
     fwavacc = (freq[freq > 0] * iu[freq > 0]).sum()
     return SegScores(None, ovAcc, meanAcc, iu, meanIu, fwavacc)
 
