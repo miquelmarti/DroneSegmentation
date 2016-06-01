@@ -33,6 +33,10 @@ def isTrainLossLine(line):
             all([tag in line for tag in TRAIN_LOSS_TAGS]))
 
 
+def isTestStatLine(line):
+    return line.startswith(SEG_TEST_PREFIX) and SEG_TEST_AVOID not in line
+    
+
 def getIterNum(line):
     '''Returns the iteration number that this line corresponds to.
 
@@ -168,14 +172,13 @@ if __name__ == "__main__":
             elif l.startswith(STAGE_START_STR):
                 stage = l.partition(STAGE_START_STR)[2].strip()
                 prefix = 'MS Iter. ' + str(msIter) + ', ' + stage + ': '
+                
             # remaining cases are aggregating data
             elif l.startswith(BEST_SCORE_STR):
                 bestScoreLines.append(l)
-            elif not (l.startswith(SEG_TEST_PREFIX) or SEG_TEST_AVOID in l):
-                continue  # ignore badly-formatted lines
-            elif l.startswith(SEG_TEST_PREFIX) and SEG_TEST_AVOID not in l:
+            elif isTestStatLine(l):
                 segTestLines.append(l)
-            elif all([t in l for t in TRAIN_LOSS_TAGS]):
+            elif isTrainLossLine(l):
                 # if iteration goes down, we must be in a new job
                 newIter = getIterNum(l)
                 if newIter < currentIter:
