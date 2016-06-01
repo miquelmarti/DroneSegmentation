@@ -5,7 +5,7 @@ green=`tput setaf 2`
 reset=`tput sgr0`
 
 
-TLF_DIR="/home/pierre/hgRepos/transferLearningFramework_pierre"
+TLF_DIR="/home/pierre/hgRepos/transferLearningFramework"
 EXAMPLES_DIR="$TLF_DIR/examples/transfer_tests"
 OUTPUT_DIR="$EXAMPLES_DIR/results"
 
