@@ -2,7 +2,7 @@ train_net: "train.prototxt"
 test_net: "val.prototxt"
 test_iter: 736  # number of images in seg11valid.txt
 # make test net, but don't invoke it from the solver itself
-test_interval: 5000
+test_interval: 10000
 display: 100
 average_loss: 20
 lr_policy: "fixed"
@@ -14,6 +14,6 @@ momentum: 0.99
 iter_size: 1
 max_iter: 100000
 weight_decay: 0.0005
-snapshot: 5000
+snapshot: 50000
 snapshot_prefix: "snapshot/train"
 test_initialization: false
