@@ -2,7 +2,7 @@ train_net: "train-152.prototxt"
 #test_net: "val.prototxt"
 #test_iter: 736
 # make test net, but don't invoke it from the solver itself
-test_interval: 999999999
+test_interval: 0
 display: 100
 average_loss: 20
 lr_policy: "fixed"

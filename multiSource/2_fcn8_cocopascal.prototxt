@@ -5,18 +5,27 @@ multi_source {
     stage {
         name: "fcn32_cocopascal"
         solver_filename: "fcn32s_coco21pascal/solver.prototxt"
+        
         fcn_surgery: true
         ignore: "fc6"
         ignore: "fc7"
+        
+        outLayer: "score"
     }
     stage {
         name: "fcn16_cocopascal"
         solver_filename: "fcn16s_coco21pascal/solver.prototxt"
+        
         fcn_surgery: true
+        
+        outLayer: "score"
     }
     stage {
         name: "fcn8_cocopascal"
         solver_filename: "fcn8s_coco21pascal/solver.prototxt"
+        
         fcn_surgery: true
+        
+        outLayer: "score"
     }
 }

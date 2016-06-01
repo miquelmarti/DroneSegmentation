@@ -3,7 +3,7 @@ test_net: "val.prototxt"
 test_iter: 736
 # make test net, but don't invoke it from the solver itself
 test_interval: 5000
-display: 20
+display: 100
 average_loss: 20
 lr_policy: "fixed"
 # lr for unnormalized softmax

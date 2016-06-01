@@ -8,11 +8,15 @@ multi_source {
         solver_filename: "fcnResNet_coco21/solver-152.prototxt"
         
         fcn_surgery: true
+        
+        outLayer: "score"
     }
     stage {
         name: "pascal"
         solver_filename: "fcnResNet_pascal/solver-152.prototxt"
         
         fcn_surgery: true
+        
+        outLayer: "score"
     }
 }

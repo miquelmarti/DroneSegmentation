@@ -8,5 +8,7 @@ multi_source {
         
         fcn_surgery: true
         #halt_percentage: 10.5
+        
+        outLayer: "score"
     }
 }
