@@ -15,6 +15,7 @@ def get_arguments():
     destination folder to save png files')
     parser.add_argument('--data', type=str, default='/home/shared/datasets/MS_COCO', help='\
     path of images folder where jpg files can be found')
+    parser.add_argument('--set', type=str, help='test or val', default='train')
     
     return parser.parse_args()
 
@@ -25,10 +26,12 @@ def drawSegmentation(image, anns, img):
         :return: None
         """
         if len(anns) == 0:
-            return 0
+            return False
         if 'segmentation' in anns[0]:
 	    # sort annotations from biggest to smallest to avoid occlusions
 	    anns.sort(key=lambda x: x['area'], reverse=True)
+	    if anns[len(anns)-1]['area'] < 200:
+		return False
             for ann in anns:
 		# open file making the conversation MSCOCO classes -> VOC classes
 		f = open('classes.txt', 'r')
@@ -65,6 +68,7 @@ def drawSegmentation(image, anns, img):
 			for y in range(img.shape[1]):
 				if not mask2[x][y][3] == 0:
 					image[x][y] = c
+	return True
 		    
 		 
 
@@ -77,7 +81,7 @@ if __name__ == '__main__':
 
 	dataDir=args.data
 	dst=args.dst	
-	dataType='train2014'#val2014
+	dataType=args.set+'2014'
 	annFile='%s/annotations/instances_%s.json'%(dataDir,dataType)
 	# initialize COCO api for instance annotations
 	coco=COCO(annFile)
@@ -92,6 +96,8 @@ if __name__ == '__main__':
 	imgs = coco.loadImgs(imgIds)
 
 	imgs.sort(key=lambda x: x['id'])
+
+	f = open(args.set+'_coco21.txt', 'w')
 
 	for img in imgs:
 		#open image
@@ -110,15 +116,25 @@ if __name__ == '__main__':
 			continue
 
 		#apply segmentations on image	
-		drawSegmentation(image, anns, img)
-	
-		print img['file_name']
+		suitable = drawSegmentation(image, anns, img)
 		
-		#save files
-		if not os.path.isdir(dst):
-			os.makedirs(dst)
-		path=dst+'/'+str(img['file_name'])[:-4]+'.png'
+		if not suitable:
+			continue
 
-		cv2.imwrite(path, image)
+		#print img['file_name']
+		f.write('/images/'+args.set+'2014/'+img['file_name']+' vocstyle_cocoimages/'+args.set+'/'+img['file_name']+'\n')
+		#display image
+		#cv2.imshow('image',image)
+		#cv2.waitKey(0)
+		#cv2.destroyAllWindows()
+
+		#save files
+		#if not os.path.isdir(dst):
+		#	os.makedirs(dst)
+		#path=dst+'/'+str(img['file_name'])[:-4]+'.png'
+
+		#cv2.imwrite(path, image)
+
+	f.close()
 
 
