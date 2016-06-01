@@ -27,8 +27,15 @@ message MultiSource {
         repeated string freeze = 3;
         // Specifies layers to reinitialize with random values
         repeated string ignore = 4;
+        
         optional bool fcn_surgery = 5 [default = false];
         optional float halt_percentage = 6;
+        
+        // Layers of the network
+        optional string dataLayer = 7 [default = "data"];
+        optional string lossLayer = 8 [default = "loss"];
+        optional string outLayer = 9 [default = "out"];
+        optional string labelLayer = 10 [default = "label"];
     }
 
     repeated Stage stage = 2;
@@ -41,4 +48,23 @@ message MultiSource {
     // In some cases, we may wish to ignore or freeze layers from the input
     // weights, but not from the weights in the final stage (or vice versa).
     optional Stage init_stage = 4;
+}
+
+// Prototxt format for the snapshots
+message Snapshot {
+    // Current ms message to process after the resume
+    required int32 multisource = 1;
+    // Current iteration to process after the resume
+    required int32 iteration = 2;
+    
+    // Current best weights and scores (their number should be equal to the
+    // number of stages in the current ms)
+    repeated string best_weights = 3;
+    repeated float best_scores = 4;
+    
+    // Current stage to process after the resume
+    optional int32 stage = 5;
+    // Two ways to resume the stage (weights or solverstate), chose one
+    optional string stage_weights = 6;
+    optional string stage_snapshot = 7;
 }

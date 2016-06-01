@@ -7,5 +7,7 @@ multi_source {
         solver_filename: "../flickr_finetune/solver.prototxt"
 
         ignore: "fc8"
+        
+        outLayer: "accuracy"
     }
 }

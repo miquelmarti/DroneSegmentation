@@ -1,3 +1,7 @@
+# TODO: Check ignore and freeze functions
+# TODO: Check solve.solve
+# TODO: Make sure that usePySolver is useless
+
 import os
 import caffe
 from caffe.proto import caffe_pb2
@@ -6,11 +10,11 @@ from caffeUtils import protoUtils, solve
 # names of parameters in protobufs so we can check for their presence
 LR_MULT_FIELD = 'lr_mult'
 LAYER_PARAM_FIELD = 'param'
+SNAPSHOT_FORMAT_FIELD = 'snapshot_format'
 
 TEMP_FILE_SUFFIX = '.tmp'
 IGNORE_LAYER_SUFFIX = '-ignore'
 MODEL_SUFFIX = '.caffemodel'
-SNAPSHOT_FORMAT_FIELD = 'snapshot_format'
 ITER_PREFIX = '_iter_'
 
 
@@ -72,7 +76,9 @@ class Stage(object):
     """
 
     def __init__(self, name, solverFilename, freezeList, ignoreList,
-                 preProcFun=None, haltPercentage=None, outDir=''):
+                 preProcFun=None, haltPercentage=None, outDir='',
+                 dataLayer='data', lossLayer='loss', outLayer='out',
+                 labelLayer='label'):
         """
         Constructor for the Stage class.
 
@@ -85,28 +91,31 @@ class Stage(object):
 
         self.name = name
         self.solverFilename = solverFilename
-        learnDir = os.path.dirname(solverFilename)
-        trainNetBasename = protoUtils.getTrainNetFilename(solverFilename)
-        self.trainNetFilename = os.path.join(learnDir, trainNetBasename)
-        self.outModelFilename = os.path.join(outDir, self.name + MODEL_SUFFIX)
-        
         self.freezeList = freezeList
         self.ignoreList = ignoreList
         self.preProcFun = preProcFun
         self.haltPercentage = haltPercentage
+        self.dataLayer = dataLayer
+        self.lossLayer = lossLayer
+        self.outLayer = outLayer
+        self.labelLayer = labelLayer
+        
+        learnDir = os.path.dirname(solverFilename)
+        trainNetBasename = protoUtils.getTrainNetFilename(solverFilename)
+        self.trainNetFilename = os.path.join(learnDir, trainNetBasename)
+        self.outModelFilename = os.path.join(outDir, self.name + MODEL_SUFFIX)
 
     def cleanup(self, keepModelFilename):
         snapshotDir, snapshotPrefixBase = self.getSnapshotInfo()
         snapshotPrefix = snapshotPrefixBase + ITER_PREFIX
-        contents = os.listdir(snapshotDir)
-        for f in contents:
+        for f in os.listdir(snapshotDir):
             fullFilePath = os.path.join(snapshotDir, f)
             doRemoveFile = (os.path.isfile(fullFilePath) and
                             f.startswith(snapshotPrefix) and
                             f != keepModelFilename)
             if doRemoveFile:
                 os.remove(fullFilePath)
-
+    
     def getSnapshotInfo(self):
         solverSpec = protoUtils.readSolver(str(self.solverFilename))
         solverDir = os.path.dirname(self.solverFilename)
@@ -114,58 +123,53 @@ class Stage(object):
             solverSpec.snapshot_prefix)
         snapshotDir = os.path.join(solverDir, solverRelSnapshotDir)
         return snapshotDir, filePrefix
-
-    def execute(self, modelFilename=None, usePySolver=True):
+    
+    def execute(self, modelFilename=None):
         """Carries out this learning stage in caffe."""
-
-        # read in the provided caffe config files
+        
+        # Will store all the temporary created files (to delete them after)
         tmpFilenames = []
-        trainNetFilename = self.trainNetFilename
+        
         solverFilename = self.solverFilename
-        if modelFilename and len(self.freezeList) > 0:
-            trainNetFilename = freezeNetworkLayers(self.freezeList,
-                                                   trainNetFilename)
-            solverSpec = protoUtils.readSolver(str(solverFilename))
-            solverSpec.net = trainNetFilename
-            solverFilename = solverFilename + TEMP_FILE_SUFFIX
-            protoUtils.writeToPrototxt(solverSpec, solverFilename)
-            tmpFilenames += [solverFilename, trainNetFilename]
-
-        if modelFilename and len(self.ignoreList) > 0:
-            modelFilename = ignoreModelLayers(self.ignoreList, modelFilename)
-            tmpFilenames.append(modelFilename)
-
-        # make sure that the output filename isn't already used
+        trainNetFilename = self.trainNetFilename
         outModelFilename = self.outModelFilename
+        
+        # Make sure that the output filename isn't already used
         i = 0
         while True:
             if not os.path.isfile(outModelFilename):
                 break
             i += 1
             outModelFilename = '.'.join([self.outModelFilename, str(i)])
-
-        # TODO allow user to specify loss layer, out layer, data layer, and
-        # label layer names.
-        outNet, scores = None, None
-        if usePySolver:
-            # presently this branch is unused, but in case we miss some
-            # feature of caffe in our own solve.py, we will need this.
-            outNet, scores = solve.solve(solverFilename, modelFilename,
-                                         self.preProcFun, self.haltPercentage)
-        else:
-            solver = caffe.get_solver(str(solverFilename))
-            if modelFilename:
-                solver.net.copy_from(str(os.path.abspath(modelFilename)))
-            solver.solve()
-            solverSpec = protoUtils.readSolver(str(self.solverFilename))
-            scores = solve.runValidation(solver, solverSpec.test_iter[0],
-                                         outLayer='score', lossLayer='loss',
-                                         labelLayer='label')
-            outNet = solver.net
+        
+        # Freeze some layers of trainNet if needed
+        if len(self.freezeList) > 0:
+            trainNetFilename = freezeNetworkLayers(self.freezeList,
+                                                   trainNetFilename)
+            solverSpec = protoUtils.readSolver(str(solverFilename))
+            # TODO: check if the net / train_net matters
+            solverSpec = protoUtils.replaceTrainNetFilename(solverSpec, 
+                                                            trainNetFilename)
+            solverFilename = solverFilename + TEMP_FILE_SUFFIX
+            protoUtils.writeToPrototxt(solverSpec, solverFilename)
+            tmpFilenames += [solverFilename, trainNetFilename]
+        
+        # Ignore some layers of the given model if needed
+        if modelFilename and len(self.ignoreList) > 0:
+            modelFilename = ignoreModelLayers(self.ignoreList, modelFilename)
+            tmpFilenames.append(modelFilename)
+        
+        outNet, scores = solve.solve(solverFilename, modelFilename,
+                                     self.preProcFun, self.haltPercentage,
+                                     self.dataLayer, self.lossLayer,
+                                     self.outLayer, self.labelLayer)
+        
         # Save the results
         outNet.save(str(outModelFilename))
 
-        # remove temporary files
+        # Remove temporary files
         self.cleanup(outModelFilename)
         map(os.remove, tmpFilenames)
         return outModelFilename, scores
+
+

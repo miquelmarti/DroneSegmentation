@@ -21,6 +21,7 @@ bash get_flickr_style.sh
 
 And also the weights and mean of the source model (bvlc_reference_caffenet, trained on ImageNet) :
 cd $CAFFE_ROOT
+./scripts/download_model_binary.py models/bvlc_reference_caffenet
 bash data/ilsvrc12/get_ilsvrc_aux.sh
 
 -> Run

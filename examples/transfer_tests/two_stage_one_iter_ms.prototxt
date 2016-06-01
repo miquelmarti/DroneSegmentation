@@ -1,5 +1,5 @@
 #out_dir: "snapshots"
-init_weights: "/home/shared/givenModels/fcn-32s-pascal/fcn-32s-pascal.caffemodel"
+init_weights: "/home/shared/data/givenModels/fcn-32s-pascal/fcn-32s-pascal.caffemodel"
 
 multi_source {
     stage {
@@ -8,11 +8,15 @@ multi_source {
         
         fcn_surgery: true
         #halt_percentage: 25
+        
+        outLayer: "score"
     }
     stage {
         name: "ms3_fcn8"
         solver_filename: "../train_fcn/fcn8/solver.prototxt"
         
         fcn_surgery: true
+        
+        outLayer: "score"
     }
 }

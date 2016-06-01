@@ -1,17 +1,19 @@
 #out_dir: "snapshots"
-init_weights: "/home/shared/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel"
+init_weights: "/home/shared/data/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel.tmp"
 
 multi_source {
-    init_stage {
-        name: "init"
-        solver_filename: "../train_fcn/fcn32/solver.prototxt"
-        
-        ignore: "fc6"
-        ignore: "fc7"
-        
-        fcn_surgery: true
-        halt_percentage: 40.0
-    }
+#    init_stage {
+#        name: "init"
+#        solver_filename: "../train_fcn/fcn32/solver.prototxt"
+#        
+#        ignore: "fc6"
+#        ignore: "fc7"
+#        
+#        fcn_surgery: true
+#        halt_percentage: 40.0
+#        
+#        outLayer: "score"
+#    }
     
     stage {
         name: "train_fcn-32"
@@ -19,6 +21,8 @@ multi_source {
         
         fcn_surgery: true
         #halt_percentage: 10.0
+        
+        outLayer: "score"
     }
     stage {
         name: "train_fcn-16"
@@ -26,6 +30,8 @@ multi_source {
         
         fcn_surgery: true
         #halt_percentage: 10.0
+        
+        outLayer: "score"
     }
     stage {
         name: "train_fcn-8"
@@ -33,6 +39,8 @@ multi_source {
         
         fcn_surgery: true
         #halt_percentage: 10.0
+        
+        outLayer: "score"
     }
 }
 

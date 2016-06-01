@@ -4,15 +4,20 @@ multi_source {
     init_stage {
         name: "ms5_fcn32"
         solver_filename: "../train_fcn/fcn32/solver.prototxt"
+        
         # these models don't make sense coming from the input weights 
         ignore: "fc6"
         ignore: "fc7"
+        
         fcn_surgery: true
+        
+        outLayer: "score"
     }
     
     stage {
         name: "ms5_fcn32"
         solver_filename: "../train_fcn/fcn32/solver.prototxt"
+        
         fcn_surgery: true
     }
     stage {
@@ -21,6 +26,8 @@ multi_source {
         
         fcn_surgery: true
         halt_percentage: 50
+        
+        outLayer: "score"
     }
     stage {
         name: "ms5_fcn8"
@@ -28,5 +35,7 @@ multi_source {
         
         fcn_surgery: true
         # halt_percentage: 40
+        
+        outLayer: "score"
     }    
 }

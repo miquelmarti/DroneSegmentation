@@ -1,5 +1,5 @@
 #out_dir: "snapshots"
-init_weights: "/home/shared/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel"
+init_weights: "/home/shared/data/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel"
 
 multi_source {
     iterations: 5
@@ -12,6 +12,8 @@ multi_source {
         
         fcn_surgery: true
         #halt_percentage: 10.0
+        
+        outLayer: "score"
     }
     
     stage {
@@ -19,6 +21,8 @@ multi_source {
         solver_filename: "../train_fcn/fcn32/solver.prototxt"
         
         fcn_surgery: true
+        
+        outLayer: "score"
     }
     stage {
         name: "ms5_fcn16"
@@ -26,6 +30,8 @@ multi_source {
         
         fcn_surgery: true
         # halt_percentage: 50
+        
+        outLayer: "score"
     }
     stage {
         name: "ms5_fcn8"
@@ -33,5 +39,7 @@ multi_source {
         
         fcn_surgery: true
         # halt_percentage: 40
+        
+        outLayer: "score"
     }    
 }

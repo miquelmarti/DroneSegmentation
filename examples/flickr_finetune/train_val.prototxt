@@ -13,7 +13,7 @@ layer {
     mean_file: "/home/shared/caffe/data/ilsvrc12/imagenet_mean.binaryproto"
   }
   image_data_param {
-    source: "data/flickr_style/train.txt"
+    source: "../../data/flickr_style/train.txt"
     batch_size: 50
     new_height: 256
     new_width: 256
@@ -33,7 +33,7 @@ layer {
     mean_file: "/home/shared/caffe/data/ilsvrc12/imagenet_mean.binaryproto"
   }
   image_data_param {
-    source: "data/flickr_style/test.txt"
+    source: "../../data/flickr_style/test.txt"
     batch_size: 50
     new_height: 256
     new_width: 256
