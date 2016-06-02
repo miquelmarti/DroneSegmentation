@@ -203,7 +203,7 @@ if __name__ == "__main__":
             # Checking the results
             assert (len(nextModels) == len(nextScores)) and \
                    ((args.clean and len(nextModels) == 1) or \
-                    (not arg.clean and len(nextModels) == len(stages))), \
+                    (not args.clean and len(nextModels) == len(stages))), \
             ' '.join(["nextModels and nextScores' shape mismatch.\n", \
                       "nb of elements in nextModels :", \
                             str(len(nextModels)), "\n", \
