@@ -67,12 +67,11 @@ def vis_square(data, shift=0, scale=1, autoscale=False):
         data = np.pad(data, padding, mode='constant', constant_values=1)
 
         # tile the filters into an image
-        # data = data.reshape((n, n) + data.shape[1:])
-        # axesOrder = (0, 2, 1, 3) + tuple(range(4, data.ndim + 1))
-        # data = data.transpose(axesOrder)
-        data = data.reshape((n, n) + data.shape[1:]).transpose((0, 2, 1, 3) + tuple(range(4, data.ndim + 1)))
-        data = data.reshape((n * data.shape[1], n * data.shape[3]) +
-                            data.shape[4:])
+        tempShape = (n, n) + data.shape[1:]
+        axesOrder = (0, 2, 1, 3) + tuple(range(4, data.ndim + 1))
+        data = data.reshape(tempShape).transpose(axesOrder)
+        finalShape = (n * data.shape[1], n * data.shape[3]) + data.shape[4:]
+        data = data.reshape(finalShape)
 
         # Plot a 600x600 window of the weights
         data_to_show = cv2.resize(data, (600, 600), 0, 0, 0,
