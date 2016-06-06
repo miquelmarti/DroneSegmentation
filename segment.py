@@ -312,10 +312,13 @@ if __name__ == '__main__':
         times.append(time.time() - start)
         
         # Get the output of the network
+        # TODO: Not sure of the first if, but was madatory for making resnet works
+        if len(guessed_labels.shape) == 1 and len(guessed_labels[0].shape) == 4:
+            guessed_labels = guessed_labels[0][0]
         if len(guessed_labels.shape) == 3:
             guessed_labels = guessed_labels.argmax(axis=0)
         elif len(guessed_labels.shape) != 2:
-            print 'Unknown output shape'
+            print 'Unknown output shape:', guessed_labels.shape
             break
 
         # Read the colours of the classes
