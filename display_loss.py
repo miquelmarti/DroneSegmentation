@@ -99,7 +99,7 @@ def plotLearningLogs(lossLines, segTestLines, prefix=''):
 def plotTrainingLosses(lossLines, prefix=''):
     iterNums = map(getIterNum, lossLines)
     losses = [float(l.strip().rpartition(' ')[2]) for l in lossLines]
-    plotXAndY(iterNums, losses, prefix + 'training loss', 'Iterations', 'Testing loss')
+    plotXAndY(iterNums, losses, prefix + 'training loss', 'Iterations', 'Training loss')
 
 
 def plotSegTests(segTestLines, prefix=''):
