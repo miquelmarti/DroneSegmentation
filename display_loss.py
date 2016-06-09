@@ -73,8 +73,10 @@ def getTestStats(lines):
     return stats
 
 
-def plotXAndY(x, y, title):
+def plotXAndY(x, y, title, xlabel='', ylabel=''):
     plt.plot(x, y)
+    plt.clabel(xlabel)
+    plt.ylabel(ylabel)
     plt.title(title)
     plt.show()
 
@@ -82,6 +84,7 @@ def plotXAndY(x, y, title):
 def plotMultiple(xs, ys, labels, title):
     for x, y, label in zip(xs, ys, labels):
         plt.plot(x, y, label=label)
+    plt.xlabel('Iterations')
     plt.title(title)
     plt.legend(bbox_to_anchor=(0.7, 1), loc=2, borderaxespad=0.)
     plt.show()
@@ -96,7 +99,7 @@ def plotLearningLogs(lossLines, segTestLines, prefix=''):
 def plotTrainingLosses(lossLines, prefix=''):
     iterNums = map(getIterNum, lossLines)
     losses = [float(l.strip().rpartition(' ')[2]) for l in lossLines]
-    plotXAndY(iterNums, losses, prefix + 'training loss')
+    plotXAndY(iterNums, losses, prefix + 'training loss', 'Iterations', 'Testing loss')
 
 
 def plotSegTests(segTestLines, prefix=''):
@@ -105,7 +108,7 @@ def plotSegTests(segTestLines, prefix=''):
     testStats = getTestStats(segTestLines)
     # plot loss separately, since it exists on a very different scale
     testLossIters, testLosses = zip(*testStats[TST_LOSS_TAG])
-    plotXAndY(testLossIters, testLosses, prefix + 'test loss')
+    plotXAndY(testLossIters, testLosses, prefix + 'test loss', 'Iterations', 'Testing loss')
     del(testStats[TST_LOSS_TAG])
 
     # plot other statistics

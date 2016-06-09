@@ -29,6 +29,10 @@ CV2_LOAD_IMAGE_UNCHANGED = -1
 # ignore divisions by zero
 np.seterr(divide='ignore', invalid='ignore')
 
+#If no networks provide input shape, this will be the default one (there could be a nicer way of doing this, by loading .npy arrays and have a direct look at their size)
+default_input_shape = np.array((1,21,500,500))
+default_numb_cla = 21
+
 
 # copied from shelhamer's score.py
 # def fast_hist(a, b, n):
@@ -118,14 +122,14 @@ def softmax(x): #Softmax function, transforming logits into probabilities
     return out
 
     
-def combineEnsemble(net_outputs, method):
+def combineEnsemble(net_outputs, method, weighting):
     output = 0
     
     #If there is only one model, we skip this step
     if np.asarray(net_outputs).shape[0] == 1:
         return np.squeeze(net_outputs)
     
-    if method==1: #Majority voting
+    if method==1: #Majority voting (does not perform model weighting yet)
             #Calculates the label (by looking at the maximum class score)
             net_outputs = np.squeeze(np.asarray(net_outputs).argmax(axis=1))
             
@@ -135,13 +139,15 @@ def combineEnsemble(net_outputs, method):
     if method==2: #Logit arithmetic averaging
             output = np.zeros(net_outputs[0].shape)
             
-            for current_net_output in net_outputs:
-                output = output + current_net_output
+            sum_weightings = 0
+            for current_net_output, current_weighting in zip(net_outputs, weighting):
+                output = output + current_net_output * current_weighting
+                sum_weightings = sum_weightings + current_weighting
             
             #Make it a mean instead of a sum of logits
-            output = output/len(net_outputs)
+            output = output/sum_weightings
             
-    if method==3: #Logit geometric averaging
+    if method==3: #Logit geometric averaging (does not perform model weighting yet)
             output = np.ones(net_outputs[0].shape)
             
             for current_net_output in net_outputs:
@@ -156,13 +162,15 @@ def combineEnsemble(net_outputs, method):
     if method==4: #Probability arithmetic averaging
             output = np.zeros(net_outputs[0].shape)
             
-            for current_net_output in net_outputs:
-                output = output + softmax(current_net_output)
+            sum_weightings = 0
+            for current_net_output, current_weighting in zip(net_outputs, weighting):
+                output = output + softmax(current_net_output) * current_weighting
+                sum_weightings = sum_weightings + current_weighting
             
             #Make it a mean instead of a sum of probabilities
-            output = output/len(net_outputs)
+            output = output/sum_weightings
     
-    if method==5: #Probability geometric averaging
+    if method==5: #Probability geometric averaging (does not perform model weighting yet)
             output = np.ones(net_outputs[0].shape)
             
             for current_net_output in net_outputs:
@@ -205,6 +213,8 @@ if __name__ == '__main__':
     input_blobs = []
     output_blobs = []
     nets = []
+    model_weighting = []
+    
     for model in config.model: #Load all networks from the different models specified in .proto
         #Create network and add it to network list
         nets.append(build_network(model.deploy, model.weights))
@@ -212,6 +222,7 @@ if __name__ == '__main__':
         #Get information about input and output layers
         input_blobs.append(model.input)
         output_blobs.append(model.output)
+        model_weighting.append(model.weighting)
         
     for model in config.modelOutput: #Load all model output folders specified in .proto
         #Create network and add it to network list
@@ -220,11 +231,16 @@ if __name__ == '__main__':
         #Get information about input and output layers
         input_blobs.append(None)
         output_blobs.append(model.folder)
-            
-    input_shape = nets[0].blobs[input_blobs[0]].data.shape
+        model_weighting.append(model.weighting)
+    
+    if input_blobs[0] is not None:        
+        input_shape = nets[0].blobs[input_blobs[0]].data.shape
+        numb_cla = nets[0].blobs[output_blobs[0]].channels
+    else:
+        input_shape = default_input_shape
+        numb_cla = default_numb_cla
     
     # Histogram for evan's metrics
-    numb_cla = nets[0].blobs[output_blobs[0]].channels
     totalHist = np.zeros((numb_cla, numb_cla))
     
     times = []  # Variable for test times
@@ -297,7 +313,8 @@ if __name__ == '__main__':
         # Combine the outputs of each net by the chosen method (voting,
         # averaging, etc.)
         guessed_labels = combineEnsemble(guessed_labels,
-                                         config.ensemble_type)
+                                         config.ensemble_type, 
+                                         model_weighting)
                                          
         
         #If we precise an output folder in the prototxt
