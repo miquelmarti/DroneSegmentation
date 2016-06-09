@@ -75,7 +75,7 @@ def getTestStats(lines):
 
 def plotXAndY(x, y, title, xlabel='', ylabel=''):
     plt.plot(x, y)
-    plt.clabel(xlabel)
+    plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
     plt.show()
