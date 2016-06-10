@@ -19,7 +19,7 @@ import cv2
 import google.protobuf
 from scipy import stats
 import ensemble_pb2
-from caffeUtils import iterators, score
+from caffeUtils import iterators, score, protoUtils
 import os
 from os.path import basename
 
@@ -57,7 +57,9 @@ def get_arguments():
     For recording the videos, expects the path and file prefix of where to \
     save them (eg. "/path/to/segnet_"). Will create three videos if ground \
     truth is present, three videos if not.')
-    
+    parser.add_argument('--show_prob', type=int, help='\
+    If provided, will display the probability of the given class at each \
+    pixel.') 
     return parser.parse_args()
 
 
@@ -125,14 +127,14 @@ def combineEnsemble(net_outputs, method):
     if np.asarray(net_outputs).shape[0] == 1:
         return np.squeeze(net_outputs)
     
-    if method==1: #Majority voting
+    if method==ensemble_pb2.VOTING: #Majority voting
             #Calculates the label (by looking at the maximum class score)
             net_outputs = np.squeeze(np.asarray(net_outputs).argmax(axis=1))
             
             #Looks for the most common label for each pixel
             output = np.squeeze(stats.mode(net_outputs, axis=0)[0]).astype(int)
     
-    if method==2: #Logit arithmetic averaging
+    if method==ensemble_pb2.LOGITARI: #Logit arithmetic averaging
             output = np.zeros(net_outputs[0].shape)
             
             for current_net_output in net_outputs:
@@ -141,7 +143,7 @@ def combineEnsemble(net_outputs, method):
             #Make it a mean instead of a sum of logits
             output = output/len(net_outputs)
             
-    if method==3: #Logit geometric averaging
+    if method==ensemble_pb2.LOGITGEO: #Logit geometric averaging
             output = np.ones(net_outputs[0].shape)
             
             for current_net_output in net_outputs:
@@ -153,7 +155,7 @@ def combineEnsemble(net_outputs, method):
             #Make it a mean
             output = np.power(output,float(1)/len(net_outputs))
     
-    if method==4: #Probability arithmetic averaging
+    if method==ensemble_pb2.PROBAARI: #Probability arithmetic averaging
             output = np.zeros(net_outputs[0].shape)
             
             for current_net_output in net_outputs:
@@ -162,7 +164,7 @@ def combineEnsemble(net_outputs, method):
             #Make it a mean instead of a sum of probabilities
             output = output/len(net_outputs)
     
-    if method==5: #Probability geometric averaging
+    if method==ensemble_pb2.PROBAGEO: #Probability geometric averaging
             output = np.ones(net_outputs[0].shape)
             
             for current_net_output in net_outputs:
@@ -189,13 +191,9 @@ if __name__ == '__main__':
                 caffe.set_device(args.gpu_device)
         caffe.set_mode_gpu()
     
-    # Create an Ensemble object
-    config = ensemble_pb2.Ensemble()
-
     # Read the ensemble.prototxt
-    f = open(args.ensemble_file, "rb")
-    google.protobuf.text_format.Merge(f.read(), config)
-    f.close()
+    config = ensemble_pb2.Ensemble()
+    protoUtils.readFromPrototxt(config, args.ensemble_file)
     
     if not config.IsInitialized():
         raise ValueError('\
@@ -213,11 +211,9 @@ if __name__ == '__main__':
         input_blobs.append(model.input)
         output_blobs.append(model.output)
         
-    for model in config.modelOutput: #Load all model output folders specified in .proto
-        #Create network and add it to network list
+    # Load all model output folders specified in .proto
+    for model in config.modelOutput: 
         nets.append(None)
-        
-        #Get information about input and output layers
         input_blobs.append(None)
         output_blobs.append(model.folder)
             
@@ -228,9 +224,8 @@ if __name__ == '__main__':
     totalHist = np.zeros((numb_cla, numb_cla))
     
     times = []  # Variable for test times
-    
-    # Video recording
     if args.record != '':
+        # Video recording
         fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
         shape = (input_shape[3], input_shape[2])
         images = cv2.VideoWriter(args.record + 'img.avi', fourcc, 5.0, shape)
@@ -246,11 +241,11 @@ if __name__ == '__main__':
 
     # Create the appropriate iterator
     imageIterator = None
-    if config.input.type == 1:
+    if config.input.type == ensemble_pb2.Input.VIDEO:
         imageIterator = iterators.VideoIterator(config.input.file)
-    elif config.input.type == 2:
+    elif config.input.type == ensemble_pb2.Input.IMAGES:
         imageIterator = iterators.FileListIterator(config.input.file)
-    elif config.input.type == 3:
+    elif config.input.type == ensemble_pb2.Input.LABELS:
         imageIterator = iterators.FileListIterator(config.input.file,
                                                    pairs=True)
     else:
@@ -271,7 +266,7 @@ if __name__ == '__main__':
                      
     for _input, real_label, imagePath in imageIterator:
         n_im += 1
-        guessed_labels = []
+        logits = []
         start = time.time()
         
         # Extracts current image name from the image path
@@ -280,10 +275,10 @@ if __name__ == '__main__':
         for net, in_blob, out_blob in zip(nets, input_blobs, output_blobs):
             guessed_label = None
             newShape = None
-            
-            if net is None: #If no net is provided, it means the outputs are in .npy files
+            if net is None:
+                # the outputs are in .npy files
                 guessed_label = np.load(out_blob+imageName+'.npy')
-                guessed_labels.append(np.squeeze(guessed_label))
+                logits.append(np.squeeze(guessed_label))
                 continue
             
             if config.input.resize: #Set new shape to shape defined by .prototxt
@@ -292,33 +287,30 @@ if __name__ == '__main__':
             #Run the network
             guessed_label = score.segmentImage(net, _input, in_blob, out_blob,
                                                mean, newShape)
-            guessed_labels.append(np.squeeze(guessed_label)) #Add network output to list
+            logits.append(np.squeeze(guessed_label)) #Add network output to list
 
         # Combine the outputs of each net by the chosen method (voting,
         # averaging, etc.)
-        guessed_labels = combineEnsemble(guessed_labels,
-                                         config.ensemble_type)
-                                         
+        logits = combineEnsemble(logits, config.ensemble_type)
         
         #If we precise an output folder in the prototxt
         if config.outputFolder != "None":
-                # Saves network outputs to numpy file
-                np.save(config.outputFolder+imageName+".npy",guessed_labels)
-                # Writes down in list.txt the files that have been saved
-                summaryFile.write(imagePath+" "+config.outputFolder+imageName+".npy\n")
-
+            # Saves network outputs to numpy file
+            np.save(config.outputFolder+imageName+".npy",logits)
+            # Writes down in list.txt the files that have been saved
+            summaryFile.write(imagePath+" "+config.outputFolder+imageName+".npy\n")
         
         # Get the time after the network process
         times.append(time.time() - start)
         
         # Get the output of the network
-        # TODO: Not sure of the first if, but was madatory for making resnet works
-        if len(guessed_labels.shape) == 1 and len(guessed_labels[0].shape) == 4:
-            guessed_labels = guessed_labels[0][0]
-        if len(guessed_labels.shape) == 3:
-            guessed_labels = guessed_labels.argmax(axis=0)
-        elif len(guessed_labels.shape) != 2:
-            print 'Unknown output shape:', guessed_labels.shape
+        # TODO: Not sure of the first if, needed for making resnet output work
+        if len(logits.shape) == 1 and len(logits[0].shape) == 4:
+            logits = logits[0][0]
+        if len(logits.shape) == 3:
+            guessed_labels = logits.argmax(axis=0)
+        elif len(logits.shape) != 2:
+            print 'Unknown output shape:', logits.shape
             break
 
         # Read the colours of the classes
@@ -380,6 +372,11 @@ if __name__ == '__main__':
         if args.record == '' and not args.hide:
             cv2.imshow("Input", _input)
             cv2.imshow("Output", guessed_image)
+            if args.show_prob is not None:
+                probs = softmax(logits)
+                showProb = probs[args.show_prob]
+                showProb = showProb / np.max(showProb)
+                cv2.imshow("probability", showProb)
             key = 0
             if args.key:
                 key = cv2.waitKey(0)
