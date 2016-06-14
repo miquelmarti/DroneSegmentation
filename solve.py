@@ -12,25 +12,27 @@ import sys
 import os
 sys.path.append(os.path.dirname(inspect.getfile(fcnLayers)))
 
-TRAIN_NET_FIELD = 'train_net'
-TEST_NET_FIELD = 'test_net'
+# Extensions
+E_SOLVERSTATE = '.solverstate'
 
 
-def runValidation(solver, numIter, dataLayer, lossLayer, outLayer, labelLayer):
+def runValidation(solver, numIter, layerNames):
+    """Run the test step."""
     totalHist = None
     totalLoss = 0
     
     # Share the trained weights with the test net
+    # TODO: What if multiple test_nets ?
     solver.test_nets[0].share_with(solver.net)
     
     for i in range(numIter):
         # Run the network on its own data and labels
         # TODO: Implement image + gtImage
         _, hist, loss = score.runNetForward(solver.test_nets[0], 
-                                            dataLayer=dataLayer,
-                                            lossLayer=lossLayer,
-                                            outLayer=outLayer,
-                                            labelLayer=labelLayer)
+                                            dataLayer=layerNames[0],
+                                            lossLayer=layerNames[1],
+                                            outLayer=layerNames[2],
+                                            labelLayer=layerNames[3])
         if totalHist is None:
             totalHist = hist
         else:
@@ -43,7 +45,8 @@ def runValidation(solver, numIter, dataLayer, lossLayer, outLayer, labelLayer):
 
 
 def printScores(scores, iteration):
-    prefix = ' '.join(['>>>', str(datetime.now()), 'Iteration',
+    """Prints the given scores."""
+    prefix = ' '.join(['>>>', str(datetime.now()), 'Iteration', 
                        str(iteration)])
     print prefix, 'loss', scores.loss
     print prefix, 'overall accuracy', scores.overallAcc
@@ -52,21 +55,116 @@ def printScores(scores, iteration):
     print prefix, 'fwavacc', scores.fwavacc
 
 
-def validateAndPrint(solver, testIter, silent, dataLayer, lossLayer, outLayer,
-                     labelLayer):
-    scores = runValidation(solver, testIter, dataLayer, lossLayer, outLayer,
-                           labelLayer)
+def validateAndPrint(solver, testIter, layerNames, silent):
+    """Runs a test and print the results."""
+    scores = runValidation(solver, testIter, layerNames)
     if not silent:
         printScores(scores, solver.iter)
     return scores
 
+def saveSnapshotWeights(snapshotPrefix, solver, snapshot):
+    """Save a snapshot (for future resuming)."""
+    solver.snapshot()
+    snapshotFile = snapshotPrefix + str(solver.iter) + E_SOLVERSTATE
+    assert os.path.isfile(snapshotFile), \
+    ' '.join(["Problem while creating the snapshot, nothing in", snapshotFile])
+    
+    # Update and save the snapshot
+    setattr(snapshot, 'stage_snapshot', snapshotFile)
+    snapshot.save()
 
-# TODO: implement with silent
+def doAction(action, snapParams, testParams):
+    """Execute the appropriate action."""
+    if not action:
+        return None
+    elif action == 'SNAP':
+        return saveSnapshotWeights(snapParams[0], snapParams[1], snapParams[2])
+    elif action == 'TEST':
+        return validateAndPrint(testParams[0], testParams[1], testParams[2],
+                                testParams[3])
+    else:
+        print 'Unknown action, do nothing.. (', action, ')'
+    
+    return None
+
+def checkHalt(prev, new, halt):
+    """Check if we reach the halting criteria."""
+    perc = (prev / new) if new != 0 else 0
+    
+    if (1. - perc) * 100 < halt:
+        return True
+    return False
+
+def solveWithIntervals(maxIter, snapInterval, testInterval, 
+                       solver, halt, silent, 
+                       snapParams, testParams):
+    """Run the needed number of iteration and do appropriate actions."""
+    # If we don't have to snap or test
+    snapInterval = (maxIter + 1) if snapInterval is 0 else snapInterval
+    testInterval = (maxIter + 1) if testInterval is 0 else testInterval
+    
+    # Nb of iterations to do untill next interval for snap and test
+    rests = [snapInterval, testInterval]
+    # Final scores to return
+    scores = None
+    # Tmp variable for computing the halt criteria
+    prevScore = 0
+    
+    # Exit loop flag
+    end = False
+    
+    while not end:
+        # Get the number of iteration to do
+        nbStepsToDo = 0
+        if (rests[0] < rests[1]):
+            nbStepsToDo = rests[0]
+            rests = [snapInterval, rests[1] - nbStepsToDo]
+        elif (rests[0] > rests[1]):
+            nbStepsToDo = rests[1]
+            rests = [rests[0] - nbStepsToDo, testInterval]
+        else:
+            nbStepsToDo = snapInterval
+            rests = [snapInterval, testInterval]
+        # If the maxIter has been reached (and no halt criteria)
+        if halt is None and (solver.iter + nbStepsToDo) >= maxIter:
+            nbStepsToDo = maxIter - solver.iter
+                
+        # Do them
+        solver.step(nbStepsToDo)
+        
+        # Execute the appropriate actions
+        if solver.iter % snapInterval is 0:
+            doAction('SNAP', snapParams, testParams)
+        if solver.iter % testInterval is 0:
+            scores = doAction('TEST', snapParams, testParams)
+        
+        # Check if we have to quit the loop
+        if not halt is None and scores:
+            end = checkHalt(prevScore, scores.meanIu, halt)
+            prevScore = scores.meanIu
+        elif solver.iter == maxIter:
+            end = True
+    
+    # If we have to do a last test
+    if testInterval <= maxIter and rests[1] != testInterval:
+        scores = doAction('TEST', snapParams, testParams)
+    
+    # TODO: Check in the solver if test iter is provided if we have halt
+    # If we used the halt criteria
+    if not halt is None and not silent:
+        print ' '.join(['Halting ratio', str(halt), 'acheived in', 
+                        str(solver.iter), 'iterations.'])
+    
+    return scores
+
+
 def solve(solverFilename, modelFilename=None, preProcFun=None,
-          haltPercent=None, dataLayer='data', lossLayer='loss', outLayer='out',
-          labelLayer='label', silent=False):
+          haltPercent=None, layerNames=('data', 'loss', 'out', 'label'), 
+          snapshot=None, snapshotToRestore=None, silent=False):
+    """Solve a solver with given parameters."""
     
     # Use the absolute path, since we change the directory later
+    # TODO: We do ?
     if modelFilename is not None:
         modelFilename = os.path.abspath(modelFilename)
     
@@ -75,79 +173,58 @@ def solve(solverFilename, modelFilename=None, preProcFun=None,
     os.chdir(os.path.dirname(solverFilename))
     solverFilename = os.path.basename(solverFilename)
     
-    # Load the weights
+    # Get solver
     solver = caffe.get_solver(str(solverFilename))
-    if modelFilename is not None:
+    
+    # Load the weights or restore the provided solverstate
+    if snapshotToRestore and not snapshotToRestore.restored \
+                         and snapshotToRestore.stage_snapshot:
+        solver.restore(str(snapshotToRestore.stage_snapshot))
+    elif modelFilename is not None:
         solver.net.copy_from(str(modelFilename))
     
     # Pre-processing function
-    # TODO: not flexible, works only for surgery
+    # TODO: not flexible, works only for fcnSurgery
     if preProcFun is not None:
         preProcFun(solver.net)
     
-    # Check the solver
-    # TODO: Do more assertions for the solver
-    # TODO:     - testInterval < maxIter
-    # TODO: By the way, perhaps it should be done before
+    # Get the solver
+    # TODO: Check if the solver is ok... Create a class solver.py ? Where ? A
+    # TODO: solver class can be usefull for getting an array of intervals and
+    # TODO: check if snapshotInterval is provided for example
     solverSpec = protoUtils.readSolver(solverFilename)
+    
+    # Extract the main infos
     maxIter = solverSpec.max_iter
+    testIter = solverSpec.test_iter[0]
     testInterval = solverSpec.test_interval
+    snapshotInterval = solverSpec.snapshot
+    
+    # TODO: Should be done in the solver.verify()
     assert not testInterval < 0, \
     ' '.join(["test_interval is invalid (", testInterval,
               ").  Is it specified in ", solverFilename, "?"])
     
+    # Where to save the snapshots
+    # TODO: Flexible to abs / not abs pathes ?
+    # TODO: Does not work if no snapshot prefix, fixable with solver.py
+    solverDir = os.path.dirname(os.path.abspath(solverFilename))
+    filePrefix = solverSpec.snapshot_prefix
+    snapshotPrefix = os.path.join(solverDir, filePrefix + '_iter_')
+    
+    # Join the needed parameters for saving snapshots and for testing
+    snapParams = (snapshotPrefix, solver, snapshot)
+    testParams = (solver, testIter, layerNames, silent)
+    
     # Will store the new scores for this stage
     latestScores = None
     
-    # Solve the network and do the validation step if needed
+    # Execute all the iterations, taking care of the intervals
     # TODO: SOULD be ok, but have to test
-    if testInterval is 0 or len(solver.test_nets) is 0:
-        solver.solve()
-    else:
-        # At least one test net was specified, so run it at the given interval
-        # TODO: Only deal with one of the test_net, the solver can handle more
-        testIter = solverSpec.test_iter[0]
-        
-        # If the halt criteria is not provided
-        # TODO: Compact here
-        if haltPercent is None:
-            # run for testInterval iterations, then test
-            for _ in range(maxIter / testInterval):
-                solver.step(testInterval)
-                latestScores = validateAndPrint(solver, testIter, silent,
-                                                dataLayer, lossLayer,
-                                                outLayer, labelLayer)
-
-            # Finish up any remaining steps
-            if maxIter % testInterval != 0:
-                solver.step(maxIter % testInterval)
-                latestScores = validateAndPrint(solver, testIter, silent,
-                                                dataLayer, lossLayer,
-                                                outLayer, labelLayer)
-
-        else:
-            # Stop when the mean IU improvement drops below given percentage.
-            prevScore = 0  # Assuming this is mean IU for now.
-            newScore = 0
-            while True:
-                solver.step(testInterval)
-                scores = validateAndPrint(solver, testIter, silent,
-                                          dataLayer, lossLayer,
-                                          outLayer, labelLayer)
-                newScore = scores.meanIu
-                perc = 0
-                if not newScore is 0:
-                    perc = prevScore/newScore
-                percentIncrease = (1. - perc) * 100
-                if percentIncrease < haltPercent:
-                    print percentIncrease, ' is less than ', haltPercent
-                    break
-                prevScore = newScore
-
-            if not silent:
-                print ' '.join(['Halting ratio', str(haltPercent),
-                                'acheived in', str(solver.iter),
-                                'iterations.'])
+    # TODO: Make it flexible to dynamic number of intervals
+    latestScores = solveWithIntervals(maxIter, snapshotInterval, testInterval,
+                                      solver, haltPercent, silent, 
+                                      snapParams, testParams)
             
     # Clean up environment and return the final testing results.
     os.chdir(startDir)

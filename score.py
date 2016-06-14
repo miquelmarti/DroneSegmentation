@@ -62,7 +62,7 @@ def runNetForward(net, image=None, gtImage=None, dataLayer='data',
     
     output = net.blobs[outLayer].data
     
-    if gtImage is not None or labelLayer in net.blobs:
+    if output.shape and (gtImage is not None or labelLayer in net.blobs):
         flatOutput = output[0].argmax(0).flatten()
         hist = None
         n_cl = net.blobs[outLayer].channels
@@ -73,6 +73,8 @@ def runNetForward(net, image=None, gtImage=None, dataLayer='data',
                              flatOutput, n_cl)
         return output, hist, net.blobs[lossLayer].data.flat[0]
     else:
+        # TODO: if labelLayer in net.blobs and not output.shape
+        # TODO: -> classification, take the output (printable) in charge
         return output, None, 0
 
 
