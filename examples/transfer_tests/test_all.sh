@@ -31,7 +31,7 @@ for test in $( ls $EXAMPLES_DIR/*.prototxt ); do
     echo "${green}[Test the $(basename $test) file]${reset}"
     echo "Run the training (may be long)..."
     
-    python $TLF_DIR/scripts/transfer.py $test --gpu 0 --clean --quiet --out_dir $OUTPUT_DIR
+    python $TLF_DIR/scripts/transfer.py $test --gpu 0 --quiet --out_dir $OUTPUT_DIR #--resume results/snap_0_0_0_100.prototxt
     ret=$?
     if [ $ret -ne 0 ]; then
         echo "${red}This test failed...${reset}"

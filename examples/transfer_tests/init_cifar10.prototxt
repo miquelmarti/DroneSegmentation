@@ -1,5 +1,6 @@
+name: "init_cifar10"
 out_dir: "snapshots"
-init_weights: "fast_cifar10.caffemodel"
+
 multi_source {
     iterations: 3
     init_stage {

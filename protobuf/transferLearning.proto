@@ -4,9 +4,11 @@ package transferLearning;
 
 // Defines a whole transfer learning cycle
 message TransferLearning {
-    optional string out_dir = 1;
-    repeated MultiSource multi_source = 2;
+    // TODO: Turn name optional
+    required string name = 1;
+    optional string out_dir = 2;
     optional string init_weights = 3;
+    repeated MultiSource multi_source = 4;
 }
 
 message MultiSource {
@@ -63,7 +65,7 @@ message Snapshot {
     repeated float best_scores = 4;
     
     // Current stage to process after the resume
-    optional int32 stage = 5;
+    required int32 stage = 5;
     // Two ways to resume the stage (weights or solverstate), chose one
     optional string stage_weights = 6;
     optional string stage_snapshot = 7;

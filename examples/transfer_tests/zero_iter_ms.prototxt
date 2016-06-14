@@ -1,3 +1,4 @@
+name: "zero_iter_ms"
 #out_dir: "snapshots"
 init_weights: "/home/shared/data/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel"
 

@@ -1,5 +1,6 @@
+name: "one_stage_one_iter_ms"
 #out_dir: "snapshots"
-init_weights: "/home/shared/data/givenModels/fcn-16s-pascal/fcn-16s-pascal.caffemodel"
+init_weights: "/home/shared/data/givenModels/fcn-16s-pascal/fcn16s-heavy-pascal.caffemodel"
 
 multi_source {
     stage {

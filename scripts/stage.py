@@ -1,30 +1,19 @@
 # TODO: Check ignore and freeze functions
-# TODO: Check solve.solve
-# TODO: Make sure that usePySolver is useless
 
 import os
 import caffe
 from caffe.proto import caffe_pb2
 from caffeUtils import protoUtils, solve
 
-# names of parameters in protobufs so we can check for their presence
-LR_MULT_FIELD = 'lr_mult'
-LAYER_PARAM_FIELD = 'param'
-SNAPSHOT_FORMAT_FIELD = 'snapshot_format'
+# Suffixes
+S_IGNORE_LAYER = '-ignore'
 
-TEMP_FILE_SUFFIX = '.tmp'
-IGNORE_LAYER_SUFFIX = '-ignore'
-MODEL_SUFFIX = '.caffemodel'
-ITER_PREFIX = '_iter_'
+# Extensions
+E_TEMP_FILE = '.tmp'
+E_MODEL = '.caffemodel'
 
-
-def swapFiles(filename1, filename2):
-    tempName = filename1 + TEMP_FILE_SUFFIX
-    if tempName == filename2:
-        tempName = tempName + TEMP_FILE_SUFFIX
-    os.rename(filename1, tempName)
-    os.rename(filename2, filename1)
-    os.rename(tempName, filename2)
+# General
+ITER = '_iter_'
 
 
 def freezeNetworkLayers(freezeList, trainNetFilename):
@@ -42,7 +31,7 @@ def freezeNetworkLayers(freezeList, trainNetFilename):
                 p.lr_mult = 0
 
     # re-serialize modified files
-    tmpTrainNetFilename = trainNetFilename + TEMP_FILE_SUFFIX
+    tmpTrainNetFilename = trainNetFilename + E_TEMP_FILE
     protoUtils.writeToPrototxt(trainNet, tmpTrainNetFilename)
     return tmpTrainNetFilename
 
@@ -58,10 +47,10 @@ def ignoreModelLayers(ignoreList, modelFilename):
     # rename layers to force Caffe to ignore them
     for layer in layers:
         if layer.name in ignoreList:
-            layer.name = layer.name + IGNORE_LAYER_SUFFIX
+            layer.name = layer.name + S_IGNORE_LAYER
 
     # write the model back out to a temporary file
-    tmpModelFilename = modelFilename + TEMP_FILE_SUFFIX
+    tmpModelFilename = modelFilename + E_TEMP_FILE
     with open(tmpModelFilename, 'w') as f:
         f.write(model.SerializeToString())
     return tmpModelFilename
@@ -95,28 +84,36 @@ class Stage(object):
         self.ignoreList = ignoreList
         self.preProcFun = preProcFun
         self.haltPercentage = haltPercentage
-        self.dataLayer = dataLayer
-        self.lossLayer = lossLayer
-        self.outLayer = outLayer
-        self.labelLayer = labelLayer
+        self.layerNames = (dataLayer, lossLayer, outLayer, labelLayer)
         
         learnDir = os.path.dirname(solverFilename)
         trainNetBasename = protoUtils.getTrainNetFilename(solverFilename)
         self.trainNetFilename = os.path.join(learnDir, trainNetBasename)
-        self.outModelFilename = os.path.join(outDir, self.name + MODEL_SUFFIX)
+        self.outModelFilename = os.path.join(outDir, self.name + E_MODEL)
 
-    def cleanup(self, keepModelFilename):
+    def verify(self):
+        """Check if the stage respects few requirements."""
+        assert os.path.isfile(self.solverFilename), \
+        ' '.join["Cannot find solver file:", solverFilename]
+        if self.haltPercentage:
+            assert self.haltPercentage >= 0 and self.haltPercentage <= 100, \
+            ' '.join["'haltPercentage' should be set between 0 and 100, here:",
+                     self.iteration]
+
+    def cleanup(self, keepModelFilenames):
+        """Cleans all the snapshots / models, except those we want to keep."""
         snapshotDir, snapshotPrefixBase = self.getSnapshotInfo()
-        snapshotPrefix = snapshotPrefixBase + ITER_PREFIX
+        snapshotPrefix = snapshotPrefixBase + ITER
         for f in os.listdir(snapshotDir):
             fullFilePath = os.path.join(snapshotDir, f)
             doRemoveFile = (os.path.isfile(fullFilePath) and
                             f.startswith(snapshotPrefix) and
-                            f != keepModelFilename)
+                            not f in keepModelFilenames)
             if doRemoveFile:
                 os.remove(fullFilePath)
     
     def getSnapshotInfo(self):
+        """Returns the directory where are the snapshots and their prefixes."""
         solverSpec = protoUtils.readSolver(str(self.solverFilename))
         solverDir = os.path.dirname(self.solverFilename)
         solverRelSnapshotDir, filePrefix = os.path.split(
@@ -124,17 +121,19 @@ class Stage(object):
         snapshotDir = os.path.join(solverDir, solverRelSnapshotDir)
         return snapshotDir, filePrefix
     
-    def execute(self, modelFilename=None):
+    def execute(self, modelFilename=None, snapshot=None,
+                      snapshotToRestore=None, quiet=False):
         """Carries out this learning stage in caffe."""
-        
         # Will store all the temporary created files (to delete them after)
         tmpFilenames = []
         
+        # Get solver main values
         solverFilename = self.solverFilename
         trainNetFilename = self.trainNetFilename
         outModelFilename = self.outModelFilename
         
-        # Make sure that the output filename isn't already used
+        # Make sure that the output filename isn't already used, and change its
+        # extension if it is (.1, .2, .3, ...)
         i = 0
         while True:
             if not os.path.isfile(outModelFilename):
@@ -150,7 +149,7 @@ class Stage(object):
             # TODO: check if the net / train_net matters
             solverSpec = protoUtils.replaceTrainNetFilename(solverSpec, 
                                                             trainNetFilename)
-            solverFilename = solverFilename + TEMP_FILE_SUFFIX
+            solverFilename = solverFilename + E_TEMP_FILE
             protoUtils.writeToPrototxt(solverSpec, solverFilename)
             tmpFilenames += [solverFilename, trainNetFilename]
         
@@ -159,16 +158,20 @@ class Stage(object):
             modelFilename = ignoreModelLayers(self.ignoreList, modelFilename)
             tmpFilenames.append(modelFilename)
         
+        # Run the stage
         outNet, scores = solve.solve(solverFilename, modelFilename,
                                      self.preProcFun, self.haltPercentage,
-                                     self.dataLayer, self.lossLayer,
-                                     self.outLayer, self.labelLayer)
+                                     self.layerNames, snapshot, 
+                                     snapshotToRestore, quiet)
         
         # Save the results
         outNet.save(str(outModelFilename))
+        modelsToKeep = [outModelFilename]
+        if snapshot.stage_snapshot:
+            modelsToKeep.append(os.path.basename(snapshot.stage_snapshot))
 
         # Remove temporary files
-        self.cleanup(outModelFilename)
+        self.cleanup(modelsToKeep)
         map(os.remove, tmpFilenames)
         return outModelFilename, scores
 

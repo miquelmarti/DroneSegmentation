@@ -1,4 +1,6 @@
+name: "init_3s5iMs"
 out_dir: "three_stage_five_iter"
+
 multi_source {
     iterations: 5
     init_stage {
@@ -19,6 +21,8 @@ multi_source {
         solver_filename: "../train_fcn/fcn32/solver.prototxt"
         
         fcn_surgery: true
+        
+        outLayer: "score"
     }
     stage {
         name: "ms5_fcn16"

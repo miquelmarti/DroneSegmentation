@@ -1,5 +1,6 @@
+name: "two_stage_five_iter_ms"
 #out_dir: "snapshots"
-init_weights: "/home/shared/data/givenModels/fcn-32s-pascal/fcn-32s-pascal.caffemodel"
+init_weights: "/home/shared/data/givenModels/fcn-32s-pascal/fcn32s-heavy-pascal.caffemodel"
 
 multi_source {
     iterations: 5
