@@ -6762,7 +6762,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 21
+    num_output: 12
     pad: 0
     kernel_size: 1
     weight_filler {
@@ -6784,7 +6784,7 @@ layer {
     lr_mult: 0
   }
   convolution_param {
-    num_output: 21
+    num_output: 12
     bias_term: false
     kernel_size: 64
     stride: 32

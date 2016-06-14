@@ -7,7 +7,7 @@ layer {
   python_param {
     module: "coco_layers"
     layer: "ImgPairFileDataLayer"
-      param_str: "{\'dataset_dir\': \'/home/shared/data/datasets/droneye_dataset\', \'seed\': 1337, \'image_list\': \'train.txt\', \'mean\': (103.85, 131.4 125.56),\'randomize\': True}"
+      param_str: "{\'dataset_dir\': \'/home/shared/data/datasets/droneye_dataset\', \'seed\': 1337, \'image_list\': \'train_by8.txt\', \'mean\': (103.85, 131.4, 125.56),\'randomize\': True}"
   }
 }
 layer {
@@ -6808,7 +6808,7 @@ layer {
   bottom: "label"
   top: "loss"
   loss_param {
-    ignore_label: 255
+    #ignore_label: 255
     normalize: false
   }
 }

@@ -1,4 +1,3 @@
-name: "dronEye_resNet_100000"
 out_dir: "dronEye_resNet_100000"
 init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
 
