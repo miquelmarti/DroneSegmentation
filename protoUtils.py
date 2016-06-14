@@ -31,6 +31,15 @@ def getTrainNetFilename(solverFilename):
         raise Exception(solverFilename + ' provides no training network!')
 
 
+def getTrainNetFilenameFromProto(solverSpec):
+    if solverSpec.HasField(NET_FIELD):
+        return solverSpec.net
+    elif solverSpec.HasField(TRAIN_NET_FIELD):
+        return solverSpec.train_net
+    else:
+        raise Exception(solverFilename + ' provides no training network!')
+
+
 def readSolver(filename):
     solverSpec = caffe_pb2.SolverParameter()
     readFromPrototxt(solverSpec, filename)
