@@ -29,6 +29,10 @@ CV2_LOAD_IMAGE_UNCHANGED = -1
 # ignore divisions by zero
 np.seterr(divide='ignore', invalid='ignore')
 
+#If no networks provide input shape, this will be the default one (there could be a nicer way of doing this, by loading .npy arrays and have a direct look at their size)
+default_input_shape = np.array((1,21,500,500))
+default_numb_cla = 21
+
 
 # copied from shelhamer's score.py
 # def fast_hist(a, b, n):
@@ -57,6 +61,10 @@ def get_arguments():
     For recording the videos, expects the path and file prefix of where to \
     save them (eg. "/path/to/segnet_"). Will create three videos if ground \
     truth is present, three videos if not.')
+    parser.add_argument('--crop', type=int, default=1, help='\
+    Cut each image into crop*crop small images before inputting in network (for GPU memory saving)')
+    parser.add_argument('--view_resize', type=float, default=1.0, help='\
+    Cut each image into crop*crop small images before inputting in network (for GPU memory saving)')
     parser.add_argument('--show_prob', type=int, help='\
     If provided, will display the probability of the given class at each \
     pixel.') 
@@ -120,7 +128,7 @@ def softmax(x): #Softmax function, transforming logits into probabilities
     return out
 
     
-def combineEnsemble(net_outputs, method):
+def combineEnsemble(net_outputs, method, weighting):
     output = 0
     
     #If there is only one model, we skip this step
@@ -137,11 +145,14 @@ def combineEnsemble(net_outputs, method):
     if method==ensemble_pb2.LOGITARI: #Logit arithmetic averaging
             output = np.zeros(net_outputs[0].shape)
             
-            for current_net_output in net_outputs:
-                output = output + current_net_output
+            sum_weightings = 0
+            for current_net_output, current_weighting in zip(net_outputs,
+                                                             weighting):
+                output = output + current_net_output * current_weighting
+                sum_weightings = sum_weightings + current_weighting
             
             #Make it a mean instead of a sum of logits
-            output = output/len(net_outputs)
+            output = output/sum_weightings
             
     if method==ensemble_pb2.LOGITGEO: #Logit geometric averaging
             output = np.ones(net_outputs[0].shape)
@@ -158,11 +169,13 @@ def combineEnsemble(net_outputs, method):
     if method==ensemble_pb2.PROBAARI: #Probability arithmetic averaging
             output = np.zeros(net_outputs[0].shape)
             
-            for current_net_output in net_outputs:
-                output = output + softmax(current_net_output)
+            sum_weightings = 0
+            for current_net_output, current_weighting in zip(net_outputs, weighting):
+                output = output + softmax(current_net_output) * current_weighting
+                sum_weightings = sum_weightings + current_weighting
             
             #Make it a mean instead of a sum of probabilities
-            output = output/len(net_outputs)
+            output = output/sum_weightings
     
     if method==ensemble_pb2.PROBAGEO: #Probability geometric averaging
             output = np.ones(net_outputs[0].shape)
@@ -203,6 +216,8 @@ if __name__ == '__main__':
     input_blobs = []
     output_blobs = []
     nets = []
+    model_weighting = []
+    
     for model in config.model: #Load all networks from the different models specified in .proto
         #Create network and add it to network list
         nets.append(build_network(model.deploy, model.weights))
@@ -210,22 +225,32 @@ if __name__ == '__main__':
         #Get information about input and output layers
         input_blobs.append(model.input)
         output_blobs.append(model.output)
+        model_weighting.append(model.weighting)
         
-    # Load all model output folders specified in .proto
-    for model in config.modelOutput: 
+    for model in config.modelOutput: #Load all model output folders specified in .proto
+        #Create network and add it to network list
         nets.append(None)
+        
+        #Get information about input and output layers
         input_blobs.append(None)
         output_blobs.append(model.folder)
-            
-    input_shape = nets[0].blobs[input_blobs[0]].data.shape
+        model_weighting.append(model.weighting)
+    
+    if input_blobs[0] is not None:        
+        input_shape = nets[0].blobs[input_blobs[0]].data.shape
+        numb_cla = nets[0].blobs[output_blobs[0]].channels
+    else:
+        input_shape = default_input_shape
+        numb_cla = default_numb_cla
     
     # Histogram for evan's metrics
     numb_cla = nets[0].blobs[output_blobs[0]].channels
     totalHist = np.zeros((numb_cla, numb_cla))
     
     times = []  # Variable for test times
+    
+    # Video recording
     if args.record != '':
-        # Video recording
         fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
         shape = (input_shape[3], input_shape[2])
         images = cv2.VideoWriter(args.record + 'img.avi', fourcc, 5.0, shape)
@@ -275,8 +300,8 @@ if __name__ == '__main__':
         for net, in_blob, out_blob in zip(nets, input_blobs, output_blobs):
             guessed_label = None
             newShape = None
-            if net is None:
-                # the outputs are in .npy files
+            
+            if net is None: #If no net is provided, it means the outputs are in .npy files
                 guessed_label = np.load(out_blob+imageName+'.npy')
                 logits.append(np.squeeze(guessed_label))
                 continue
@@ -285,13 +310,27 @@ if __name__ == '__main__':
                 newShape = input_shape
                 
             #Run the network
-            guessed_label = score.segmentImage(net, _input, in_blob, out_blob,
+            if args.crop > 1:
+                _input_array = np.asarray(_input)
+                guessed_label = np.zeros((12,_input_array.shape[0],_input_array.shape[1]))
+                for id_h in range(0,args.crop):
+                        crop_h = int(_input_array.shape[0]/float(args.crop))
+                        h1 = id_h*crop_h
+                        
+                        for id_w in range(0,args.crop+0):
+                                crop_w = int(_input_array.shape[1]/float(args.crop))
+                                w1 = id_w*crop_w
+                                
+                                cropped = _input_array[h1:(h1+crop_h), w1:(w1+crop_w), :]
+                                guessed_label[:,h1:(h1+crop_h),w1:(w1+crop_w)] = score.segmentImage(net, Image.fromarray(cropped), in_blob, out_blob, mean, newShape)
+            else:
+                guessed_label = score.segmentImage(net, _input, in_blob, out_blob,
                                                mean, newShape)
             logits.append(np.squeeze(guessed_label)) #Add network output to list
 
         # Combine the outputs of each net by the chosen method (voting,
         # averaging, etc.)
-        logits = combineEnsemble(logits, config.ensemble_type)
+        logits = combineEnsemble(logits, config.ensemble_type, model_weighting)
         
         #If we precise an output folder in the prototxt
         if config.outputFolder != "None":
@@ -360,29 +399,37 @@ if __name__ == '__main__':
             
             # Display the ground truth
             if args.record == '' or args.hide:
-                cv2.imshow("Labelled", gt_image)
+                newSize = (int(args.view_resize*gt_image.shape[1]),
+                           int(args.view_resize*gt_image.shape[0]))
+                labeledImage = cv2.resize(gt_image, newSize)
+                cv2.imshow("Ground truth", labeledImage)
             elif args.record != '':
                 labels.write(gt_image)
                 
         # Switch to RGB (PIL Image read files as BGR)
         if len(np.array(_input).shape) is 3:
-                _input = np.array(cv2.cvtColor(np.array(_input), cv2.COLOR_BGR2RGB))
+            _input = np.array(cv2.cvtColor(np.array(_input),
+                                           cv2.COLOR_BGR2RGB))
         
         # Display input and output
         if args.record == '' and not args.hide:
-            cv2.imshow("Input", _input)
+            newSize = (int(args.view_resize*_input.shape[1]),
+                       int(args.view_resize*_input.shape[0]))
+            cv2.imshow("Input", cv2.resize(_input, newSize))
             if args.show_prob is not None:
                 probs = softmax(logits)
                 showProb = probs[args.show_prob]
                 showProb = showProb / np.max(showProb)
                 cv2.imshow("probability", showProb)
             else:
-                cv2.imshow("Output", guessed_image)
+                newSize = (int(args.view_resize*guessed_image.shape[1]),
+                           int(args.view_resize*guessed_image.shape[0]))
+                cv2.imshow("Output", cv2.resize(guessed_image, newSize))
             key = 0
             if args.key:
                 key = cv2.waitKey(0)
             else:
-                key = cv2.waitKey(1000)
+                key = cv2.waitKey(2000)
             if key % 256 == 27:  # exit on ESC - keycode is platform-dependent
                 break
         elif args.record != '':

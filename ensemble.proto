@@ -6,11 +6,13 @@ message Model {
   required string weights = 2;
   optional string input = 3 [default = "data"];
   optional string output = 4 [default = "score"];
+  optional int32 weighting = 5 [default = 1];
 }
 
 //MODEL OUTPUT
 message ModelOutput {
   required string folder = 1;
+  optional int32 weighting = 2 [default = 1];
 }
 
 //INPUT

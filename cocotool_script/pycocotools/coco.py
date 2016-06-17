@@ -58,6 +58,16 @@ import itertools
 import mask
 import os
 
+def PolygonArea(corners):
+    n = len(corners) # of corners
+    area = 0.0
+    for i in range(n):
+        j = (i + 1) % n
+        area += corners[i][0] * corners[j][1]
+        area -= corners[j][0] * corners[i][1]
+    area = abs(area) / 2.0
+    return area
+
 class COCO:
     def __init__(self, annotation_file=None):
         """
@@ -93,12 +103,24 @@ class COCO:
             imgToAnns = {ann['image_id']: [] for ann in self.dataset['annotations']}
             anns =      {ann['id']:       [] for ann in self.dataset['annotations']}
             for ann in self.dataset['annotations']:
+		if 'segmentation' in self.dataset['annotations'][0] \
+and not 'area' in ann and type(ann['segmentation']) == list:
+			area = 0.0
+			poly = np.array(ann['segmentation']).reshape((len(ann['segmentation'])/2, 2))
+			pts = np.array(poly, np.int32)
+			pts.reshape((-1,1,2))
+			area = area + PolygonArea(pts)
+			ann['area'] = area
+		elif not 'area' in ann:
+			ann['area'] = 0
                 imgToAnns[ann['image_id']] += [ann]
                 anns[ann['id']] = ann
 
         if 'images' in self.dataset:
             imgs      = {im['id']: {} for im in self.dataset['images']}
             for img in self.dataset['images']:
+		if img['file_name'].startswith("../images/firstThree/"):
+			img['file_name'] = img['file_name'][len("../images/firstThree/"):]
                 imgs[img['id']] = img
 
         if 'categories' in self.dataset:

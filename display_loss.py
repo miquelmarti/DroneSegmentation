@@ -73,17 +73,27 @@ def getTestStats(lines):
     return stats
 
 
-def plotXAndY(x, y, title):
+def plotXAndY(x, y, title, xlabel='', ylabel=''):
     plt.plot(x, y)
-    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    
+    #plt.plot(x, np.multiply(y,100)) #For mean IU
+    #plt.xlabel(xlabel, fontsize=20)
+    #plt.ylabel(ylabel, fontsize=20) #For training loss
+    #plt.ylabel(ylabel + " (%)", fontsize=20) #For mean IU
+    #plt.tick_params(axis='both', which='major', labelsize=15)
+    #plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0)) #For training loss
+    #plt.title(title)
     plt.show()
 
 
 def plotMultiple(xs, ys, labels, title):
     for x, y, label in zip(xs, ys, labels):
         plt.plot(x, y, label=label)
+    plt.xlabel('Iterations')
     plt.title(title)
-    plt.legend(bbox_to_anchor=(0.7, 1), loc=2, borderaxespad=0.)
+    plt.legend(bbox_to_anchor=(0.7, 0.2), loc=2, borderaxespad=0.)
     plt.show()
     
 
@@ -96,7 +106,7 @@ def plotLearningLogs(lossLines, segTestLines, prefix=''):
 def plotTrainingLosses(lossLines, prefix=''):
     iterNums = map(getIterNum, lossLines)
     losses = [float(l.strip().rpartition(' ')[2]) for l in lossLines]
-    plotXAndY(iterNums, losses, prefix + 'training loss')
+    plotXAndY(iterNums, losses, prefix + 'training loss', 'Iterations', 'Training loss')
 
 
 def plotSegTests(segTestLines, prefix=''):
@@ -105,8 +115,12 @@ def plotSegTests(segTestLines, prefix=''):
     testStats = getTestStats(segTestLines)
     # plot loss separately, since it exists on a very different scale
     testLossIters, testLosses = zip(*testStats[TST_LOSS_TAG])
-    plotXAndY(testLossIters, testLosses, prefix + 'test loss')
+    plotXAndY(testLossIters, testLosses, prefix + 'test loss', 'Iterations', 'Testing loss')
     del(testStats[TST_LOSS_TAG])
+    
+    
+    iuIters, iuVals = zip(*testStats[MEAN_IU_TAG])
+    plotXAndY(iuIters, iuVals, prefix + 'Mean IU', 'Iterations', 'Mean IU')
 
     # plot other statistics
     testIters, testVals = [], []
