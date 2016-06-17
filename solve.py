@@ -196,7 +196,9 @@ def solve(solverFilename, modelFilename=None, preProcFun=None,
     
     # Extract the main infos
     maxIter = solverSpec.max_iter
-    testIter = solverSpec.test_iter[0]
+    testIter = 0
+    if len(solverSpec.test_iter) > 0:
+        testIter = solverSpec.test_iter[0]
     testInterval = solverSpec.test_interval
     snapshotInterval = solverSpec.snapshot
     
