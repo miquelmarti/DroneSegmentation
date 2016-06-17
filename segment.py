@@ -61,6 +61,10 @@ def get_arguments():
     For recording the videos, expects the path and file prefix of where to \
     save them (eg. "/path/to/segnet_"). Will create three videos if ground \
     truth is present, three videos if not.')
+    parser.add_argument('--crop', type=int, default=1, help='\
+    Cut each image into crop*crop small images before inputting in network (for GPU memory saving)')
+    parser.add_argument('--view_resize', type=float, default=1.0, help='\
+    Cut each image into crop*crop small images before inputting in network (for GPU memory saving)')
     
     return parser.parse_args()
 
@@ -306,7 +310,21 @@ if __name__ == '__main__':
                 newShape = input_shape
                 
             #Run the network
-            guessed_label = score.segmentImage(net, _input, in_blob, out_blob,
+            if args.crop > 1:
+                _input_array = np.asarray(_input)
+                guessed_label = np.zeros((12,_input_array.shape[0],_input_array.shape[1]))
+                for id_h in range(0,args.crop):
+                        crop_h = int(_input_array.shape[0]/float(args.crop))
+                        h1 = id_h*crop_h
+                        
+                        for id_w in range(0,args.crop+0):
+                                crop_w = int(_input_array.shape[1]/float(args.crop))
+                                w1 = id_w*crop_w
+                                
+                                cropped = _input_array[h1:(h1+crop_h), w1:(w1+crop_w), :]
+                                guessed_label[:,h1:(h1+crop_h),w1:(w1+crop_w)] = score.segmentImage(net, Image.fromarray(cropped), in_blob, out_blob, mean, newShape)
+            else:
+                guessed_label = score.segmentImage(net, _input, in_blob, out_blob,
                                                mean, newShape)
             guessed_labels.append(np.squeeze(guessed_label)) #Add network output to list
 
@@ -385,7 +403,7 @@ if __name__ == '__main__':
             
             # Display the ground truth
             if args.record == '' or args.hide:
-                cv2.imshow("Labelled", gt_image)
+                cv2.imshow("Labelled", cv2.resize(gt_image,(int(args.view_resize*gt_image.shape[1]),int(args.view_resize*gt_image.shape[0]))))
             elif args.record != '':
                 labels.write(gt_image)
                 
@@ -395,13 +413,14 @@ if __name__ == '__main__':
         
         # Display input and output
         if args.record == '' and not args.hide:
-            cv2.imshow("Input", _input)
-            cv2.imshow("Output", guessed_image)
+            
+            cv2.imshow("Input", cv2.resize(_input,(int(args.view_resize*_input.shape[1]),int(args.view_resize*_input.shape[0]))))
+            cv2.imshow("Output", cv2.resize(guessed_image,(int(args.view_resize*guessed_image.shape[1]),int(args.view_resize*guessed_image.shape[0]))))
             key = 0
             if args.key:
                 key = cv2.waitKey(0)
             else:
-                key = cv2.waitKey(1000)
+                key = cv2.waitKey(2000)
             if key % 256 == 27:  # exit on ESC - keycode is platform-dependent
                 break
         elif args.record != '':

@@ -77,7 +77,14 @@ def plotXAndY(x, y, title, xlabel='', ylabel=''):
     plt.plot(x, y)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    plt.title(title)
+    
+    #plt.plot(x, np.multiply(y,100)) #For mean IU
+    #plt.xlabel(xlabel, fontsize=20)
+    #plt.ylabel(ylabel, fontsize=20) #For training loss
+    #plt.ylabel(ylabel + " (%)", fontsize=20) #For mean IU
+    #plt.tick_params(axis='both', which='major', labelsize=15)
+    #plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0)) #For training loss
+    #plt.title(title)
     plt.show()
 
 
