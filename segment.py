@@ -371,12 +371,13 @@ if __name__ == '__main__':
         # Display input and output
         if args.record == '' and not args.hide:
             cv2.imshow("Input", _input)
-            cv2.imshow("Output", guessed_image)
             if args.show_prob is not None:
                 probs = softmax(logits)
                 showProb = probs[args.show_prob]
                 showProb = showProb / np.max(showProb)
                 cv2.imshow("probability", showProb)
+            else:
+                cv2.imshow("Output", guessed_image)
             key = 0
             if args.key:
                 key = cv2.waitKey(0)
