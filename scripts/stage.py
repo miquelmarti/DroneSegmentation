@@ -3,8 +3,7 @@
 import os
 import caffe
 from caffe.proto import caffe_pb2
-from caffeUtils import protoUtils, solve
-import solverParam
+from caffeUtils import protoUtils, solve, solverParam
 
 # Suffixes
 S_IGNORE_LAYER = '-ignore'

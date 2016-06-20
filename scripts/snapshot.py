@@ -89,12 +89,13 @@ class Snapshot(object):
         return snap
         
 
-    def save(self):
+    def save(self, silent=False):
         snap_msg = self.snapToMsg(self)
         
         # Write the snapshot
         protoUtils.writeToPrototxt(snap_msg, self.out_filename)
-        print SNAP_PREFIX, 'Write', os.path.basename(self.out_filename)
+        if not silent:
+            print SNAP_PREFIX, 'Write', os.path.basename(self.out_filename)
 
     def copyFrom(self, fileName):
         msg = transferLearning_pb2.Snapshot()

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-# TODO: Use logging
-# TODO: Also take in charge absolute paths
+# TODO: Use logging, and check it displays correctly the test results
+# TODO: Also take in charge absolute paths ; maybe not needed anymore with the
+# TODO: solverParam class, check this.
 # TODO: Think about the preProcFun -> should be usable easily
 
 """Carries out transfer learning according to a provided configuration file."""
@@ -124,7 +125,7 @@ def executeListOfStages(stages, firstModel, snapshot, snapshotToRestore=None,
                         str(os.path.basename(model) if model else '')])
         
         # Save the snapshot
-        snapshot.save()
+        snapshot.save(quiet)
         
         # Execute the stage
         newModel, scores = s.execute(model, snapshot, snapshotToRestore, quiet)
@@ -175,7 +176,8 @@ if __name__ == "__main__":
         os.environ['GLOG_minloglevel'] = '3'
         warnings.filterwarnings("ignore")
         logging.basicConfig(level=logging.INFO)
-        # TODO: delete protobuf warnings
+        # TODO: Delete protobuf warnings, it seems that divided the messages is
+        # TODO: the only way to do this... so have to check in protoUtils 
     
     # Must change log level prior to importing caffe
     import caffe
@@ -186,7 +188,8 @@ if __name__ == "__main__":
     if args.cpu:
         caffe.set_mode_cpu()
     else:
-        # TODO: set_device(1) runs the framework on gpu 0, fix this
+        # TODO: Set_device(1) runs the framework on gpu 0, fix this. 0 seems to be
+        # TODO: the "default" GPU, don't know why it is always the nb 1 though
         caffe.set_device(args.gpu)
         caffe.set_mode_gpu()
 
