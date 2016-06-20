@@ -5,6 +5,8 @@ import caffe
 from caffe.proto import caffe_pb2
 import transferLearning_pb2
 from caffeUtils import protoUtils, solve
+import logging
+logger = logging.getLogger()
 
 # names of parameters in protobufs so we can check for their presence
 SNAP_PREFIX = '[snapshot_info]'
@@ -51,19 +53,6 @@ class Snapshot(object):
                  "of best_scores"]
         assert self.stage >= 0, \
         ' '.join["'stage' should be positive, here:", self.multiSource]
-
-    def overview(self):
-        print SNAP_PREFIX, 'multisource:', self.multisource
-        print SNAP_PREFIX, 'iteration:', self.iteration
-        for i in range(len(self.best_weights)):
-            print SNAP_PREFIX, 'best_weights:', self.best_weights[i]
-        for i in range(len(self.best_scores)):
-            print SNAP_PREFIX, 'best_scores:', self.best_scores[i]
-        
-        print SNAP_PREFIX, 'stage:', self.stage
-        print SNAP_PREFIX, 'stage_weights:', self.stage_weights
-        print SNAP_PREFIX, 'stage_snapshot:', self.stage_snapshot
-        print SNAP_PREFIX, 'out_filename:', self.out_filename
     
     def snapToMsg(self, snap):
         msg = transferLearning_pb2.Snapshot()
@@ -95,7 +84,7 @@ class Snapshot(object):
         # Write the snapshot
         protoUtils.writeToPrototxt(snap_msg, self.out_filename)
         if not silent:
-            print SNAP_PREFIX, 'Write', os.path.basename(self.out_filename)
+            logger.info('%s Write %s', SNAP_PREFIX, os.path.basename(self.out_filename))
 
     def copyFrom(self, fileName):
         msg = transferLearning_pb2.Snapshot()

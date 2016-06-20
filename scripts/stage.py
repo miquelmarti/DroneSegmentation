@@ -4,6 +4,8 @@ import os
 import caffe
 from caffe.proto import caffe_pb2
 from caffeUtils import protoUtils, solve, solverParam
+import logging
+logger = logging.getLogger()
 
 # Suffixes
 S_IGNORE_LAYER = '-ignore'
@@ -130,8 +132,7 @@ class Stage(object):
     
     def execute(self, modelFilename=None, snapshot=None,
                       snapshotToRestore=None, quiet=False):
-        """Carries out this learning stage in caffe."""
-        
+        """Carries out this learning stage in caffe.""" 
         # Will store all the temporary created files (to delete them after)
         tmpFilenames = []
         
