@@ -1,6 +1,0 @@
-multisource: 0
-iteration: 0
-best_weights: ""
-best_scores: 0.0
-stage: 0
-stage_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
