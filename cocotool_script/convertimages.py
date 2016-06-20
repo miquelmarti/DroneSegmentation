@@ -16,6 +16,15 @@ def get_arguments():
     parser.add_argument('--ann', type=str, help='annotation file path', default='')
     return parser.parse_args()
 
+def getPriority(id):
+	#if annotation is road, footpath, grass or earth
+	# swiss 100 
+	#if id == 3 or id == 4 or id == 6 or id == 7:
+	#okutama
+	if id == 5 or id == 4 or id == 3:
+		return 1
+	return 0
+
 def drawSegmentation(image, anns, img):
         """
         draws segmentation on input image
@@ -26,12 +35,11 @@ def drawSegmentation(image, anns, img):
             return False
         if 'segmentation' in anns[0]:
 	    # sort annotations from biggest to smallest to avoid occlusions
-	   
-	    anns.sort(key=lambda x: x['area'], reverse=True)
+	    colours = cv2.imread('/home/shared/data/datasets/VOCdevkit/VOC2012/colours/pascal_voc_21_colours.png').astype(np.uint8)
+	    anns.sort(key=lambda x: (getPriority(x['category_id']),x['area']), reverse=True)
             for ann in anns:
-		
-		pixelvalue = ann['category_id']* 10
-		c = [pixelvalue, pixelvalue, pixelvalue] 
+		#c = [int(colours[0][ann['category_id']][0]), int(colours[0][ann['category_id']][1]), int(colours[0][ann['category_id']][2])] 
+		c = [ann['category_id'], ann['category_id'], ann['category_id']]
 		if type(ann['segmentation']) == list:
 		    poly = np.array(ann['segmentation']).reshape((len(ann['segmentation'])/2, 2))
 		    pts = np.array(poly, np.int32)
@@ -40,6 +48,7 @@ def drawSegmentation(image, anns, img):
 		    cv2.fillPoly(image, [pts], c)
 	return True
 		    
+
 		 
 
 
@@ -58,6 +67,7 @@ if __name__ == '__main__':
 
 	#get all category ids
 	catIds = coco.getCatIds()
+	cats = coco.loadCats(catIds)
 
 	#get all image ids
 	imgIds = coco.getImgIds()
@@ -71,7 +81,11 @@ if __name__ == '__main__':
 	for img in imgs:
 		#open image
 		#image = cv2.imread('%s/images/%s/%s'%(dataDir,dataType,img['file_name']),-1)
-		image = cv2.imread('%s/%s'%(dataDir,img['file_name']),-1)		
+		image = cv2.imread('%s/%s'%(dataDir,img['file_name']),-1)
+		
+		if image==None:
+			continue		
+			
 		#if there is no color channels, resize the matrix
 		
 		if len(image.shape) is 2:

@@ -119,8 +119,7 @@ and not 'area' in ann and type(ann['segmentation']) == list:
         if 'images' in self.dataset:
             imgs      = {im['id']: {} for im in self.dataset['images']}
             for img in self.dataset['images']:
-		if img['file_name'].startswith("../images/firstThree/"):
-			img['file_name'] = img['file_name'][len("../images/firstThree/"):]
+		img['file_name'] = os.path.basename(img['file_name'])
                 imgs[img['id']] = img
 
         if 'categories' in self.dataset:
