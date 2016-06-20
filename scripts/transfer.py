@@ -218,7 +218,8 @@ if __name__ == "__main__":
     elif outDir is None:
         outDir = '.'
     setattr(snapshot, 'out_filename',
-            os.path.join(outDir, tlMsg.name + S_SNAP + E_PROTOTXT))
+            os.path.join(os.path.abspath(outDir), 
+                         tlMsg.name + S_SNAP + E_PROTOTXT))
     print 'Will save all the results into', outDir
     
     # Command-line init weights take priority, if not provided, we use the ones
