@@ -4,7 +4,6 @@
 import caffe
 from datetime import datetime
 import score
-import protoUtils
 
 # Add the path to the layers to sys.path so caffe's code can import them
 import fcnLayers
@@ -18,7 +17,7 @@ E_SOLVERSTATE = '.solverstate'
 
 
 def runValidation(solver, numIter, layerNames):
-    """Run the test step."""
+    """Run the test step."""n
     totalHist = None
     totalLoss = 0
     
@@ -65,6 +64,7 @@ def validateAndPrint(solverParam, solver, layerNames, silent):
         printScores(scores, solver.iter)
     return scores
 
+    
 def saveSnapshotWeights(solverParam, solver, snapshot, silent):
     """Save a snapshot (for future resuming)."""
     solver.snapshot()
@@ -78,6 +78,7 @@ def saveSnapshotWeights(solverParam, solver, snapshot, silent):
         setattr(snapshot, 'stage_snapshot', snapshotFile)
         snapshot.save(silent)
 
+        
 def doSnapOrTest(action, solverParam, solver, snapshot=None, layerNames=None, 
                  silent=False):
     """Execute the appropriate action."""
@@ -92,14 +93,15 @@ def doSnapOrTest(action, solverParam, solver, snapshot=None, layerNames=None,
     
     return None
 
+    
 def checkHalt(prev, new, halt):
     """Check if we reach the halting criteria."""
     perc = (prev / new) if new != 0 else 0
-    
     if (1. - perc) * 100 < halt:
         return True
     return False
 
+    
 def solveWithIntervals(solverParam, solver, halt, snapshot, layerNames, 
                        silent):
     """Run the needed number of iteration and do appropriate actions."""
