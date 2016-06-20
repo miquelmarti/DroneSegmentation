@@ -3,7 +3,7 @@
 #  imported so that we can train with these python layers.
 import argparse
 import caffe
-from caffeUtils import solve, fcnSurgery
+from caffeUtils import solve, fcnSurgery, solverParam
 
 
 def getArguments():
@@ -39,8 +39,11 @@ if __name__ == "__main__":
     if args.device is not None:
         caffe.set_device(args.device)
         caffe.set_mode_gpu()
+    
+    solverParam = solverParam.SolverParam(args.solver)
+    solverParam.verify()
         
-    net, scores = solve.solve(args.solver, args.weights, preProcFun,
-                              args.halt_percent)
+    net, scores = solve.solve(solverParam, args.weights, preProcFun,
+                              args.halt_percent, ('data', 'loss', 'score', 'label'))
     if args.out_file is not None:
         net.save(args.out_file)
