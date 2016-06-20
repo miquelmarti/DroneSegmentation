@@ -1,5 +1,5 @@
 out_dir: "job1Weights"
-init_weights: "/home/shared/data/givenModels/fcn-8s-pascal/fcn-8s-pascal.caffemodel"
+init_weights: "/home/shared/data/givenModels/fcn-8s-pascal/fcn8s-heavy-pascal.caffemodel"
 
 multi_source {
     iterations: 4

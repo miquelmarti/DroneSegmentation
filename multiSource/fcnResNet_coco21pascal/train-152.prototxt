@@ -5,7 +5,7 @@ layer {
   top: "data"
   top: "label"
   python_param {
-    module: "coco_layers"
+    module: "data_layers"
     layer: "ImgPairFileDataLayer"
       param_str: "{\'seed\': 1337, \'image_list\': \'/home/shared/data/datasets/PascalCoco/train.txt\', \'mean\': (104.008, 116.669, 122.675),\'randomize\': True}"
   }
