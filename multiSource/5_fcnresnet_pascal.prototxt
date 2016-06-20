@@ -1,14 +1,13 @@
-name: "dronEye_resNet_cropped_6"
-out_dir: "resNet_cropped_6"
+out_dir: "job5Weights"
 init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
 
 multi_source {
-    iterations: 1
     stage {
-        name: "resnet"
-        solver_filename: "fcnResNet_dronEye/solver-152.prototxt"
+        name: "fcnResnet_pascal"
+        solver_filename: "fcnResNet_pascal/solver-152.prototxt"
         
         fcn_surgery: true
+        #halt_percentage: 10.5
         
         outLayer: "score"
     }
