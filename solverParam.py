@@ -32,8 +32,9 @@ class SolverParam(object):
         """
         
         # Absolute path to the solver
-        self.filename = filename
-        self.directory = os.path.dirname(filename)
+        self.filename = os.path.abspath(filename)
+        self.directory = os.path.dirname(os.path.abspath(filename))
+        
         # Prototxt with all the solver charcteristics
         self.solverSpec = protoUtils.readSolver(str(self.filename))
         
@@ -60,6 +61,7 @@ class SolverParam(object):
                 self.testNetworks.append(os.path.join(self.directory,
                                          self.solverSpec.test_net[i]))
         if len(self.solverSpec.test_net_param) > 0:
+            # TODO: Check this + in any case, delete print
             print "'test_net_param' not handle by this framework, use test_net."
         
         # Get number of iterations for test

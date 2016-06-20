@@ -4,6 +4,8 @@ from __future__ import division
 import numpy as np
 import caffe
 from PIL import Image
+import logging
+logger = logging.getLogger()
 
 
 class SegScores(object):

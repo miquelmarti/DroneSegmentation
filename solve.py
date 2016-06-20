@@ -11,6 +11,8 @@ import inspect
 import sys
 import os
 sys.path.append(os.path.dirname(inspect.getfile(fcnLayers)))
+import logging
+logger = logging.getLogger()
 
 # Extensions
 E_SOLVERSTATE = '.solverstate'
@@ -50,11 +52,11 @@ def printScores(scores, iteration):
     """Prints the given scores."""
     prefix = ' '.join(['>>>', str(datetime.now()), 'Iteration', 
                        str(iteration)])
-    print prefix, 'loss', scores.loss
-    print prefix, 'overall accuracy', scores.overallAcc
-    print prefix, 'mean accuracy', scores.meanAcc
-    print prefix, 'mean IU', scores.meanIu
-    print prefix, 'fwavacc', scores.fwavacc
+    logger.info('%s loss %s', prefix, scores.loss)
+    logger.info('%s overall accuracy %s', prefix, scores.overallAcc)
+    logger.info('%s mean accuracy %s', prefix, scores.meanAcc)
+    logger.info('%s mean IU %s', prefix, scores.meanIu)
+    logger.info('%s fwavacc %s', prefix, scores.fwavacc)
 
 
 def validateAndPrint(solverParam, solver, layerNames, silent):
@@ -68,13 +70,14 @@ def validateAndPrint(solverParam, solver, layerNames, silent):
 def saveSnapshotWeights(solverParam, solver, snapshot, silent):
     """Save a snapshot (for future resuming)."""
     solver.snapshot()
+    snapshotFile = os.path.join(solverParam.directory, 
+                                solverParam.snapshotPrefix + \
+                                str(solver.iter) + E_SOLVERSTATE)
+    assert os.path.isfile(snapshotFile), \
+    ' '.join(["Problem while creating the snapshot, nothing in", snapshotFile])
     
     # Update and save the snapshot
     if snapshot:
-        snapshotFile = solverParam.snapshotPrefix + str(solver.iter) + \
-                       E_SOLVERSTATE
-        assert os.path.isfile(snapshotFile), \
-        ' '.join(["Problem while creating the snapshot, nothing in", snapshotFile])
         setattr(snapshot, 'stage_snapshot', snapshotFile)
         snapshot.save(silent)
 
@@ -89,7 +92,7 @@ def doSnapOrTest(action, solverParam, solver, snapshot=None, layerNames=None,
     elif action == 'TEST':
         return validateAndPrint(solverParam, solver, layerNames, silent)
     else:
-        print 'Unknown action, do nothing.. (', action, ')'
+        logger.info('Unknown action, do nothing.. (%s)', action)
     
     return None
 
@@ -163,8 +166,8 @@ def solveWithIntervals(solverParam, solver, halt, snapshot, layerNames,
     
     # If we used the halt criteria
     if not halt is None and not silent:
-        print ' '.join(['Halting ratio', str(halt), 'acheived in', 
-                        str(solver.iter), 'iterations.'])
+        logger.info('Halting ratio %s acheived in %s iterations.', 
+                    halt, solver.iter)
     
     return scores
 

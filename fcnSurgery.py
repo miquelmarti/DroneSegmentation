@@ -2,21 +2,23 @@
 
 from __future__ import division
 import numpy as np
+import logging
+logger = logging.getLogger()
 
 
 def transplant(new_net, net):
     for p in net.params:
         if p not in new_net.params:
-            print 'dropping', p
+            logger.info('dropping %s', p)
             continue
         for i in range(len(net.params[p])):
             if i > (len(new_net.params[p]) - 1):
-                print 'dropping', p, i
+                logger.info('dropping %s %s', p, i)
                 break
             if net.params[p][i].data.shape != new_net.params[p][i].data.shape:
-                print 'coercing', p, i, 'from', net.params[p][i].data.shape, 'to', new_net.params[p][i].data.shape
+                logger.info('coercing %s %s from %s to %s', p, i, net.params[p][i].data.shape, new_net.params[p][i].data.shape)
             else:
-                print 'copying', p, i
+                logger.info('copying %s %s', p, i)
             new_net.params[p][i].data.flat = net.params[p][i].data.flat
 
             
@@ -41,10 +43,10 @@ def interp(net, layers):
     for l in layers:
         m, k, h, w = net.params[l][0].data.shape
         if m != k and k != 1:
-            print 'input + output channels need to be the same or |output| == 1'
+            logger.info('input + output channels need to be the same or |output| == 1')
             raise
         if h != w:
-            print 'filters need to be square'
+            logger.info('filters need to be square')
             raise
         filt = upsample_filt(h)
         net.params[l][0].data[range(m), range(k), :, :] = filt
