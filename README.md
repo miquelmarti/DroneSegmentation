@@ -10,7 +10,7 @@ in your .bashrc file, so that you won't have to run the export command every tim
 
 ## FOLDERS ########################
 # fcnLayers
-this directory contains various python Caffe layers used to read in different types of data for training and testing.  The contained voc_layers.py file is deprecated, so please use the modules in coco_layers instead.
+this directory contains various python Caffe layers used to read in different types of data for training and testing.  See its own README.md for more information.
 
 ## FILES ##########################
 

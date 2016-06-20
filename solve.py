@@ -17,7 +17,7 @@ E_SOLVERSTATE = '.solverstate'
 
 
 def runValidation(solver, numIter, layerNames):
-    """Run the test step."""n
+    """Run the test step."""
     totalHist = None
     totalLoss = 0
     
