@@ -4,4 +4,19 @@ It is recommended that you add the directory of this repo to your PYTHONPATH env
 
 export PYTHONPATH=/home/andrew:$PYTHONPATH
 
-You can also put the above line in your .bashrc file.
+You can also put the line:
+PYTHONPATH=/home/andrew:$PYTHONPATH
+in your .bashrc file, so that you won't have to run the export command every time you log in.
+
+## FOLDERS ########################
+# fcnLayers
+this directory contains various python Caffe layers used to read in different types of data for training and testing.  The contained voc_layers.py file is deprecated, so please use the modules in coco_layers instead.
+
+## FILES ##########################
+
+# solve.py
+This module contains methods for training and testing Caffe networks with Python.
+# score.py
+This module contains utility methods for computing the metrics we use to judge the quality of a semantic segmentation, such as pixel accuracy and mean IU.
+# protoUtils.py
+This module contains utility methods for interacting with protocol buffer objects.

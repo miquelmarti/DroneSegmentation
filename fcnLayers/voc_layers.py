@@ -1,3 +1,5 @@
+# DEPRECATED.  Copied from Evan Shelhamer's python layer code, but our own coco_layers.py replaces the functionality of these layers and eliminates the duplicated code used here.
+
 import caffe
 
 import numpy as np
