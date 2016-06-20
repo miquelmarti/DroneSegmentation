@@ -7,7 +7,7 @@ layer {
   python_param {
     module: "coco_layers"
     layer: "ImgPairFileDataLayer"
-      param_str: "{\'dataset_dir\': \'/home/shared/data/datasets/Okutama\', \'seed\': 1337, \'image_list\': \'lists/hikawa.txt.txt\', \'mean\': (97.4855072464, 117.275362319, 109.369565217),\'randomize\': True}"
+      param_str: "{\'dataset_dir\': \'/home/shared/data/datasets/Okutama\', \'seed\': 1337, \'image_list\': \'lists/hikawa.txt\', \'mean\': (97.4855072464, 117.275362319, 109.369565217),\'randomize\': True}"
   }
 }
 layer {
