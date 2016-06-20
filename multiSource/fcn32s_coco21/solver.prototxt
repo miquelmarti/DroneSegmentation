@@ -1,7 +1,6 @@
-train_net: "train-152.prototxt"
-test_net: "val-152.prototxt"
+train_net: "train.prototxt"
+test_net: "val.prototxt"
 test_iter: 736
-# make test net, but don't invoke it from the solver itself
 test_interval: 5000
 display: 100
 average_loss: 20
@@ -15,5 +14,5 @@ iter_size: 1
 max_iter: 100000
 weight_decay: 0.0005
 snapshot: 5000
-snapshot_prefix: "snapshot/train_fcnResNet_pascal"
+snapshot_prefix: "snapshot/train"
 test_initialization: false

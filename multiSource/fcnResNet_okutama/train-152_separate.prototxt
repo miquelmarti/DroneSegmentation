@@ -5,9 +5,9 @@ layer {
   top: "data"
   top: "label"
   python_param {
-    module: "data_layers"
+    module: "coco_layers"
     layer: "ImgPairFileDataLayer"
-      param_str: "{\'dataset_dir\': \'/home/shared/data/datasets/droneye_dataset\', \'seed\': 1337, \'image_list\': \'lists/train_croped_6.txt\', \'mean\': (103.85, 131.4, 125.56),\'randomize\': True}"
+      param_str: "{\'dataset_dir\': \'/home/shared/data/datasets/Okutama\', \'seed\': 1337, \'image_list\': \'lists/baseball.txt\', \'mean\': (97.4855072464, 117.275362319, 109.369565217),\'randomize\': True}"
   }
 }
 layer {
@@ -6762,7 +6762,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 12
+    num_output: 11
     pad: 0
     kernel_size: 1
     weight_filler {
@@ -6784,7 +6784,7 @@ layer {
     lr_mult: 0
   }
   convolution_param {
-    num_output: 12
+    num_output: 11
     bias_term: false
     kernel_size: 64
     stride: 32
