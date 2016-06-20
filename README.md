@@ -23,3 +23,5 @@ Visualize the weights of a layer from the caffemodel of a given iteration.
 
 # configure
 A simple bash script that auto-generates protocol-buffer python files from .proto message definition files.  When you first check out this repo, this script will need to be run before you can use some of the other scripts that rely on it.  You’ll also need to run it again if you make changes to any .proto files in this repo.
+
+# TODO add description for cocotool_script, create_dataset
