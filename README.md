@@ -4,7 +4,8 @@ Contains many files for dealing with the providing datasets and convert them int
 
 ## FILES ##########################
 
-trainNetwork.py: a script for training caffe networks.  This replaces the ‘solve.py’ scripts used by most of FCN architectures from the original Berkeley github repos.
+# trainNetwork.py
+A script for training caffe networks.  This replaces the ‘solve.py’ scripts used by most of FCN architectures from the original Berkeley github repos.
 
 When using this, be aware that many of the values in specified in Caffe's solver.prototxt that are ignored by the original solve.py files are *not* ignored by trainNetwork.py.  test_interval, test_iter and max_iter are the most notable examples of this.  Be sure that you have set these properly in your solver.prototxt file.  Also please be aware of the behaviour of your chosen data layer - the statistics computed during the test phase will depend on its behaviour, particularly if your test_iter value is bigger than the number of samples in your test set.
 
@@ -21,6 +22,4 @@ In SegNet, the loss layer weights each class by its frequency in the dataset.  T
 Visualize the weights of a layer from the caffemodel of a given iteration.
 
 # configure
-a simple bash script that auto-generates protocol-buffer python files from .proto message definition files.  When you first check out this repo, this script will need to be run before you can use some of the other scripts that rely on it.  You’ll also need to run it again if you make changes to any .proto files in this repo.
-
-We have some changes to permissions...
+A simple bash script that auto-generates protocol-buffer python files from .proto message definition files.  When you first check out this repo, this script will need to be run before you can use some of the other scripts that rely on it.  You’ll also need to run it again if you make changes to any .proto files in this repo.
