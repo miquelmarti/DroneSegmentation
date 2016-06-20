@@ -65,25 +65,26 @@ def validateAndPrint(solverParam, solver, layerNames, silent):
         printScores(scores, solver.iter)
     return scores
 
-def saveSnapshotWeights(solverParam, solver, snapshot):
+def saveSnapshotWeights(solverParam, solver, snapshot, silent):
     """Save a snapshot (for future resuming)."""
     solver.snapshot()
-    snapshotFile = solverParam.snapshotPrefix + str(solver.iter) + \
-                   E_SOLVERSTATE
-    assert os.path.isfile(snapshotFile), \
-    ' '.join(["Problem while creating the snapshot, nothing in", snapshotFile])
     
     # Update and save the snapshot
-    setattr(snapshot, 'stage_snapshot', snapshotFile)
-    snapshot.save()
+    if snapshot:
+        snapshotFile = solverParam.snapshotPrefix + str(solver.iter) + \
+                       E_SOLVERSTATE
+        assert os.path.isfile(snapshotFile), \
+        ' '.join(["Problem while creating the snapshot, nothing in", snapshotFile])
+        setattr(snapshot, 'stage_snapshot', snapshotFile)
+        snapshot.save(silent)
 
-def doAction(action, solverParam, solver, snapshot=None, layerNames=None, 
-             silent=False):
+def doSnapOrTest(action, solverParam, solver, snapshot=None, layerNames=None, 
+                 silent=False):
     """Execute the appropriate action."""
     if not action:
         return None
     elif action == 'SNAP':
-        return saveSnapshotWeights(solverParam, solver, snapshot)
+        return saveSnapshotWeights(solverParam, solver, snapshot, silent)
     elif action == 'TEST':
         return validateAndPrint(solverParam, solver, layerNames, silent)
     else:
@@ -141,10 +142,10 @@ def solveWithIntervals(solverParam, solver, halt, snapshot, layerNames,
         
         # Execute the appropriate actions
         if solver.iter % snapInterval is 0:
-            doAction('SNAP', solverParam, solver, snapshot=snapshot)
+            doSnapOrTest('SNAP', solverParam, solver, snapshot=snapshot)
         if solver.iter % testInterval is 0:
-            scores = doAction('TEST', solverParam, solver,
-                              layerNames=layerNames, silent=silent)
+            scores = doSnapOrTest('TEST', solverParam, solver,
+                                  layerNames=layerNames, silent=silent)
         
         # Check if we have to quit the loop
         if not halt is None and scores:
@@ -155,8 +156,8 @@ def solveWithIntervals(solverParam, solver, halt, snapshot, layerNames,
     
     # If we have to do a last test
     if testInterval <= maxIter and rests[1] != testInterval:
-        scores = doAction('TEST', solverParam, solver, layerNames=layerNames, 
-                          silent=silent)
+        scores = doSnapOrTest('TEST', solverParam, solver, 
+                              layerNames=layerNames, silent=silent)
     
     # If we used the halt criteria
     if not halt is None and not silent:
@@ -166,7 +167,6 @@ def solveWithIntervals(solverParam, solver, halt, snapshot, layerNames,
     return scores
 
 
-# TODO: Modified with solver.py
 def solve(solverParam, modelFilename=None, preProcFun=None, haltPercent=None,
           layerNames=('data', 'loss', 'out', 'label'), snapshot=None,
           snapshotToRestore=None, silent=False):
@@ -200,7 +200,6 @@ def solve(solverParam, modelFilename=None, preProcFun=None, haltPercent=None,
     latestScores = None
     
     # Execute all the iterations, taking care of the intervals
-    # TODO: SOULD be ok, but have to test
     # TODO: Make it flexible to dynamic number of intervals
     latestScores = solveWithIntervals(solverParam, solver, haltPercent,
                                       snapshot, layerNames, silent)

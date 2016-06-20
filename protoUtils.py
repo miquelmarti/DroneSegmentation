@@ -11,6 +11,7 @@ NET_FIELD = 'net'
 TRAIN_NET_FIELD = 'train_net'
 
 
+
 def replaceTrainNetFilename(solverSpec, newTrainNet):
     if solverSpec.HasField(NET_FIELD):
         solverSpec.net = newTrainNet
