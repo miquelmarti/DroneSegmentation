@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-# TODO: Use logging
-# TODO: Also take in charge absolute paths
+# TODO: Also take in charge absolute paths ; maybe not needed anymore with the
+# solverParam class, check this.
 # TODO: Think about the preProcFun -> should be usable easily
 
 """Carries out transfer learning according to a provided configuration file."""
@@ -11,6 +11,7 @@ import argparse
 import os
 import warnings
 import logging
+logger = logging.getLogger()
 
 # Field names
 F_HALT          = 'halt_percentage'
@@ -114,17 +115,17 @@ def executeListOfStages(stages, firstModel, snapshot, snapshotToRestore=None,
         if doRestore and snapshotToRestore.stage > idx:
             if not clean:
                 allResults.append((None, None))
-            print '>> Restored the stage', s.name
+            logger.info('>> Restored the stage %s', s.name)
             continue
         
         # Update current snapshot
         setattr(snapshot, 'stage', idx)
         setattr(snapshot, 'stage_weights', model)
-        print ' '.join(['>> Will start the stage', s.name, 
-                        str(os.path.basename(model) if model else '')])
+        logger.info('>> Will start the stage %s %s', s.name, 
+                    str(os.path.basename(model) if model else ''))
         
         # Save the snapshot
-        snapshot.save()
+        snapshot.save(quiet)
         
         # Execute the stage
         newModel, scores = s.execute(model, snapshot, snapshotToRestore, quiet)
@@ -142,7 +143,8 @@ def executeListOfStages(stages, firstModel, snapshot, snapshotToRestore=None,
             allResults.append((newModel, scores))
         
         model = newModel
-        print '>> Stage', s.name, 'produces model', os.path.basename(model)
+        logger.info('>> Stage %s produces model %s', s.name, 
+                    os.path.basename(model))
     
     if clean:
         # Only the last was saved
@@ -170,12 +172,24 @@ if __name__ == "__main__":
     # Get the arguments
     args = getArguments()
     
+    # Init the logging level
+    logger.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.ERROR)
+    f = '[%(filename)s:%(lineno)s - %(funcName)20s] %(message)s'
+    
     # Non-verbose mode
     if args.quiet:
         os.environ['GLOG_minloglevel'] = '3'
         warnings.filterwarnings("ignore")
-        logging.basicConfig(level=logging.INFO)
-        # TODO: delete protobuf warnings
+        ch.setLevel(logging.INFO)
+        f = '%(message)s'
+        # TODO: Delete protobuf warnings, it seems that divided the messages is
+        # the only way to do this... so have to check in protoUtils
+    
+    formatter = logging.Formatter(f) 
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
     
     # Must change log level prior to importing caffe
     import caffe
@@ -186,7 +200,8 @@ if __name__ == "__main__":
     if args.cpu:
         caffe.set_mode_cpu()
     else:
-        # TODO: set_device(1) runs the framework on gpu 0, fix this
+        # TODO: Set_device(1) runs the framework on gpu 0, fix this. 0 seems to
+        # be the "default" GPU, don't know why it is always the nb 1 though
         caffe.set_device(args.gpu)
         caffe.set_mode_gpu()
 
@@ -205,7 +220,7 @@ if __name__ == "__main__":
         snapshotToRestore = snapshot.copyFrom(args.resume)
         snapshotToRestore.verify()
         doRestore = True
-        print 'We will restore the training from', args.resume
+        logger.info('We will restore the training from %s', args.resume)
     
     # Command-line out dir takes priority, if not provided, we use the one in
     # the config file, if still not provided, we use the current directory
@@ -215,16 +230,17 @@ if __name__ == "__main__":
     elif outDir is None:
         outDir = '.'
     setattr(snapshot, 'out_filename',
-            os.path.join(outDir, tlMsg.name + S_SNAP + E_PROTOTXT))
-    print 'Will save all the results into', outDir
+            os.path.join(os.path.abspath(outDir), 
+                         tlMsg.name + S_SNAP + E_PROTOTXT))
+    logger.info('Will save all the results into %s', outDir)
     
     # Command-line init weights take priority, if not provided, we use the ones
     # in the config file, if still not provided, we train from scratch
     prevModel = args.weights
     if prevModel is None and tlMsg.HasField(F_INIT_WEIGHTS):
         prevModel = os.path.join(configDir, tlMsg.init_weights)
-    print 'Will initialize the training with the weights :', prevModel
-    print 
+    logger.info('Will initialize the training with the weights : %s', 
+                prevModel)
     
     
     # For each multiSource message in the config file
@@ -239,12 +255,12 @@ if __name__ == "__main__":
         
         # If we resume this multiSource message
         if doRestore and snapshotToRestore.multisource > idx:
-            print 'Restored the multisource', idx
+            logger.info('Restored the multisource %s', idx)
             continue
         
         # Update the current snapshot
         setattr(snapshot, 'multisource', idx)
-        print 'Will start the multisource', idx
+        logger.info('Will start the multisource %s', idx)
         
         # Get the stages from the current multisource message
         initStage, stages = getStagesFromMsgs(msMsg, configDir, outDir)
@@ -263,7 +279,7 @@ if __name__ == "__main__":
         for it in range(msMsg.iterations):
             # Check if we have to resume this iteration
             if doRestore and snapshotToRestore.iteration > it:
-                print '> Restored the iteration', it
+                logger.info('> Restored the iteration %s', it)
                 continue
             
             # Update the current snapshot
@@ -272,7 +288,7 @@ if __name__ == "__main__":
                                                     in range(len(bestModels))])
             setattr(snapshot, 'best_scores', [bestScores[i] for i 
                                                     in range(len(bestScores))])
-            print '> Will start the iteration', it
+            logger.info('> Will start the iteration %s', it)
             
             # Will store the models and scores generated by the list of stages
             # for this iteration
@@ -282,7 +298,7 @@ if __name__ == "__main__":
             allStages = stages
             if initStage is not None and it is 0:
                 # On the first iteration, run initStage instead of first stage
-                print '> Replace first stage by init stage'
+                logger.info('> Replace first stage by init stage')
                 allStages = [initStage] + stages[1:]
             
             # Execute all the stages
@@ -334,7 +350,7 @@ if __name__ == "__main__":
                 if model is not None and notNeeded and args.clean:
                     os.remove(model)
     
-    print
-    print 'Final models stored in', ', '.join(bestModels)
+    allModels = ', '.join(bestModels)
+    logger.info('Final models stored in %s', allModels)
     raise SystemExit
     
