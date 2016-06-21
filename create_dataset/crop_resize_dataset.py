@@ -55,9 +55,9 @@ def main(args):
                                 cropped = Image.fromarray(cropped)
                                 # Resize mode should be different for labels (solid values)
                                 if args.labels:
-                                    cropped = cropped.resize([int(crop_w+1/float(args.resize)), int(crop_h+1/float(args.resize))],Image.NEAREST)
+                                    cropped = cropped.resize([int((crop_w+1)/float(args.resize)), int((crop_h+1)/float(args.resize))],Image.NEAREST)
                                 else:
-                                    cropped = cropped.resize([int(crop_w+1/float(args.resize)), int(crop_h+1/float(args.resize))], Image.ANTIALIAS)
+                                    cropped = cropped.resize([int((crop_w+1)/float(args.resize)), int((crop_h+1)/float(args.resize))], Image.ANTIALIAS)
                                 
                                 cropped = np.asarray(cropped)
                                 

@@ -188,6 +188,23 @@ def combineEnsemble(net_outputs, method, weighting):
     
     return output
 
+def cropAndSegment(_input, newShape, args, net, in_blob, out_blob, mean): #This function segments the image patch by patch by cropping
+        _input_array = np.asarray(_input)
+        guessed_label = np.zeros((11,newShape[2]*args.crop,newShape[3]*args.crop)) #Set output segmentation shape
+
+        for id_h in range(0,args.crop): #Iterate cropping along first dimension
+                crop_h = newShape[2] #Height of the cropped image we input to net
+                h1 = id_h*crop_h #Current crop position in height
+                
+                for id_w in range(0,args.crop): #Iterate cropping along second dimension
+                        crop_w = newShape[3] #Width of cropped image we input to net
+                        w1 = id_w*crop_w #Current crop position in width
+                        
+                        #Crop image
+                        cropped = _input_array[h1:(h1+crop_h), w1:(w1+crop_w), :]
+                        
+                        #Get segmentation with cropped image
+                        guessed_label[:,h1:(h1+crop_h),w1:(w1+crop_w)] = score.segmentImage(net, Image.fromarray(cropped), in_blob, out_blob, mean, newShape=newShape)[0]
 
 if __name__ == '__main__':
 
@@ -291,11 +308,13 @@ if __name__ == '__main__':
                      
     for _input, real_label, imagePath in imageIterator:
         n_im += 1
-        logits = []
+        guessed_labels = []
         start = time.time()
         
         # Extracts current image name from the image path
-        imageName = basename(os.path.splitext(imagePath)[0])
+        imageName = ''
+        if imagePath: #Bug, because sometimes iterators (video namely) return None imagePath
+                imageName = basename(os.path.splitext(imagePath)[0])
         
         for net, in_blob, out_blob in zip(nets, input_blobs, output_blobs):
             guessed_label = None
@@ -303,53 +322,50 @@ if __name__ == '__main__':
             
             if net is None: #If no net is provided, it means the outputs are in .npy files
                 guessed_label = np.load(out_blob+imageName+'.npy')
-                logits.append(np.squeeze(guessed_label))
+                guessed_labels.append(np.squeeze(guessed_label))
                 continue
             
             if config.input.resize: #Set new shape to shape defined by .prototxt
                 newShape = input_shape
-                
-            #Run the network
-            if args.crop > 1:
-                _input_array = np.asarray(_input)
-                guessed_label = np.zeros((12,_input_array.shape[0],_input_array.shape[1]))
-                for id_h in range(0,args.crop):
-                        crop_h = int(_input_array.shape[0]/float(args.crop))
-                        h1 = id_h*crop_h
-                        
-                        for id_w in range(0,args.crop+0):
-                                crop_w = int(_input_array.shape[1]/float(args.crop))
-                                w1 = id_w*crop_w
-                                
-                                cropped = _input_array[h1:(h1+crop_h), w1:(w1+crop_w), :]
-                                guessed_label[:,h1:(h1+crop_h),w1:(w1+crop_w)] = score.segmentImage(net, Image.fromarray(cropped), in_blob, out_blob, mean, newShape)
             else:
+                newShape = np.array([1,3,int(np.asarray(_input).shape[0]/float(args.crop)),int(np.asarray(_input).shape[1]/float(args.crop))])
+            #newShape is the shape of images that will be input to the network, so it already includes the cropping (for example 2000x2000 images, cropped to 500x500 will have newShape=(1,3,500,500)
+                
+            #If want to crop images before inputting the network (saves memory)
+            if args.crop > 1:
+                guessed_label = cropAndSegment(_input, newShape, args, net, in_blob, out_blob, mean)
+                                
+            else: #If no cropping, simply get segmentation with input image
                 guessed_label = score.segmentImage(net, _input, in_blob, out_blob,
-                                               mean, newShape)
-            logits.append(np.squeeze(guessed_label)) #Add network output to list
+                                               mean, newShape=newShape)[0]
+            guessed_labels.append(np.squeeze(guessed_label)) #Add network output to list
 
         # Combine the outputs of each net by the chosen method (voting,
         # averaging, etc.)
-        logits = combineEnsemble(logits, config.ensemble_type, model_weighting)
+        guessed_labels = combineEnsemble(guessed_labels,
+                                         config.ensemble_type, 
+                                         model_weighting)
+                                         
         
         #If we precise an output folder in the prototxt
         if config.outputFolder != "None":
-            # Saves network outputs to numpy file
-            np.save(config.outputFolder+imageName+".npy",logits)
-            # Writes down in list.txt the files that have been saved
-            summaryFile.write(imagePath+" "+config.outputFolder+imageName+".npy\n")
+                # Saves network outputs to numpy file
+                np.save(config.outputFolder+imageName+".npy",guessed_labels)
+                # Writes down in list.txt the files that have been saved
+                summaryFile.write(imagePath+" "+config.outputFolder+imageName+".npy\n")
+
         
         # Get the time after the network process
         times.append(time.time() - start)
         
         # Get the output of the network
-        # TODO: Not sure of the first if, needed for making resnet output work
-        if len(logits.shape) == 1 and len(logits[0].shape) == 4:
-            logits = logits[0][0]
-        if len(logits.shape) == 3:
-            guessed_labels = logits.argmax(axis=0)
-        elif len(logits.shape) != 2:
-            print 'Unknown output shape:', logits.shape
+        # TODO: Not sure of the first if, but was madatory for making resnet works
+        if len(guessed_labels.shape) == 1 and len(guessed_labels[0].shape) == 4:
+            guessed_labels = guessed_labels[0][0]
+        if len(guessed_labels.shape) == 3:
+            guessed_labels = guessed_labels.argmax(axis=0)
+        elif len(guessed_labels.shape) != 2:
+            print 'Unknown output shape:', guessed_labels.shape
             break
 
         # Read the colours of the classes
