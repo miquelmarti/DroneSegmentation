@@ -30,16 +30,16 @@ multi_source {
 #    }
 }
 
-multi_source {
-    iterations: 1
-    stage {
-        name: "fast_stage"
-        solver_filename: "../cifar10/solver.prototxt"
-        
-        ignore: "ip2"
-        
-        outLayer: "accuracy"
-    }
+#multi_source {
+#    iterations: 1
+#    stage {
+#        name: "fast_stage"
+#        solver_filename: "../cifar10/solver.prototxt"
+#        
+#        ignore: "ip2"
+#        
+#        outLayer: "accuracy"
+#    }
 #    stage {
 #        name: "slow_stage"
 #        solver_filename: "../cifar10/solver_lr1.prototxt"
@@ -56,4 +56,4 @@ multi_source {
 #        
 #        outLayer: "accuracy"
 #    }
-}
+#}

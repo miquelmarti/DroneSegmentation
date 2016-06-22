@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-# TODO: Also take in charge absolute paths ; maybe not needed anymore with the
-# solverParam class, check this.
 # TODO: Think about the preProcFun -> should be usable easily
 
 """Carries out transfer learning according to a provided configuration file."""
@@ -208,7 +206,7 @@ if __name__ == "__main__":
     # Read in the configuration file
     tlMsg = transferLearning_pb2.TransferLearning()
     protoUtils.readFromPrototxt(tlMsg, args.config)
-    configDir = os.path.dirname(args.config)
+    configDir = os.path.abspath(os.path.dirname(args.config))
     
     # Initialize the snapshot to save
     snapshot = snapshot.Snapshot()
@@ -229,9 +227,9 @@ if __name__ == "__main__":
         outDir = os.path.join(configDir, tlMsg.out_dir)
     elif outDir is None:
         outDir = '.'
+    outDir = os.path.abspath(outDir)
     setattr(snapshot, 'out_filename',
-            os.path.join(os.path.abspath(outDir), 
-                         tlMsg.name + S_SNAP + E_PROTOTXT))
+            os.path.join(outDir, tlMsg.name + S_SNAP + E_PROTOTXT))
     logger.info('Will save all the results into %s', outDir)
     
     # Command-line init weights take priority, if not provided, we use the ones
@@ -239,6 +237,8 @@ if __name__ == "__main__":
     prevModel = args.weights
     if prevModel is None and tlMsg.HasField(F_INIT_WEIGHTS):
         prevModel = os.path.join(configDir, tlMsg.init_weights)
+    if prevModel:
+        prevModel = os.path.abspath(prevModel)
     logger.info('Will initialize the training with the weights : %s', 
                 prevModel)
     
@@ -327,6 +327,9 @@ if __name__ == "__main__":
             
             # Check if those results are better than previous ones
             for m in range(len(bestModels)):
+                if not nextScores:
+                    # No scores (no testing phase), so just pass
+                    continue
                 if not nextModels[m] and not nextScores[m]:
                     # No information about these weights, just pass
                     continue
