@@ -1,15 +1,15 @@
 name: "FCNResNet"
 layer {
-  name: "input"
-  type: "Input"
+  name: "data"
+  type: "Python"
   top: "data"
-  input_param {
-    # These dimensions are purely for sake of example;
-    # see eval.py for how to reshape the net to the given input size.
-    shape { dim: 1 dim: 3 dim: 500 dim: 500 }
+  top: "label"
+  python_param {
+    module: "data_layers"
+    layer: "ImgPairFileDataLayer"
+      param_str: "{\'dataset_dir\': \'/home/shared/data/datasets/droneye_dataset\', \'seed\': 1337, \'image_list\': \'lists/val_cut64.txt\', \'mean\': (104.456043956, 132.197802198, 126.175824176),\'randomize\': True}"
   }
 }
-
 layer {
 	bottom: "data"
 	top: "conv1"
@@ -6762,7 +6762,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 11
+    num_output: 12
     pad: 0
     kernel_size: 1
     weight_filler {
@@ -6784,7 +6784,7 @@ layer {
     lr_mult: 0
   }
   convolution_param {
-    num_output: 11
+    num_output: 12
     bias_term: false
     kernel_size: 64
     stride: 32
@@ -6799,5 +6799,16 @@ layer {
   crop_param {
     axis: 2
     offset: 19
+  }
+}
+layer {
+  name: "loss"
+  type: "SoftmaxWithLoss"
+  bottom: "score"
+  bottom: "label"
+  top: "loss"
+  loss_param {
+    ignore_label: 255
+    normalize: false
   }
 }

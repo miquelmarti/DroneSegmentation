@@ -1,9 +1,9 @@
-train_net: "train-152_separate.prototxt"
-#test_net: "val-152_separate.prototxt"
-#test_iter: 90
+train_net: "train_80perc_crop16_by2.prototxt"
+test_net: "val_80perc_crop16_by2.prototxt"
+test_iter: 320
 # make test net, but don't invoke it from the solver itself
-test_interval: 0
-display: 10
+test_interval: 5000
+display: 100
 average_loss: 20
 lr_policy: "fixed"
 # lr for unnormalized softmax
@@ -12,8 +12,8 @@ base_lr: 1e-10
 momentum: 0.99
 # no gradient accumulation
 iter_size: 1
-max_iter: 10
+max_iter: 50000
 weight_decay: 0.0005
-snapshot: 0
-snapshot_prefix: "snapshot/train_fcnResNet_okutama_separate"
+snapshot: 5000
+snapshot_prefix: "snapshots/80perc_crop16_by2"
 test_initialization: false
