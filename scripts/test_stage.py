@@ -8,7 +8,7 @@ import stage
 from caffeUtils import protoUtils
 import urllib2
 
-TEST_DIR = '../test_cases'
+TEST_DIR = 'test_cases'
 TEST_NET_FILE = 'train.prototxt'
 TEST_MODEL_URL_FILE = 'caffemodel-url'
 TEST_MODEL_FILE = 'fcn8s-heavy-pascal.caffemodel'
