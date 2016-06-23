@@ -155,6 +155,9 @@ def executeListOfStages(stages, firstModel, snapshot, snapshotToRestore=None,
 
 def getScore(scores, scoreMetric):
     """Returns the appropriate metrics (defined in the config file)."""
+    if not scores:
+        return 0
+    
     if scoreMetric == transferLearning_pb2.MultiSource.MEAN_IU:
         return scores.meanIu
     elif scoreMetric == transferLearning_pb2.MultiSource.ACCURACY:
@@ -327,9 +330,6 @@ if __name__ == "__main__":
             
             # Check if those results are better than previous ones
             for m in range(len(bestModels)):
-                if not nextScores:
-                    # No scores (no testing phase), so just pass
-                    continue
                 if not nextModels[m] and not nextScores[m]:
                     # No information about these weights, just pass
                     continue
