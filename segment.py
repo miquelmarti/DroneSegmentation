@@ -190,7 +190,7 @@ def combineEnsemble(net_outputs, method, weighting):
 
 def cropAndSegment(_input, newShape, args, net, in_blob, out_blob, mean): #This function segments the image patch by patch by cropping
         _input_array = np.asarray(_input)
-        guessed_label = np.zeros((11,newShape[2]*args.crop,newShape[3]*args.crop)) #Set output segmentation shape
+        guessed_label = np.zeros((numb_cla,newShape[2]*args.crop,newShape[3]*args.crop)) #Set output segmentation shape
 
         for id_h in range(0,args.crop): #Iterate cropping along first dimension
                 crop_h = newShape[2] #Height of the cropped image we input to net
@@ -205,6 +205,8 @@ def cropAndSegment(_input, newShape, args, net, in_blob, out_blob, mean): #This 
                         
                         #Get segmentation with cropped image
                         guessed_label[:,h1:(h1+crop_h),w1:(w1+crop_w)] = score.segmentImage(net, Image.fromarray(cropped), in_blob, out_blob, mean, newShape=newShape)[0]
+        
+        return guessed_label
 
 if __name__ == '__main__':
 
