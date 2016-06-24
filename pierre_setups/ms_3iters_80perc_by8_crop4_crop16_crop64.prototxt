@@ -6,7 +6,7 @@ multi_source {
     iterations: 3
     stage {
         name: "data_80perc_crop1_by8"
-        solver_filename: "fcnResNet-152/swiss/solver_80perc_crop0_by8.prototxt"
+        solver_filename: "fcnResNet-152/swiss/solver_80perc_crop1_by8.prototxt"
         
         fcn_surgery: true
         outLayer: "score"
