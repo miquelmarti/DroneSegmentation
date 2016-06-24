@@ -10,7 +10,7 @@ message Model {
 }
 
 //MODEL OUTPUT
-message ModelOutput {
+message LogitFolder {
   required string folder = 1;
   optional int32 weighting = 2 [default = 1];
 }
@@ -39,18 +39,18 @@ message Input {
 
 //ENSEMBLE
 enum EnsembleType { //Which method is used to combine outputs of models?
-    VOTING = 1; // Majority voting of labels
-    LOGITARI = 2; //Arithmetic average of logits
-    LOGITGEO = 3; //Geometric average of logits
-    PROBAARI = 4; //Arithmetic average of probabilities (logits through softmax)
-    PROBAGEO = 5; //Geometric average of probabilities (logits through softmax)
-  }
+  VOTING = 1; // Majority voting of labels
+  LOGITARI = 2; //Arithmetic average of logits
+  LOGITGEO = 3; //Geometric average of logits
+  PROBAARI = 4; //Arithmetic average of probabilities (logits through softmax)
+  PROBAGEO = 5; //Geometric average of probabilities (logits through softmax)
+}
   
 // MAIN MESSAGE
 message Ensemble {
   optional EnsembleType ensemble_type = 1 [default = VOTING];
   repeated Model model = 2;
-  repeated ModelOutput modelOutput = 3;
+  repeated LogitFolder logitFolder = 3;
   required Input input = 4;
-  optional string outputFolder = 5 [default = "None"];
+  optional string outputFolder = 5;
 }
