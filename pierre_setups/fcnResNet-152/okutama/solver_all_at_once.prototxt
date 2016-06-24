@@ -1,6 +1,6 @@
-train_net: "train_all_crop4_by2.prototxt"
-#test_net: "val_all_crop4_by2.prototxt"
-#test_iter: 126
+train_net: "train_all_at_once.prototxt"
+#test_net: "val_all_at_once.prototxt"
+#test_iter: 6
 # make test net, but don't invoke it from the solver itself
 test_interval: 0
 display: 100
