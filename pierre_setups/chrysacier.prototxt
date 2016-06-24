@@ -1,0 +1,28 @@
+name: "chrysacier"
+out_dir: "results/chrysacier"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 3
+    stage {
+        name: "data_ms_by4_50"
+        solver_filename: "fcnResNet-152/okutama/solver_crop1_by4_50.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "data_ms_crop4_by2_50"
+        solver_filename: "fcnResNet-152/okutama/solver_crop4_by2_50.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "data_ms_crop16_by1_50"
+        solver_filename: "fcnResNet-152/okutama/solver_crop16_by1_50.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

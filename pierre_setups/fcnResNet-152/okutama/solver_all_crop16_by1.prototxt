@@ -1,6 +1,6 @@
-train_net: "train_all_crop1_by4.prototxt"
-#test_net: "val_all_crop1_by4.prototxt"
-#test_iter: 6
+train_net: "train_all_crop16_by1.prototxt"
+#test_net: "val_all_crop16_by1.prototxt"
+#test_iter: 96
 # make test net, but don't invoke it from the solver itself
 test_interval: 0
 display: 100
@@ -15,5 +15,5 @@ iter_size: 1
 max_iter: 100000
 weight_decay: 0.0005
 snapshot: 5000
-snapshot_prefix: "snapshots/all_crop1_by4"
+snapshot_prefix: "snapshots/all_crop16_by1"
 test_initialization: false

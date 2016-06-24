@@ -1,12 +1,12 @@
-name: "carabaffe"
-out_dir: "results/carabaffe"
+name: "tortank"
+out_dir: "results/tortank"
 init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
 
 multi_source {
     iterations: 1
     stage {
-        name: "data_all_crop4_by2"
-        solver_filename: "fcnResNet-152/okutama/solver_all_crop4_by2.prototxt"
+        name: "data_all_crop16_by1"
+        solver_filename: "fcnResNet-152/okutama/solver_all_crop16_by1.prototxt"
         
         fcn_surgery: true
         outLayer: "score"
