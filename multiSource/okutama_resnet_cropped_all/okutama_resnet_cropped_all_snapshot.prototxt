@@ -4,3 +4,4 @@ best_weights: ""
 best_scores: 0.0
 stage: 0
 stage_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+stage_snapshot: "/home/pierre/hgRepos/models/multiSource/fcnResNet_okutama/snapshot/train_fcnResNet_okutama_iter_100000.solverstate"
