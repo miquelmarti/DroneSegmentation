@@ -1,9 +1,9 @@
-train_net: "train_all_at_once.prototxt"
-#test_net: "val_all_at_once.prototxt"
-#test_iter: 6
+train_net: "train.prototxt"
+#test_net: "val.prototxt"
+#test_iter: 1111
 # make test net, but don't invoke it from the solver itself
 test_interval: 0
-display: 100
+display: 20
 average_loss: 20
 lr_policy: "fixed"
 # lr for unnormalized softmax
@@ -15,5 +15,5 @@ iter_size: 1
 max_iter: 100000
 weight_decay: 0.0005
 snapshot: 5000
-snapshot_prefix: "snapshots/all_at_once"
+snapshot_prefix: "snapshots/train"
 test_initialization: false
