@@ -55,7 +55,7 @@ class Model(object):
         self.output_layer = model_buf.output
         self.weight = model_buf.weighting
 
-    def segmentImage(self, input_image, mean, new_shape):
+    def segmentImage(self, input_image, mean, new_shape=None):
         # TODO should we pass mean here or in the constructor?
         seg = score.segmentImage(self.net, input_image, self.input_layer,
                                  self.output_layer, mean, newShape=new_shape)
@@ -186,35 +186,43 @@ def combineEnsemble(net_outputs, method, weighting):
 
         # Make it a mean
         output = np.power(output, float(1)/len(net_outputs))
-    
     return output
 
 
-def cropAndSegment(input_image, new_shape, numSections, model, mean):
-    '''This function segments the image patch by patch by cropping'''
+def getSections(array_length, num_sections):
+    section_length = array_length / num_sections
+    starts = [section_length * i for i in range(num_sections)]
+    ends = starts[1:] + [array_length]
+    return zip(starts, ends)
+
+
+def cropAndSegment(input_image, num_sections, model, mean):
+    '''
+    This function segments the image patch by patch, then assembles the
+    patches into a complete segmentation of the image.
+    '''
     input_array = np.asarray(input_image)
     # Set output segmentation shape
-    model_logits = np.zeros((model.getNumClasses(), new_shape[2]*numSections,
-                             new_shape[3]*numSections))
-
-    # Iterate cropping along first dimension
-    for id_h in range(0, numSections):
-        # Height of the cropped image we input to net
-        crop_h = new_shape[2]
-        h1 = id_h*crop_h  # Current crop position in height
-        # Iterate cropping along second dimension
-        for id_w in range(0, numSections):
-            crop_w = new_shape[3]  # Width of cropped image we input to net
-            w1 = id_w*crop_w  # Current crop position in width
-
+    
+    # model_logits = np.zeros((model.getNumClasses(), input_array.shape[0],
+    #                          input_array.shape[1]))
+    model_logits = np.zeros((model.getNumClasses(),) + input_array.shape[:2])
+    vert_sections = getSections(input_array.shape[0], num_sections)
+    horiz_sections = getSections(input_array.shape[1], num_sections)
+    # print 'input array:', input_array.shape
+    for h_start, h_end in vert_sections:
+        for w_start, w_end in horiz_sections:
             # Crop image
-            cropped = input_array[h1:(h1+crop_h), w1:(w1+crop_w), :]
-            cropped_image = Image.fromarray(cropped)
+            # print 'indices:', h_start, '-', h_end, 'and', w_start, '-', w_end
+            cropped_array = input_array[h_start:h_end, w_start:w_end, :]
+            # print 'cropped array:', cropped_array.shape
+            cropped_image = Image.fromarray(cropped_array)
             # Why do we take [0] here???
-            logits = model.segmentImage(cropped_image, mean, new_shape)[0]
+            logits = model.segmentImage(cropped_image, mean)[0]
+            # print 'logit shape:', logits.shape
             
             # Get segmentation with cropped image
-            model_logits[:, h1:(h1+crop_h), w1:(w1+crop_w)] = logits
+            model_logits[:, h_start:h_end, w_start:w_end] = logits
     return model_logits
 
 
@@ -238,8 +246,7 @@ def computeEnsembleLogits(input_image, input_shape, models, logit_cols, crop):
     start = time.time()
     for model in models:
         if crop > 1:
-            model_logits = cropAndSegment(input_image, new_shape, crop, model,
-                                          mean)
+            model_logits = cropAndSegment(input_image, crop, model, mean)
         else:
             model_logits = model.segmentImage(input_image, mean, new_shape)
         logits.append(np.squeeze(model_logits))
@@ -270,7 +277,8 @@ def displayOutput(label_colours, input_image, guessed_labels, true_labels,
                   resize, wait=False):
     # Transform the class labels into a segmented image
     guessed_image = colourSegment(guessed_labels, label_colours)
-    newSize = (int(resize*input_image.shape[1]), int(resize*input_image.shape[0]))
+    newSize = (int(resize*input_image.shape[1]),
+               int(resize*input_image.shape[0]))
     cv2.imshow("Input", cv2.resize(input_image, newSize))
     cv2.imshow("Output", cv2.resize(guessed_image, newSize))
     
@@ -444,7 +452,7 @@ if __name__ == '__main__':
         cv2.destroyAllWindows()
         
     # If we opened an output file, close it
-    if config.outputFolder != "None":
+    if config.outputFolder != "":
         summaryFile.close()
     
     avgImageTime = sum(times) / float(len(times))
