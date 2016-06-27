@@ -20,12 +20,7 @@ class SegScores(object):
 
 
 # def preProcessing(img, shape, resize_img, mean=None):
-def preProcessing(image, mean=None, newShape=None):
-    # Ensure that the image has the good size
-    # try without resizing for now
-    if newShape is not None:
-        image = image.resize((newShape[3], newShape[2]), Image.ANTIALIAS)
-
+def preProcessing(image, mean=None):
     # Get pixel values and convert them from RGB to BGR
     image = np.array(image, dtype=np.float32)
     if len(image.shape) is 2:
@@ -54,22 +49,21 @@ def fast_hist(a, b, n):
 
 # TODO: Deal with classification (here, only pixel-wise)
 # TODO: What about those without the labelLayer ?
-def runNetForward(net, image=None, gtImage=None, dataLayer='data',
+def runNetForward(net, image=None, gtLabels=None, dataLayer='data',
                   lossLayer='loss', outLayer='score', labelLayer='label'):
     if image is not None:
         net.blobs[dataLayer].reshape(1, *image.shape)
         net.blobs[dataLayer].data[...] = image
     
     net.forward()
-    
     output = net.blobs[outLayer].data
     
-    if output.shape and (gtImage is not None or labelLayer in net.blobs):
+    if output.shape and (gtLabels is not None or labelLayer in net.blobs):
         flatOutput = output[0].argmax(0).flatten()
         hist = None
         n_cl = net.blobs[outLayer].channels
-        if gtImage is not None:
-            hist = fast_hist(np.array(gtImage).flatten(), flatOutput, n_cl)
+        if gtLabels is not None:
+            hist = fast_hist(np.array(gtLabels).flatten(), flatOutput, n_cl)
         else:
             hist = fast_hist(net.blobs[labelLayer].data[0, 0].flatten(),
                              flatOutput, n_cl)
@@ -80,17 +74,15 @@ def runNetForward(net, image=None, gtImage=None, dataLayer='data',
         return output, None, 0
 
 
-def segmentImage(net, image, lossLayer, outLayer, mean=None,
-                 groundTruthImage=None, newShape=None):
-    
-    image = preProcessing(image, mean, newShape)
-    return runNetForward(net, image, gtImage=groundTruthImage,
+def segmentImage(net, image, lossLayer, outLayer, mean=None, gtLabels=None):
+    image = preProcessing(image, mean)
+    return runNetForward(net, image, gtLabels=gtLabels,
                          lossLayer=lossLayer, outLayer=outLayer,
                          labelLayer=None)
 
 
 def computeSegmentationScores(hist):
-    # Often happens in case of classification (instead of semantic segmentation)
+    # Often happens in classification (instead of semantic segmentation)
     if hist is None:
         return SegScores(None, 0, 0, 0, 0, 0)
     
@@ -110,9 +102,8 @@ def computeSegmentationScores(hist):
 def scoreDataset(deployFilename, modelFilename, dataset, mean=None,
                  lossLayer='loss', outLayer='score'):
     net = caffe.Net(str(deployFilename), str(modelFilename), caffe.TEST)
-    hlZip = [segmentImage(net, image, lossLayer, outLayer, mean,
-                          groundTruthImage)[1:]
-             for image, groundTruthImage, _ in dataset]
+    hlZip = [segmentImage(net, image, lossLayer, outLayer, mean, gtLabels)[1:]
+             for image, gtLabels, _ in dataset]
     hists, losses = zip(*hlZip)
     hist = sum(hists)
     scores = computeSegmentationScores(hist)
