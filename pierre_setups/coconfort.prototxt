@@ -1,0 +1,14 @@
+name: "coconfort"
+out_dir: "results/coconfort"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "data_all_by8"
+        solver_filename: "fcnResNet-152/okutama/solver_all_crop1_by8.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}
