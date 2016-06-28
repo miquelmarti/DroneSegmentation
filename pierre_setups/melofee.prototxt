@@ -10,5 +10,9 @@ multi_source {
         
         fcn_surgery: true
         outLayer: "score"
+        ignore: score_fr
+        ignore: upscore2
+        ignore: score_pool4
+        ignore: upscore16
     }
 }
