@@ -1,0 +1,28 @@
+name: "nidoran_mal"
+out_dir: "results/nidoran_mal"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-50-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "data_resnet50_50"
+        solver_filename: "fcnResNet-50/okutama/solver_50.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "data_resnet101_50"
+        solver_filename: "fcnResNet-101/okutama/solver_50.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "data_all_crop16_by1_50"
+        solver_filename: "fcnResNet-152/okutama/solver_all_crop16_by1_50.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

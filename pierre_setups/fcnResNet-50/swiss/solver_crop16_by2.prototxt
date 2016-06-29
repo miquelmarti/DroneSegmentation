@@ -3,7 +3,7 @@ train_net: "train_crop16_by2.prototxt"
 #test_iter: 1111
 # make test net, but don't invoke it from the solver itself
 test_interval: 0
-display: 20
+display: 100
 average_loss: 20
 lr_policy: "fixed"
 # lr for unnormalized softmax

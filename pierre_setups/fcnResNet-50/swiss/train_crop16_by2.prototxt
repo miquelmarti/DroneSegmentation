@@ -7,7 +7,7 @@ layer {
   python_param {
     module: "data_layers"
     layer: "ImgPairFileDataLayer"
-      param_str: "{\'dataset_dir\': \'/home/shared/data/datasets/droneye_dataset\', \'seed\': 1337, \'image_list\': \'lists/train_cut16.txt\', \'mean\': (104.504120879, 132.194368132, 126.177197802),\'randomize\': True}"
+      param_str: "{\'dataset_dir\': \'/home/shared/data/datasets/Swiss\', \'seed\': 1337, \'image_list\': \'lists/train_crop4_by2.txt\', \'mean\': (104.504120879, 132.194368132, 126.177197802),\'randomize\': True}"
   }
 }
 layer {

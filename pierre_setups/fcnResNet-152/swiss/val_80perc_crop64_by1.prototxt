@@ -7,7 +7,7 @@ layer {
   python_param {
     module: "data_layers"
     layer: "ImgPairFileDataLayer"
-      param_str: "{\'dataset_dir\': \'/home/shared/data/datasets/droneye_dataset\', \'seed\': 1337, \'image_list\': \'lists/val_cut64.txt\', \'mean\': (104.456043956, 132.197802198, 126.175824176),\'randomize\': True}"
+      param_str: "{\'dataset_dir\': \'/home/shared/data/datasets/droneye_dataset\', \'seed\': 1337, \'image_list\': \'lists/val_crop8.txt\', \'mean\': (104.456043956, 132.197802198, 126.175824176),\'randomize\': True}"
   }
 }
 layer {
@@ -6762,7 +6762,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 12
+    num_output: 10
     pad: 0
     kernel_size: 1
     weight_filler {
@@ -6784,7 +6784,7 @@ layer {
     lr_mult: 0
   }
   convolution_param {
-    num_output: 12
+    num_output: 10
     bias_term: false
     kernel_size: 64
     stride: 32

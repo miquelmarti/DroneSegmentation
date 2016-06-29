@@ -1,0 +1,14 @@
+name: "piafabec"
+out_dir: "results/piafabec"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-101-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "data_resnet101"
+        solver_filename: "fcnResNet-101/swiss/solver_crop16_by2.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}
