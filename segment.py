@@ -58,7 +58,7 @@ class Model(object):
     def segmentImage(self, input_image, mean, new_shape=None):
         # TODO should we pass mean here or in the constructor?
         seg = score.segmentImage(self.net, input_image, self.input_layer,
-                                 self.output_layer, mean, newShape=new_shape)
+                                 self.output_layer, mean)
         return seg
 
     def getInputShape(self):
@@ -96,6 +96,8 @@ def get_arguments():
     parser.add_argument('--show_prob', type=int, help='\
     If provided, will display the probability of the given class at each \
     pixel.')
+    parser.add_argument('--center', action="store_true", help='\
+    Keeps only the center part of the image (for faster computation).')
     return parser.parse_args()
 
 
@@ -255,7 +257,8 @@ def computeEnsembleLogits(input_image, input_shape, models, logit_cols, crop):
     runTime = time.time() - start
 
     # Import the logits saved in folders
-    image_name = basename(os.path.splitext(image_path)[0])
+    if len(logit_cols)>0:
+        image_name = basename(os.path.splitext(image_path)[0])
     for logit_col in logit_cols:
         model_logits = logit_col.getImageLogits(image_name)
         logits.append(np.squeeze(model_logits))
@@ -300,7 +303,7 @@ def displayOutput(label_colours, input_image, guessed_labels, true_labels,
     if wait:
         key = cv2.waitKey(0)
     else:
-        key = cv2.waitKey(1500)
+        key = cv2.waitKey(100)
     return key
 
 
@@ -383,6 +386,14 @@ if __name__ == '__main__':
 
     # Initialization is finished, so begin iterating over the images.
     for input_image, real_label, image_path in imageIterator:
+        if args.center:
+            w,h = input_image.size
+            dw = 1200
+            dh = 800
+            a = int((w-dw)/2)
+            b = int((h-dh)/2)
+            input_image = input_image.crop((a, b, a+dw, b+dh))
+    
         if config.input.resize:
             # Resize all inputs to the same size
             input_image = input_image.resize((input_shape[3], input_shape[2]),
@@ -391,7 +402,10 @@ if __name__ == '__main__':
                                                 models, logit_cols, args.crop)
         times.append(runTime)
 
-        image_name = basename(os.path.splitext(image_path)[0])
+        if image_path is not None:
+                image_name = basename(os.path.splitext(image_path)[0])
+        else:
+                image_name = ""
         if config.outputFolder != "":
             # Saves network outputs to folder and compiles list of saved files
             np.save(config.outputFolder + image_name + ".npy", logits)
