@@ -306,6 +306,26 @@ def displayOutput(label_colours, input_image, guessed_labels, true_labels,
         key = cv2.waitKey(100)
     return key
 
+def initialiseVideo(shape):
+        fps = 12.0
+        # Initialize video recording
+        fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
+        print "Creating video with shape", shape
+        images = cv2.VideoWriter(args.record + 'img.avi', fourcc, fps, shape)
+        #labels = cv2.VideoWriter(args.record + 'labels.avi', fourcc, fps, shape)
+        segmentation = cv2.VideoWriter(args.record + 'segmentation.avi',
+                                       fourcc, fps, shape)
+        return (images, segmentation)
+
+def writeVideo(images, segmentation, input_image, guessed_labels, label_colours, resize):
+        # Transform the class labels into a segmented image
+        guessed_image = colourSegment(guessed_labels, label_colours)
+        newSize = (int(resize*input_image.shape[1]),
+               int(resize*input_image.shape[0]))
+        images.write(cv2.resize(input_image, newSize))
+        segmentation.write(cv2.resize(guessed_image, newSize))
+        
+        return (images, segmentation)
 
 if __name__ == '__main__':
     args = get_arguments()
@@ -343,15 +363,6 @@ if __name__ == '__main__':
         input_shape = models[0].getInputShape()
         numb_cla = models[0].getNumClasses()
     
-    if args.record != '':
-        # Initialize video recording
-        fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
-        shape = (input_shape[3], input_shape[2])
-        images = cv2.VideoWriter(args.record + 'img.avi', fourcc, 5.0, shape)
-        labels = cv2.VideoWriter(args.record + 'labels.avi', fourcc, 5.0,
-                                 shape)
-        segmentation = cv2.VideoWriter(args.record + 'segmentation.avi',
-                                       fourcc, 5.0, shape)
         
     # Create the appropriate image iterator
     imageIterator = None
@@ -377,11 +388,11 @@ if __name__ == '__main__':
                      config.input.mean.b])
                      
     # process each image, one-by-one
-    n_im = 0  # Image counter
+    n_im = 1  # Image counter
     times = []  # Variable for test times
     # Read the colours of the classes
     display = (args.record == '' and not args.hide)
-    if display:
+    if display or args.record != '':
         label_colours = cv2.imread(config.input.colours).astype(np.uint8)
 
     # Initialization is finished, so begin iterating over the images.
@@ -442,12 +453,23 @@ if __name__ == '__main__':
                 # Print image number and accuracy
                 acc = score.computeSegmentationScores(hist).overallAcc
                 print "Image", n_im, "(", image_name, ") accuracy:", acc
-                            
+
+                     
         # Switch to RGB (PIL Image read files as BGR)
         if len(np.array(input_image).shape) is 3:
             input_image = np.array(cv2.cvtColor(np.array(input_image),
                                                 cv2.COLOR_BGR2RGB))
         
+                
+        if args.record != '':
+                shape = (int(input_image.shape[1]*args.view_resize), int(input_image.shape[0]*args.view_resize))
+                if n_im == 1: #If it's the first image, we initialise video
+                        print "INITIALISE VIDEO TO INPUT IMAGE SHAPE: ", shape
+                        images, segmentation = initialiseVideo(shape)
+                print "Writing frame", n_im
+                images, segmentation = writeVideo(images, segmentation, input_image, guessed_labels, label_colours, args.view_resize)
+        
+                
         # Display input and output
         if display:
             if args.show_prob is not None:
@@ -456,12 +478,14 @@ if __name__ == '__main__':
                                 real_label, args.view_resize, args.key)
             if key % 256 == 27:  # exit on ESC - keycode is platform-dependent
                 break
+        
+        n_im += 1
 
     # Exit properly
     if args.record != '':
         images.release()
         segmentation.release()
-        labels.release()
+        #labels.release()
     elif not args.hide:
         cv2.destroyAllWindows()
         
