@@ -80,16 +80,17 @@ if __name__ == '__main__':
 	#sort images by id
 	imgs.sort(key=lambda x: x['id'])
 
+	cpt = 1
+
 	for img in imgs:
 		#open image
 		#image = cv2.imread('%s/images/%s/%s'%(dataDir,dataType,img['file_name']),-1)
 		for subdir, dirs, files in os.walk(dataDir):
+			if not os.path.isfile(subdir+"/"+img['file_name']):
+				continue
 			image = cv2.imread('%s/%s'%(subdir,img['file_name']),-1)
-			if image != None:
-				break
-		
-		if image==None:
-			continue		
+			break
+				
 		
 		#if there is no color channels, resize the matrix
 		
@@ -99,9 +100,11 @@ if __name__ == '__main__':
 		#set all pixels to background class
 	 	image[:] = 0
 		# load instance annotations
-		#annIds = coco.getAnnIds(imgIds=img['id'], catIds=catIds)	
+
 		lists = [coco.imgToAnns[img['id']] for imgId in imgIds if imgId in coco.imgToAnns]
                 anns = list(itertools.chain.from_iterable(lists))
+
+		#annIds = coco.getAnnIds(imgIds=img['id'], catIds=catIds)
 		#anns = coco.loadAnns(annIds)
 		
 		#apply segmentations on image	
@@ -110,8 +113,8 @@ if __name__ == '__main__':
 		if not suitable:
 			continue
 
-		print img['file_name']
-
+		print img['file_name'], "("+ str(cpt) + "/"+ str(len(imgs)) + ")"
+		cpt += 1
 		#display image
 
 		#cv2.imshow('image',image)
