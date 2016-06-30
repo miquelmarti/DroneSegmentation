@@ -5,7 +5,7 @@ layer {
   top: "data"
   top: "label"
   python_param {
-    module: "data_layers"
+    module: "coco_layers"
     layer: "ImgPairFileDataLayer"
       param_str: "{\'dataset_dir\': \'/home/shared/data/datasets/Okutama\', \'seed\': 1337, \'image_list\': \'lists/train_all_crop16_by1.txt\', \'mean\': (104.504120879, 132.194368132, 126.177197802),\'randomize\': True}"
   }
@@ -2321,9 +2321,84 @@ layer {
   }
 }
 layer {
-  name: "upscore"
+  name: "upscore2"
   type: "Deconvolution"
   bottom: "score_fr"
+  top: "upscore2"
+  param {
+    lr_mult: 0
+  }
+  convolution_param {
+    num_output: 10
+    bias_term: false
+    kernel_size: 4
+    stride: 2
+  }
+}
+
+
+
+
+
+
+
+
+
+layer {
+  name: "score_pool4"
+  type: "Convolution"
+  bottom: "res4f"
+  top: "score_pool4"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 10
+    pad: 0
+    kernel_size: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.005
+    }
+    bias_filler {
+      type: "constant"
+      value: 1
+    }
+  }
+}
+
+
+
+layer {
+  name: "score_pool4c"
+  type: "Crop"
+  bottom: "upscore2"
+  bottom: "score_pool4"
+  top: "upscore2c"
+  crop_param {
+    axis: 2
+    offset: 0
+  }
+}
+layer {
+  name: "fuse_pool4"
+  type: "Eltwise"
+  bottom: "score_pool4"
+  bottom: "upscore2c"
+  top: "fuse_pool4"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "upscore_skip16"
+  type: "Deconvolution"
+  bottom: "fuse_pool4"
   top: "upscore"
   param {
     lr_mult: 0
@@ -2331,10 +2406,14 @@ layer {
   convolution_param {
     num_output: 10
     bias_term: false
-    kernel_size: 64
-    stride: 32
+    kernel_size: 32
+    stride: 16
   }
 }
+
+
+
+
 layer {
   name: "score"
   type: "Crop"
@@ -2343,7 +2422,7 @@ layer {
   top: "score"
   crop_param {
     axis: 2
-    offset: 19
+    offset: 14
   }
 }
 layer {

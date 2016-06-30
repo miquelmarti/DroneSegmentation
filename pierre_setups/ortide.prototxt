@@ -1,0 +1,28 @@
+name: "ortide"
+out_dir: "results/ortide"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-50-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "data_resnet50_skip_50"
+        solver_filename: "fcnResNet-50-skip/swiss/solver_50.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "data_resnet101_skip_50"
+        solver_filename: "fcnResNet-101-skip/swiss/solver_50.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "data_resnet152_skip_50"
+        solver_filename: "fcnResNet-152-skip/swiss/solver_50.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}
