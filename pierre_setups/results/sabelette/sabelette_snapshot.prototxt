@@ -6,6 +6,6 @@ best_weights: ""
 best_scores: 0.0
 best_scores: 0.0
 best_scores: 0.0
-stage: 1
-stage_weights: "/home/johannes/models/pierre_setups/results/sabelette/fcn32_oku.caffemodel"
-stage_snapshot: "/home/johannes/models/pierre_setups/fcn16s/swiss/snapshots/train_iter_40000.solverstate"
+stage: 2
+stage_weights: "/home/johannes/models/pierre_setups/results/sabelette/fcn16_oku.caffemodel"
+stage_snapshot: "/home/johannes/models/pierre_setups/fcn8s/swiss/snapshots/train_iter_100000.solverstate"

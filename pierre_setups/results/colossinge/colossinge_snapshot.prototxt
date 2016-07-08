@@ -1,9 +1,9 @@
 multisource: 0
-iteration: 0
-best_weights: ""
-best_weights: ""
+iteration: 2
+best_weights: "/home/johannes/models/pierre_setups/results/colossinge/res152skip_swiss.caffemodel.1"
+best_weights: "/home/johannes/models/pierre_setups/results/colossinge/res152skip_oku.caffemodel.1"
 best_scores: 0.0
 best_scores: 0.0
-stage: 0
-stage_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
-stage_snapshot: "/home/johannes/models/pierre_setups/fcnResNet-152-skip/swiss/snapshots/train_iter_5000.solverstate"
+stage: 1
+stage_weights: "/home/johannes/models/pierre_setups/results/colossinge/res152skip_swiss.caffemodel.2"
+stage_snapshot: "/home/johannes/models/pierre_setups/fcnResNet-152-skip/okutama/snapshots/train_iter_100000.solverstate"
