@@ -1,0 +1,9 @@
+multisource: 0
+iteration: 3
+best_weights: "/home/johannes/models/multiSource/job6Weights/ms_coco_21.caffemodel.2"
+best_weights: "/home/johannes/models/multiSource/job6Weights/pascal.caffemodel.2"
+best_scores: 0.0
+best_scores: 0.695774247187
+stage: 1
+stage_weights: "/home/johannes/models/multiSource/job6Weights/ms_coco_21.caffemodel.3"
+stage_snapshot: "/home/johannes/models/multiSource/fcnResNetskip_pascal/snapshot/train_fcnResNetskip_pascal_iter_100000.solverstate"
