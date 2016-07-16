@@ -1,0 +1,22 @@
+out_dir: "job6Weights"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 4
+    stage {
+        name: "ms_coco_21"
+        solver_filename: "fcnResNetskip_coco21/solver-152skip.prototxt"
+        
+        fcn_surgery: true
+        
+        outLayer: "score"
+    }
+    stage {
+        name: "pascal"
+        solver_filename: "fcnResNetskip_pascal/solver-152skip.prototxt"
+        
+        fcn_surgery: true
+        
+        outLayer: "score"
+    }
+}
