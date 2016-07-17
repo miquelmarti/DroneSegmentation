@@ -1,7 +1,8 @@
 import caffe
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageEnhance
+import cv2
 
 import random
 import os
@@ -29,6 +30,25 @@ class SemSegDataLayer(caffe.Layer):
         self.mean = np.array(params['mean'])
         self.random = params.get('randomize', False)
         self.seed = params.get('seed', None)
+        
+        # data augmentation
+        print type(params)
+        mirror, jitter, noise, crop = False, 0, False, (0,0)
+        if 'mirror' in params:
+            mirror = params['mirror']
+        if 'jitter' in params:
+            jitter = params['jitter']
+        if 'noise' in params:
+            noise = params['noise']
+        if 'crop' in params:
+            crop = params['crop']
+        self.mirror = mirror
+        self.jitter = jitter
+        self.noise = noise
+        self.crop = crop
+        self.isLabel = False
+        self.mirror_param = (False, '')
+        self.crop_param = (False, (0,0))
 
         # two tops: data and label
         if len(top) != 2:
@@ -101,7 +121,9 @@ class ImgPairFileDataLayer(SemSegDataLayer):
 
     def load_image(self, fileLine):
         filename = fileLine.split()[0]
-        return self.load_image_helper(filename)
+        img = self.load_image_helper(filename)
+        self.isLabel = True
+        return img
         
     def load_label(self, idx):
         """
@@ -114,6 +136,8 @@ class ImgPairFileDataLayer(SemSegDataLayer):
         if len(label.shape) > 2:
             label = label[:, :, 0]
         label = label[np.newaxis, ...]
+        
+        self.isLabel = False
         return label
         
     def load_image_helper(self, filename):
@@ -122,7 +146,77 @@ class ImgPairFileDataLayer(SemSegDataLayer):
             if os.path.isabs(filename):
                 filename = filename[1:]
             filename = os.path.join(self.dataset_dir, filename)
-        return Image.open(filename)
+        image = cv2.imread(filename)
+        if not self.isLabel:
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        # Data augmentation
+        if self.isLabel:
+            if self.mirror_param[0]:
+                image = self.do_flip(image, self.mirror_param[1])
+                self.mirror_param = (False, '')
+            if self.crop_param[0]:
+                image = self.do_random_crop(image, self.crop_param[1])
+                self.crop_param = (False, (0,0))
+        else:
+            if self.mirror:
+                image = self.do_flip(image)
+            if self.jitter != 0:
+                image = self.do_image_jittering(image)
+            if self.noise:
+                image = self.apply_noise(image)
+            if self.crop != (0,0):
+                image = self.do_random_crop(image)
+        
+        return Image.fromarray(image)
+        #return Image.open(filename)
+        
+    def do_flip(self, image, sense=''):
+        if sense != '':
+            image = image[:, ::-1, :] if sense == 'h' else image[::-1, :, :]
+            return image
+        
+        if bool(np.random.choice(2)):
+            if bool(np.random.choice(2)): # Horizontal flip
+                image = image[:, ::-1, :]
+                self.mirror_param = (True, 'h')
+            else:                         # Vertical flip
+                image = image[::-1, :, :]
+                self.mirror_param = (True, 'v')
+        return image
+        
+    def do_image_jittering(self, image):
+        assert image.shape[0] % self.jitter == 0
+        assert image.shape[1] % self.jitter == 0
+        if bool(np.random.choice(2)):
+            for x in range(0, image.shape[0], self.jitter):
+                for y in range(0, image.shape[1], self.jitter):
+                    window = image[x:x+self.jitter, y:y+self.jitter]
+                    rand = random.choice(random.choice(window))
+                    window = np.array([[rand]*self.jitter]*self.jitter)
+                    image[x:x+self.jitter, y:y+self.jitter] = window
+        return image
+        
+    def apply_noise(self, image):
+        if bool(np.random.choice(2)):
+            noise = np.random.randint(0,50,(image.shape[0], image.shape[1]))
+            zitter = np.zeros_like(image)
+            zitter[:,:,1] = noise
+            image = cv2.add(image, zitter)
+        return image
+        
+    def do_random_crop(self, image, idxs=None):
+        if idxs:
+            return image[idxs[0]:idxs[0]+self.crop[0], idxs[1]:idxs[1]+self.crop[1]]
+        
+        assert self.crop[0] <= image.shape[0]
+        assert self.crop[1] <= image.shape[1]
+        if bool(np.random.choice(2)):
+            randX = np.random.choice(image.shape[0]-self.crop[0])
+            randY = np.random.choice(image.shape[1]-self.crop[1])
+            self.crop_param = (True, (randX, randY))
+            image = image[randX:randX+self.crop[0], randY:randY+self.crop[1]]
+        return image
 
 
 # Following aren't ready...might be nice to polish them up and contribute them
