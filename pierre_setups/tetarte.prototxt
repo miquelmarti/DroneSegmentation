@@ -1,5 +1,5 @@
-name: "ptitard"
-out_dir: "results/ptitard"
+name: "tetarte"
+out_dir: "results/tetarte"
 init_weights: "/home/shared/data/givenModels/resNet/ResNet-50-model.caffemodel"
 
 multi_source {
