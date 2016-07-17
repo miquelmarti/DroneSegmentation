@@ -1,0 +1,14 @@
+name: "aeromite"
+out_dir: "results/aeromite"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "data_resnet152-skip_hik"
+        solver_filename: "fcnResNet-152-skip/okutama/solver_hikawa.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}
