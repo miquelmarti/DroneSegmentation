@@ -178,7 +178,6 @@ def solve(solverParam, modelFilename=None, preProcFun=None, haltPercent=None,
     """Solve a solver with given parameters."""
     
     # Use the absolute path, since we change the directory later
-    # TODO: We do ?
     if modelFilename is not None:
         modelFilename = os.path.abspath(modelFilename)
     

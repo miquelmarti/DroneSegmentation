@@ -32,7 +32,6 @@ class SemSegDataLayer(caffe.Layer):
         self.seed = params.get('seed', None)
         
         # data augmentation
-        print type(params)
         mirror, jitter, noise, crop = False, 0, False, (0,0)
         if 'mirror' in params:
             mirror = params['mirror']
