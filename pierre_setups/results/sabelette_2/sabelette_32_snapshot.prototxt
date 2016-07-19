@@ -1,0 +1,10 @@
+multisource: 0
+iteration: 0
+best_weights: ""
+best_weights: ""
+best_weights: ""
+best_scores: 0.0
+best_scores: 0.0
+best_scores: 0.0
+stage: 0
+stage_weights: "/home/shared/data/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel"

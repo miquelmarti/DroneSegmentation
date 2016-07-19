@@ -1,9 +1,9 @@
 multisource: 0
-iteration: 3
-best_weights: "/home/johannes/models/multiSource/job6Weights/ms_coco_21.caffemodel.2"
-best_weights: "/home/johannes/models/multiSource/job6Weights/pascal.caffemodel.2"
+iteration: 1
+best_weights: "/home/johannes/models/multiSource/job6Weights/ms_coco_21.caffemodel.4"
+best_weights: "/home/johannes/models/multiSource/job6Weights/pascal.caffemodel.4"
 best_scores: 0.0
-best_scores: 0.695774247187
-stage: 1
-stage_weights: "/home/johannes/models/multiSource/job6Weights/ms_coco_21.caffemodel.3"
-stage_snapshot: "/home/johannes/models/multiSource/fcnResNetskip_pascal/snapshot/train_fcnResNetskip_pascal_iter_100000.solverstate"
+best_scores: 0.679848990054
+stage: 0
+stage_weights: "/home/johannes/models/multiSource/job6Weights/pascal.caffemodel.4"
+stage_snapshot: "/home/johannes/models/multiSource/fcnResNetskip_coco21/snapshot/train_fcnResNetskip_coco_iter_60000.solverstate"
