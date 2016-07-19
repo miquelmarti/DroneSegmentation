@@ -210,7 +210,7 @@ class ImgPairFileDataLayer(SemSegDataLayer):
         
         assert self.crop[0] <= image.shape[0]
         assert self.crop[1] <= image.shape[1]
-        if bool(np.random.choice(2)):
+        if True:#bool(np.random.choice(2)):
             randX = np.random.choice(image.shape[0]-self.crop[0])
             randY = np.random.choice(image.shape[1]-self.crop[1])
             self.crop_param = (True, (randX, randY))
