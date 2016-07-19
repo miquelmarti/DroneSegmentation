@@ -1,4 +1,4 @@
-train_net: "train_mirror.prototxt"
+train_net: "train_mirror_crop.prototxt"
 # make test net, but don't invoke it from the solver itself
 test_interval: 0
 display: 100
@@ -13,5 +13,5 @@ iter_size: 1
 max_iter: 100000
 weight_decay: 0.0005
 snapshot: 5000
-snapshot_prefix: "snapshots/train_mirror"
+snapshot_prefix: "snapshots/train_mirror_crop"
 test_initialization: false
