@@ -1,0 +1,14 @@
+name: "racaillou"
+out_dir: "results/racaillou"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-50-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "fcnResNet50_swiss"
+        solver_filename: "fcnResNet-50/swiss/solver_randcrop.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}
