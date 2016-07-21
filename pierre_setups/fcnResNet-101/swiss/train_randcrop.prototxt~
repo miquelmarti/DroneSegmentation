@@ -7,7 +7,7 @@ layer {
   python_param {
     module: "data_layers"
     layer: "ImgPairFileDataLayer"
-      param_str: "{\'dataset_dir\': \'/home/shared/data/datasets/Swiss\', \'seed\': 1337, \'image_list\': \'lists/train_by2.txt\', \'mean\': (0, 0, 0),\'randomize\': True}"
+      param_str: "{\'dataset_dir\': \'/home/shared/data/datasets/Swiss\', \'seed\': 1337, \'image_list\': \'lists/train_by2.txt\', \'mean\': (0, 0, 0),\'randomize\': True,\'crop\': (512,512)}"
   }
 }
 
@@ -4558,7 +4558,7 @@ layer {
     lr_mult: 0
   }
   convolution_param {
-    num_output: 21
+    num_output: 10
     bias_term: false
     kernel_size: 64
     stride: 32
