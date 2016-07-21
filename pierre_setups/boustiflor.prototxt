@@ -5,7 +5,7 @@ init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
 multi_source {
     iterations: 1
     stage {
-        name: "res152s_randcrop_swiss"
+        name: "res152_randcrop_oku"
         solver_filename: "fcnResNet-152/okutama/solver_randcrop.prototxt"
         
         fcn_surgery: true
