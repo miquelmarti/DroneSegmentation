@@ -6,4 +6,4 @@ best_scores: 0.0
 best_scores: 0.0
 stage: 0
 stage_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
-stage_snapshot: "/home/johannes/models/pierre_setups/fcnResNet-152-skip/pascal/snapshots/train_fcnResNetskip_pascal_iter_15000.solverstate"
+stage_snapshot: "/home/johannes/models/pierre_setups/fcnResNet-152-skip/pascal/snapshots/train_fcnResNetskip_pascal_iter_80000.solverstate"
