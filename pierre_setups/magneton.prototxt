@@ -1,0 +1,14 @@
+name: "magneton"
+out_dir: "results/magneton"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "resnet152_skip_randcrop"
+        solver_filename: "fcnResNet-152-skip/swiss/solver_randcrop.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}
