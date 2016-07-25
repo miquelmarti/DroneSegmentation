@@ -15,5 +15,5 @@ iter_size: 1
 max_iter: 100000
 weight_decay: 0.0005
 snapshot: 5000
-snapshot_prefix: "snapshots/80perc_randcrop"
+snapshot_prefix: "snapshots/80perc_randcrop_960"
 test_initialization: false
