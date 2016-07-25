@@ -26,6 +26,13 @@ if [[ ! -e $dir_results ]]; then
     mkdir $dir_results
 fi
 
-/home/pierre/hgRepos/transferLearningFramework/scripts/transfer.py --gpu $gpu $file_prototxt 2>&1 | tee $file_log
+
+
+if [ -z "$3" ]; then
+    /home/pierre/hgRepos/transferLearningFramework/scripts/transfer.py --gpu $gpu $file_prototxt 2>&1 | tee $file_log
+else
+    /home/pierre/hgRepos/transferLearningFramework/scripts/transfer.py --gpu $gpu --oldcaffe $3 $file_prototxt 2>&1 | tee $file_log
+fi
+
 
 

@@ -1,0 +1,15 @@
+name: "dodrio"
+out_dir: "results/dodrio"
+init_weights: "/home/shared/data/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "segnet_swiss"
+        solver_filename: "segnet/swiss/solver.prototxt"
+        
+        outLayer: "accuracy"
+        #ignore: "fc6"
+        #ignore: "fc7"
+    }
+}
