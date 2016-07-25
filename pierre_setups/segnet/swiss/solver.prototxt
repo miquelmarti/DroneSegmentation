@@ -1,0 +1,20 @@
+train_net: "train.prototxt"
+#test_net: "val.prototxt"
+#test_iter: 96
+test_interval: 0
+display: 100
+average_loss: 20
+lr_policy: "step"
+gamma: 1.0
+stepsize: 10000000
+# lr for unnormalized softmax
+base_lr: 0.001
+# high momentum
+momentum: 0.9
+# no gradient accumulation
+iter_size: 1
+max_iter: 100000
+weight_decay: 0.0005
+snapshot: 5000
+snapshot_prefix: "snapshots/train"
+test_initialization: false
