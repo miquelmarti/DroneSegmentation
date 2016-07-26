@@ -5,7 +5,7 @@ layer {
   top: "data"
   top: "label"
   dense_image_data_param {
-    source: "/home/shared/data/datasets/Swiss/lists/train_crop4_by2_abspath.txt"	# Change this to the absolute path to your data file
+    source: "/home/shared/data/datasets/Swiss/lists/train_randCrop_abspath.txt"	# Change this to the absolute path to your data file
     batch_size: 4   			# Change this number to a batch size that will fit on your GPU
     shuffle: true
   }
@@ -793,8 +793,8 @@ layer {
   bottom: "pool5_mask"
   upsample_param {
     scale: 2
-    upsample_w: 36
-    upsample_h: 27
+    upsample_w: 32
+    upsample_h: 32
   }
 }
 layer {
@@ -971,8 +971,8 @@ layer {
   bottom: "pool4_mask"
   upsample_param {
     scale: 2
-    upsample_w: 72
-    upsample_h: 54
+    upsample_w: 64
+    upsample_h: 64
   }
 }
 layer {
