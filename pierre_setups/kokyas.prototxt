@@ -1,0 +1,14 @@
+name: "kokyas"
+out_dir: "results/kokyas"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-50-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "data_resnet50_randcrop"
+        solver_filename: "fcnResNet-50/okutama/solver_randcrop.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}
