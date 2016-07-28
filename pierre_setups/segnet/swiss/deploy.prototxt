@@ -1,8 +1,8 @@
 input: "data"
 input_dim: 10
 input_dim: 3
-input_dim: 512
-input_dim: 512
+input_dim: 400
+input_dim: 400
 layer {
   bottom: "data"
   top: "conv1_1"
@@ -786,8 +786,8 @@ layer {
   bottom: "pool5_mask"
   upsample_param {
     scale: 2
-    upsample_w: 32
-    upsample_h: 32
+    upsample_w: 25
+    upsample_h: 25
   }
 }
 layer {
@@ -964,8 +964,8 @@ layer {
   bottom: "pool4_mask"
   upsample_param {
     scale: 2
-    upsample_w: 64
-    upsample_h: 64
+    upsample_w: 50
+    upsample_h: 50
   }
 }
 layer {
