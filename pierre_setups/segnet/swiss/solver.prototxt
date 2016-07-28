@@ -13,8 +13,8 @@ base_lr: 0.001
 momentum: 0.9
 # no gradient accumulation
 iter_size: 1
-max_iter: 10000
+max_iter: 100000
 weight_decay: 0.0005
-snapshot: 25000
+snapshot: 5000
 snapshot_prefix: "snapshots/train"
 test_initialization: false
