@@ -7,7 +7,7 @@ layer {
   python_param {
     module: "data_layers"
     layer: "ImgPairFileDataLayer"
-      param_str: "{\'dataset_dir\': \'/home/shared/Swiss/\', \'seed\': 1337, \'image_list\': \'lists/train_crop4_by2.txt\', \'mean\': (0, 0, 0),\'randomize\': True,\'mirror\': True}"
+      param_str: "{\'dataset_dir\': \'/home/shared/data/datasets/Okutama\', \'seed\': 1337, \'image_list\': \'lists/train_all_crop16_by1.txt\', \'mean\': (99.0142045455, 116.5, 108.659090909),\'randomize\': True}"
   }
 }
 
@@ -6763,7 +6763,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 10
+    num_output: 21
     pad: 0
     kernel_size: 1
     weight_filler {
@@ -6888,6 +6888,17 @@ layer {
   bottom: "label"
   top: "loss"
   loss_param {
+    weight_by_label_freqs: true
+    class_weighting:  0.9085
+    class_weighting:  2.1147
+    class_weighting:  0.4359
+    class_weighting:  0.3308
+    class_weighting:  0.3062
+    class_weighting:  1.1684
+    class_weighting:  0.2997
+    class_weighting:  4.6129
+    class_weighting:  1.112
+    class_weighting:  50.4125
     ignore_label: 255
     normalize: false
   }
