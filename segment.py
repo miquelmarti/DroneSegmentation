@@ -31,8 +31,8 @@ np.seterr(divide='ignore', invalid='ignore')
 # If no networks provide input shape, this will be the default one (there could
 # be a nicer way of doing this, by loading .npy arrays and have a direct look
 # at their size)
-default_input_shape = np.array((1, 21, 500, 500))
-default_numb_cla = 21
+default_input_shape = np.array((1, 10, 1920, 1080))
+default_numb_cla = 10
 
 
 class LogitCollection(object):
@@ -147,8 +147,8 @@ def combineEnsemble(net_outputs, method, weighting):
             output = np.squeeze(stats.mode(net_outputs, axis=0)[0]).astype(int)
     
     if method == ensemble_pb2.LOGITARI:  # Logit arithmetic averaging
-            output = np.zeros(net_outputs[0].shape)
-            
+            output = np.zeros(net_outputs[0].shape)     
+
             sum_weightings = 0
             for net_output, current_weighting in zip(net_outputs, weighting):
                 output = output + net_output * current_weighting
@@ -157,20 +157,17 @@ def combineEnsemble(net_outputs, method, weighting):
             # Make it a mean instead of a sum of logits
             output = output/sum_weightings
             
-    if method == ensemble_pb2.LOGITGEO:  # Logit geometric averaging
-            output = np.ones(net_outputs[0].shape)
+    if method == ensemble_pb2.LOGITGEO:  # Logit geometric averaging (NOT WORKING, BECAUSE LOGITS CAN BE NEGATIVE)
+            output = np.ones(net_outputs[0].shape)     
             
             for net_output in net_outputs:
                 output = np.multiply(output, net_output)
-                print net_output
-            
-            print output
             
             # Make it a mean
             output = np.power(output, float(1)/len(net_outputs))
     
     if method == ensemble_pb2.PROBAARI:  # Probability arithmetic averaging
-        output = np.zeros(net_outputs[0].shape)
+        output = np.zeros(net_outputs[0].shape)     
 
         sum_weightings = 0
         for net_output, current_weighting in zip(net_outputs, weighting):
@@ -181,7 +178,7 @@ def combineEnsemble(net_outputs, method, weighting):
         output = output/sum_weightings
     
     if method == ensemble_pb2.PROBAGEO:  # Probability geometric averaging
-        output = np.ones(net_outputs[0].shape)
+        output = np.ones(net_outputs[0].shape)     
 
         for net_output in net_outputs:
             output = np.multiply(output, softmax(net_output))
@@ -251,7 +248,7 @@ def computeEnsembleLogits(input_image, input_shape, models, logit_cols, crop):
             model_logits = cropAndSegment(input_image, crop, model, mean)
         else:
             model_logits = model.segmentImage(input_image, mean, new_shape)
-        logits.append(np.squeeze(model_logits))
+        logits.append(np.squeeze(model_logits[0]))
 
     # Get the time after the network process
     runTime = time.time() - start
@@ -417,15 +414,21 @@ if __name__ == '__main__':
                 image_name = basename(os.path.splitext(image_path)[0])
         else:
                 image_name = ""
+
+        # TODO: Not sure of the first if, needed for making resnet output work
+        if len(logits.shape) == 1 and len(logits[0].shape) == 4:
+            logits = logits[0][0]
+        elif len(logits.shape) == 1:
+            logits = logits[0]
+
+
         if config.outputFolder != "":
             # Saves network outputs to folder and compiles list of saved files
             np.save(config.outputFolder + image_name + ".npy", logits)
             summaryFile.write(image_path + " " + config.outputFolder +
                               image_name + ".npy\n")
         
-        # TODO: Not sure of the first if, needed for making resnet output work
-        if len(logits.shape) == 1 and len(logits[0].shape) == 4:
-            logits = logits[0][0]
+
             
         # label each pixel as the class with the biggest logit
         if len(logits.shape) == 3:
