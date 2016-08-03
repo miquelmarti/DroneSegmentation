@@ -6,14 +6,14 @@ multi_source {
     iterations: 3
     stage {
         name: "resnet152_skip_ms_bb"
-        solver_filename: "fcnResNet-152-skip/both/solver_bb.prototxt"
+        solver_filename: "fcnResNet-152-skip/both/solver_bb_50.prototxt"
         
         fcn_surgery: true
         outLayer: "score"
     }
     stage {
-        name: "resnet152_skip_ms_hk"
-        solver_filename: "fcnResNet-152-skip/both/solver_hk.prototxt"
+        name: "resnet152_skip_ms_swi"
+        solver_filename: "fcnResNet-152-skip/both/solver_hk_50.prototxt"
         
         fcn_surgery: true
         outLayer: "score"

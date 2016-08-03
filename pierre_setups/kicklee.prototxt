@@ -12,8 +12,8 @@ multi_source {
         outLayer: "score"
     }
     stage {
-        name: "resnet152_skip_ms_bb"
-        solver_filename: "fcnResNet-152-skip/both/solver_bb_50.prototxt"
+        name: "resnet152_skip_ms_swi"
+        solver_filename: "fcnResNet-152-skip/both/solver_swi_50.prototxt"
         
         fcn_surgery: true
         outLayer: "score"
