@@ -1,0 +1,9 @@
+multisource: 0
+iteration: 0
+best_weights: ""
+best_weights: ""
+best_scores: 0.0
+best_scores: 0.0
+stage: 0
+stage_weights: "/home/johannes/models/pierre_setups/results/crustabri/fcn32_swiss.caffemodel"
+stage_snapshot: "/home/johannes/models/pierre_setups/fcn16s/swiss/snapshots/train_iter_30000.solverstate"

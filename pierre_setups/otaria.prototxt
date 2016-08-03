@@ -1,0 +1,21 @@
+name: "otaria"
+out_dir: "results/otaria"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 3
+    stage {
+        name: "res152skip_swiss"
+        solver_filename: "fcnResNet-152-skip/swiss/solver_dataAug.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "res152skip_oku"
+        solver_filename: "fcnResNet-152-skip/okutama/solver_dataAug.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

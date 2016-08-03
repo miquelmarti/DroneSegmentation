@@ -1,0 +1,7 @@
+multisource: 0
+iteration: 0
+best_weights: ""
+best_scores: 0.0
+stage: 0
+stage_weights: "/home/shared/data/learnedModels/pokedex/grolem/data_resnet50_skip_randcrop.caffemodel"
+stage_snapshot: "/home/johannes/models/pierre_setups/fcnResNet-50-skip/swiss/snapshots/train_iter_200000.solverstate"

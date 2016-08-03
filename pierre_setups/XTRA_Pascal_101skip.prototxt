@@ -1,0 +1,14 @@
+name: "XTRA_Pascal_101skip"
+out_dir: "results/XTRA_Pascal_101skip"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-101-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "pascal_101skip"
+        solver_filename: "fcnResNet-101-skip/pascal/solver-101skip.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

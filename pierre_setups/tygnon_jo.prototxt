@@ -1,0 +1,14 @@
+name: "tygnon"
+out_dir: "results/tygnon"
+init_weights: "/home/shared/data/learnedModels/pokedex/grolem/data_resnet50_skip_randcrop.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "res50s_modelcomp"
+        solver_filename: "fcnResNet-50-skip/swiss/solver_modelCompression.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

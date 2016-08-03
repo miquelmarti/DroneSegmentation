@@ -1,0 +1,7 @@
+multisource: 0
+iteration: 0
+best_weights: ""
+best_scores: 0.0
+stage: 0
+stage_weights: "/home/shared/data/learnedModels/pokedex/tetarte/data_resnet50_skip_mirror_dataLayer.caffemodel"
+stage_snapshot: "/home/johannes/models/pierre_setups/fcnResNet-50-skip/okutama/snapshots/train_iter_200000.solverstate"

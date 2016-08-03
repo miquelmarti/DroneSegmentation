@@ -6,7 +6,7 @@ multi_source {
     iterations: 1
     stage {
         name: "res50s_crop_oku"
-        solver_filename: "fcnResNet-50-skip/okutama/solver_mirror_crop.prototxt"
+        solver_filename: "fcnResNet-50-skip/okutama/solver_dataAug.prototxt"
         
         fcn_surgery: true
         outLayer: "score"
