@@ -1,14 +1,5 @@
 #!/usr/bin/env python
 
-# Code, as generic as possible, for the visualization
-
-# TO DO :
-# - check if video mode works
-# - add the --folder option, that takes a folder as input and segment each image in it
-
-# - input and output blobs could be looked for automatically in deploy.prototxt instead of using default values in .proto file
-
-
 # Caffe module need to be on python path
 import caffe
 import numpy as np
@@ -96,8 +87,9 @@ def get_arguments():
     parser.add_argument('--show_prob', type=int, help='\
     If provided, will display the probability of the given class at each \
     pixel.')
-    parser.add_argument('--center', action="store_true", help='\
-    Keeps only the center part of the image (for faster computation).')
+    parser.add_argument('--center', type=float, default=1.0, help='\
+    Crops the central part of the image, with a sizeequal to args.center \
+    times the original size')
     return parser.parse_args()
 
 
@@ -133,6 +125,7 @@ def softmax(x):
 
     
 def combineEnsemble(net_outputs, method, weighting):
+    #This method will combine the output of models forming an Ensemble
     output = 0
     
     # If there is only one model, we skip this step
@@ -394,22 +387,29 @@ if __name__ == '__main__':
 
     # Initialization is finished, so begin iterating over the images.
     for input_image, real_label, image_path in imageIterator:
-        if args.center:
+
+        #If we want to only keep the central part of a too big image
+        if args.center>0.0 and args.center<1.0:
             w,h = input_image.size
-            dw = 1200
-            dh = 800
-            a = int((w-dw)/2)
+            dw = int(args.center*w) #Cropped image size
+            dh = int(args.center*h)
+            a = int((w-dw)/2) #Crop coordinates
             b = int((h-dh)/2)
             input_image = input_image.crop((a, b, a+dw, b+dh))
+            real_label = real_label.crop((a, b, a+dw, b+dh))
+            print a,b,a+dw,b+dh
     
+        #If we want to resize all inputs to the same size
         if config.input.resize:
-            # Resize all inputs to the same size
             input_image = input_image.resize((input_shape[3], input_shape[2]),
                                              Image.ANTIALIAS)
+
+        #Compute the logits (outputs) of the model(s)
         logits, runTime = computeEnsembleLogits(input_image, input_shape,
                                                 models, logit_cols, args.crop)
         times.append(runTime)
 
+        #Store eventually the path of the input image
         if image_path is not None:
                 image_name = basename(os.path.splitext(image_path)[0])
         else:
@@ -422,9 +422,10 @@ if __name__ == '__main__':
             logits = logits[0]
 
 
+        # If we want to save network outputs to folder
         if config.outputFolder != "":
-            # Saves network outputs to folder and compiles list of saved files
             np.save(config.outputFolder + image_name + ".npy", logits)
+            #Save the stored outputs in a summary list file
             summaryFile.write(image_path + " " + config.outputFolder +
                               image_name + ".npy\n")
         
@@ -437,8 +438,8 @@ if __name__ == '__main__':
             print 'Unknown output shape:', logits.shape
             break
 
+        #If ground-truth is provided, compute the metrics
         if real_label is not None:
-            # compare our segmentation to the ground truth
             real_label = real_label.resize(input_image.size, Image.NEAREST)
             
             # If pascal VOC, reshape the label to HxWx1s
@@ -463,7 +464,7 @@ if __name__ == '__main__':
             input_image = np.array(cv2.cvtColor(np.array(input_image),
                                                 cv2.COLOR_BGR2RGB))
         
-                
+        #If we want to record a video  
         if args.record != '':
                 shape = (int(input_image.shape[1]*args.view_resize), int(input_image.shape[0]*args.view_resize))
                 if n_im == 1: #If it's the first image, we initialise video
