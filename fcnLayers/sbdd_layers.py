@@ -66,7 +66,6 @@ class SBDDSegDataLayer(caffe.Layer):
             random.seed(self.seed)
             self.idx = random.randint(0, len(self.indices)-1)
 
-
     def reshape(self, bottom, top):
         # load image + label image pair
         self.data = self.load_image(self.indices[self.idx])
