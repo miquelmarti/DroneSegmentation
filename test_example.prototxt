@@ -14,9 +14,9 @@ ensemble_type: LOGITARI
 
 input
 {
-        file: "/home/shared/datasets/VOCdevkit/VOC2012/lists/seg11_img_lab.txt"
-        type: LABELS            #Type of the input file : can be VIDEO (.mp4), IMAGES (.txt) or LABELS (.txt)
-        colours: "/home/shared/datasets/VOCdevkit/VOC2012/colours/pascal_voc_21_colours.png"
+        file: "list.txt"
+        type: IMAGES            #Type of the input file : can be VIDEO (.mp4), IMAGES (.txt) or LABELS (.txt)
+        colours: "/home/shared/data/datasets/Okutama/colours/okutama_colours.png"
         
         #Optional : default values are 0
         mean {
@@ -30,17 +30,17 @@ input
 
 model
 {
-        deploy: "/home/andrew/models/caffe/FCN-16/deploy.prototxt"
-        weights: "/home/andrew/models/caffe/FCN-16/train_iter_100000.caffemodel"
+        deploy: "/home/shared/data/learnedModels/pokedex/feunard/deploy.prototxt"
+        weights: "/home/shared/data/learnedModels/pokedex/feunard/train_iter_100000.caffemodel"
         input: "data" #Optional : name of the input blob [default = "data"]
         output: "score" #Optional : name of the output blob [default = "score"]
 }
 
-model
-{
-        deploy: "/home/andrew/models/caffe/FCN-8/deploy.prototxt"
-        weights: "/home/andrew/models/caffe/FCN-8/train_iter_100000.caffemodel"
-}
+#model
+#{
+#        deploy: "/home/andrew/models/caffe/FCN-8/deploy.prototxt"
+#        weights: "/home/andrew/models/caffe/FCN-8/train_iter_100000.caffemodel"
+#}
 
 
 # If the outputs of networks have already been computed and stored into .npy files, we can include these models into the ensemble. The arrays must have been computed for the same test dataset as inputted now. Specify the folder containing .npy files:

@@ -17,12 +17,13 @@ message LogitFolder {
 
 //INPUT
 message Input {
-  required string file = 1;
+  optional string file = 1;
   
   enum InputType {
     VIDEO = 1;
     IMAGES = 2;
     LABELS = 3;
+    WEBCAM = 4;
   }
   
   message MeanValues {

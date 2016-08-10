@@ -23,7 +23,7 @@ def getPriority(id):
 	# swiss 100 
 	#if id == 3 or id == 4 or id == 6 or id == 7:
 	#okutama
-	if id == 5 or id == 4 or id == 3 or id == 13 or id == 14:
+	if id == 3 or id == 4 or id == 5 or id == 8:
 		return 1
 	return 0
 
@@ -85,17 +85,19 @@ if __name__ == '__main__':
 	for img in imgs:
 		#open image
 		#image = cv2.imread('%s/images/%s/%s'%(dataDir,dataType,img['file_name']),-1)
+		image = None
 		for subdir, dirs, files in os.walk(dataDir):
 			if not os.path.isfile(subdir+"/"+img['file_name']):
 				continue
 			image = cv2.imread('%s/%s'%(subdir,img['file_name']),-1)
 			break
-				
+		if image == None:
+			print img['file_name'],"not found in",subdir
+			continue	
 		
 		#if there is no color channels, resize the matrix
-		
 		if len(image.shape) is 2:
-		        image = np.resize(image, (image.shape[0],image.shape[1],3))
+	    	    image = np.resize(image, (image.shape[0],image.shape[1],3))
 		
 		#set all pixels to background class
 	 	image[:] = 0
