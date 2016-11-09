@@ -1,0 +1,14 @@
+name: "excelangue"
+out_dir: "results/excelangue"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "resnet152_skip_both"
+        solver_filename: "fcnResNet-152-skip/both/solver_oku_swi.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

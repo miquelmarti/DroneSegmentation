@@ -1,0 +1,14 @@
+name: "noadkoko"
+out_dir: "results/noadkoko"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "resnet152_skip_bb"
+        solver_filename: "fcnResNet-152-skip/both/solver_bb.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

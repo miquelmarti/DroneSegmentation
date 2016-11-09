@@ -1,0 +1,6 @@
+multisource: 0
+iteration: 0
+best_weights: ""
+best_scores: 0.0
+stage: 0
+stage_snapshot: "/home/johannes/models/pierre_setups/fcnResNet-152/swiss/snapshots/80perc_crop16_by2_iter_10000.solverstate"

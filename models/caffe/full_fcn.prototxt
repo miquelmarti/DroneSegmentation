@@ -1,0 +1,22 @@
+out_dir: "fcnWeights"
+init_weights: "/home/shared/data/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel"
+
+multi_source {
+    stage {
+        name: "fcn32"
+        solver_filename: "FCN-32/solver.prototxt"
+        fcn_surgery: true
+        ignore: "fc6"
+        ignore: "fc7"
+    }
+    stage {
+        name: "fcn16"
+        solver_filename: "FCN-16/solver.prototxt"
+        fcn_surgery: true
+    }
+    stage {
+        name: "fcn8"
+        solver_filename: "FCN-8/solver.prototxt"
+        fcn_surgery: true
+    }
+}

@@ -1,0 +1,14 @@
+name: "smogo"
+out_dir: "results/smogo"
+init_weights: "/home/shared/data/learnedModels/pokedex/tetarte/data_resnet50_skip_mirror_dataLayer.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "res50s_modelcomp"
+        solver_filename: "fcnResNet-50-skip/okutama/solver_modelComp.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

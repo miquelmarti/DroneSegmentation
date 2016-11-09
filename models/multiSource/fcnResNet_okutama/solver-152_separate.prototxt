@@ -1,0 +1,19 @@
+train_net: "train-152_separate.prototxt"
+#test_net: "val-152_separate.prototxt"
+#test_iter: 90
+# make test net, but don't invoke it from the solver itself
+test_interval: 0
+display: 10
+average_loss: 20
+lr_policy: "fixed"
+# lr for unnormalized softmax
+base_lr: 1e-10
+# high momentum
+momentum: 0.99
+# no gradient accumulation
+iter_size: 1
+max_iter: 10
+weight_decay: 0.0005
+snapshot: 0
+snapshot_prefix: "snapshot/train_fcnResNet_okutama_separate"
+test_initialization: false

@@ -1,0 +1,17 @@
+net: "/home/johannes/project/models/caffeFcn/fcn-alexnet/train_val.prototxt"
+test_iter: 736
+test_interval: 1000000 # py solving tests
+display: 20
+average_loss: 20
+lr_policy: "fixed"
+base_lr: 1e-5
+momentum: 0.94
+iter_size: 20
+# base_lr: 1e-9
+# momentum: 0.99
+# iter_size: 1
+max_iter: 80000
+weight_decay: 0.0005
+snapshot: 500
+snapshot_prefix: "/home/johannes/project/models/caffeFcn/fcn-alexnet/train_camVid/"
+test_initialization: false

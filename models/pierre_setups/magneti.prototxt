@@ -1,0 +1,14 @@
+name: "magneti"
+out_dir: "results/magneti"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "res152_crop_mean0_swiss"
+        solver_filename: "fcnResNet-152/swiss/solver_80perc_randcrop_mean0.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

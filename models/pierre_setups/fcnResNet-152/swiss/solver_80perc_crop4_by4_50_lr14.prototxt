@@ -1,0 +1,19 @@
+train_net: "train_80perc_crop4_by4.prototxt"
+#test_net: "val_80perc_crop4_by4.prototxt"
+#test_iter: 80
+# make test net, but don't invoke it from the solver itself
+test_interval: 0
+display: 100
+average_loss: 20
+lr_policy: "fixed"
+# lr for unnormalized softmax
+base_lr: 1e-14
+# high momentum
+momentum: 0.99
+# no gradient accumulation
+iter_size: 1
+max_iter: 50000
+weight_decay: 0.0005
+snapshot: 5000
+snapshot_prefix: "snapshots/80perc_crop4_by4_lr14"
+test_initialization: false

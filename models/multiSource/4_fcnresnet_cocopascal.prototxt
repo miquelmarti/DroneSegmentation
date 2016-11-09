@@ -1,0 +1,14 @@
+out_dir: "job4Weights"
+init_weights: "/home/shared/data/givenModels/fcn-resnet/ResNet-152-model.caffemodel"
+
+multi_source {
+    stage {
+        name: "fcnResnet_cocopascal"
+        solver_filename: "fcnResNet_coco21pascal/solver-152.prototxt"
+        
+        fcn_surgery: true
+        #halt_percentage: 10.5
+        
+        outLayer: "score"
+    }
+}

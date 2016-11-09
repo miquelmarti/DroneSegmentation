@@ -1,0 +1,21 @@
+name: "flagadoss2"
+out_dir: "results/flagadoss2"
+init_weights: "/home/johannes/models/pierre_setups/results/flagadoss2/res50skip_swiss.caffemodel"
+
+multi_source {
+    iterations: 3
+    stage {
+        name: "res50skip_oku"
+        solver_filename: "fcnResNet-50-skip/okutama/solver_dataAug2.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "res50skip_swiss"
+        solver_filename: "fcnResNet-50-skip/swiss/solver_dataAug2.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

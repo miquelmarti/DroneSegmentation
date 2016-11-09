@@ -1,0 +1,14 @@
+name: "grotadmorv"
+out_dir: "results/grotadmorv"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "res152s_crop_oku"
+        solver_filename: "fcnResNet-152-skip/swissokutama/solver_mirror_crop.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

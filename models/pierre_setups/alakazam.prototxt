@@ -1,0 +1,14 @@
+name: "alakazam"
+out_dir: "results/alakazam"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-50-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "data_resnet50_skip_all_dataLayer"
+        solver_filename: "fcnResNet-50-skip/okutama/solver_all_dataLayer.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

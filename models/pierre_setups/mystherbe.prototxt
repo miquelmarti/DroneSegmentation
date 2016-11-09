@@ -1,0 +1,14 @@
+name: "mystherbe"
+out_dir: "results/mystherbe"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "resnet152_skip"
+        solver_filename: "fcnResNet-152-skip/swiss/solver.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

@@ -1,0 +1,14 @@
+name: "onix"
+out_dir: "results/onix"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "resnet152_skip_noise"
+        solver_filename: "fcnResNet-152-skip/swiss/solver_noise.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

@@ -1,0 +1,16 @@
+name: "tadmorv"
+out_dir: "results/tadmorv"
+init_weights: "/home/shared/data/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "fcn32_oku_randcrop"
+        solver_filename: "fcn32s/okutama/solver_randcrop.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+        ignore: "fc6"
+        ignore: "fc7"
+    }
+}

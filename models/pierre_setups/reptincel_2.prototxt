@@ -1,0 +1,14 @@
+name: "reptincel_2"
+out_dir: "results/reptincel_2"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "data_all_at_once"
+        solver_filename: "fcnResNet-152/swiss/solver_80perc_all_at_once.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

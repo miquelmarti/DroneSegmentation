@@ -1,0 +1,18 @@
+train_net: "train_mean104_augmented.prototxt"
+#test_net: "val.prototxt"
+#test_iter: 96
+test_interval: 0
+display: 100
+average_loss: 20
+lr_policy: "fixed"
+# lr for unnormalized softmax
+base_lr: 1e-10
+# high momentum
+momentum: 0.99
+# no gradient accumulation
+iter_size: 1
+max_iter: 100000
+weight_decay: 0.0005
+snapshot: 5000
+snapshot_prefix: "snapshots/train"
+test_initialization: false

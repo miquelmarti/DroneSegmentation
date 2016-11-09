@@ -1,0 +1,75 @@
+name: "aspicot"
+out_dir: "results/aspicot"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    
+    stage {
+        name: "data_ms_by4_50_lr10"
+        solver_filename: "fcnResNet-152/okutama/solver_all_crop1_by4_50.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "data_ms_crop4_by2_50_lr10"
+        solver_filename: "fcnResNet-152/okutama/solver_all_crop4_by2_50.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "data_ms_crop16_by1_50_lr10"
+        solver_filename: "fcnResNet-152/okutama/solver_all_crop16_by1_50.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    
+    
+    stage {
+        name: "data_ms_by4_50_lr12"
+        solver_filename: "fcnResNet-152/okutama/solver_all_crop1_by4_50_lr12.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "data_ms_crop4_by2_50_lr12"
+        solver_filename: "fcnResNet-152/okutama/solver_all_crop4_by2_50_lr12.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "data_ms_crop16_by1_50_lr12"
+        solver_filename: "fcnResNet-152/okutama/solver_all_crop16_by1_50_lr12.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    
+    
+    stage {
+        name: "data_ms_by4_50_lr14"
+        solver_filename: "fcnResNet-152/okutama/solver_all_crop1_by4_50_lr14.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "data_ms_crop4_by2_50_lr14"
+        solver_filename: "fcnResNet-152/okutama/solver_all_crop4_by2_50_lr14.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "data_ms_crop16_by1_50_lr14"
+        solver_filename: "fcnResNet-152/okutama/solver_all_crop16_by1_50_lr14.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

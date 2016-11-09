@@ -1,0 +1,18 @@
+name: "melofee"
+out_dir: "results/melofee"
+init_weights: "/home/shared/data/givenModels/fcn-16s-pascal/fcn16s-heavy-pascal.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "fcn8_oku"
+        solver_filename: "fcn8s/okutama/solver.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+        ignore: "score_fr"
+        ignore: "upscore2"
+        ignore: "score_pool4"
+        ignore: "upscore16"
+    }
+}

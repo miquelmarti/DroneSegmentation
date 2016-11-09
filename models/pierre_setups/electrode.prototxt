@@ -1,0 +1,14 @@
+name: "electrode"
+out_dir: "results/electrode"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "resnet152_skip_jitter"
+        solver_filename: "fcnResNet-152-skip/okutama/solver_jitter_mean0.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

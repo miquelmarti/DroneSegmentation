@@ -1,0 +1,21 @@
+name: "flagadoss"
+out_dir: "results/flagadoss"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-50-model.caffemodel"
+
+multi_source {
+    iterations: 3
+    stage {
+        name: "res50skip_swiss"
+        solver_filename: "fcnResNet-50-skip/swiss/solver_dataAug.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "res50skip_oku"
+        solver_filename: "fcnResNet-50-skip/okutama/solver_dataAug.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

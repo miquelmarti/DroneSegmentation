@@ -1,0 +1,14 @@
+name: "ossatueur"
+out_dir: "results/ossatueur"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "resnet152_skip_hk"
+        solver_filename: "fcnResNet-152-skip/both/solver_hk.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

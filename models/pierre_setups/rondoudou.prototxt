@@ -1,0 +1,14 @@
+name: "rondoudou"
+out_dir: "results/rondoudou"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-101-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "data_resnet101"
+        solver_filename: "fcnResNet-101-skip/okutama/solver.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

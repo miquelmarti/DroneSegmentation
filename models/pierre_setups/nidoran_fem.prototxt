@@ -1,0 +1,14 @@
+name: "nidoran_fem"
+out_dir: "results/nidoran_fem"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-50-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "data_resnet50"
+        solver_filename: "fcnResNet-50/okutama/solver.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

@@ -1,0 +1,14 @@
+name: "abra"
+out_dir: "results/abra"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-50-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "data_resnet50_skip_jitter_dataLayer"
+        solver_filename: "fcnResNet-50-skip/okutama/solver_jitter_dataLayer.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

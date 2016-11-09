@@ -1,0 +1,13 @@
+name: "florizarre_scratch"
+out_dir: "results/florizarre_scratch"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "data_all_crop16_by2"
+        solver_filename: "fcnResNet-152/swiss/solver_80perc_crop16_by2.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

@@ -1,0 +1,14 @@
+name: "tetarte"
+out_dir: "results/tetarte"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-50-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "data_resnet50_skip_mirror_dataLayer"
+        solver_filename: "fcnResNet-50-skip/okutama/solver_mirror_dataLayer.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

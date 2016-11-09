@@ -1,0 +1,14 @@
+name: "bulbizarre_2"
+out_dir: "results/bulbizarre_2"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "data_all_crop1_by8"
+        solver_filename: "fcnResNet-152/swiss/solver_80perc_crop1_by8.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

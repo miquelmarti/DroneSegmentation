@@ -1,0 +1,23 @@
+out_dir: "job2Weights"
+init_weights: "/home/shared/data/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel"
+
+multi_source {
+    stage {
+        name: "fcn32_coco"
+        solver_filename: "fcn32s_coco21/solver.prototxt"
+        
+        fcn_surgery: true
+        ignore: "fc6"
+        ignore: "fc7"
+        
+        outLayer: "score"
+    }
+    stage {
+        name: "fcn8_pascal"
+        solver_filename: "fcn8s_pascal/solver.prototxt"
+        
+        fcn_surgery: true
+        
+        outLayer: "score"
+    }
+}

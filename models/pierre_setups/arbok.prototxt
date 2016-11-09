@@ -1,0 +1,16 @@
+name: "arbok"
+out_dir: "results/arbok"
+init_weights: "/home/shared/data/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "fcn32_oku"
+        solver_filename: "fcn32s/swiss/solver.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+        ignore: "fc6"
+        ignore: "fc7"
+    }
+}

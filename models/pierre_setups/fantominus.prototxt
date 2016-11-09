@@ -1,0 +1,30 @@
+name: "fantominus"
+out_dir: "results/fantominus"
+init_weights: "/home/shared/data/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "fcn32_oku"
+        solver_filename: "fcn32s/okutama/solver_augmented.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+        ignore: "fc6"
+        ignore: "fc7"
+    }
+    stage {
+        name: "fcn16_oku"
+        solver_filename: "fcn16s/okutama/solver_augmented.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "fcn8_oku"
+        solver_filename: "fcn8s/okutama/solver_augmented.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

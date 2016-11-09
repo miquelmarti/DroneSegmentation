@@ -1,0 +1,14 @@
+name: "doduo"
+out_dir: "results/doduo"
+init_weights: "/home/shared/data/learnedModels/pokedex/canarticho/fcn16_swiss_randcrop.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "fcn8_swiss_randcrop"
+        solver_filename: "fcn8s/swiss/solver_randcrop.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

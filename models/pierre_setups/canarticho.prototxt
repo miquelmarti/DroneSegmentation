@@ -1,0 +1,14 @@
+name: "canarticho"
+out_dir: "results/canarticho"
+init_weights: "/home/shared/data/learnedModels/pokedex/tentacruel/fcn32_swiss.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "fcn16_swiss_randcrop"
+        solver_filename: "fcn16s/swiss/solver_randcrop.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

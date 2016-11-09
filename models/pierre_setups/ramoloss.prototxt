@@ -1,0 +1,14 @@
+name: "ramoloss"
+out_dir: "results/ramoloss"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-50-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "res50s_crop_oku"
+        solver_filename: "fcnResNet-50-skip/okutama/solver_dataAug.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

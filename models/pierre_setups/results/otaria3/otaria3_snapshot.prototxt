@@ -1,0 +1,9 @@
+multisource: 0
+iteration: 2
+best_weights: "/home/johannes/models/pierre_setups/results/otaria3/res152skip_oku.caffemodel.1"
+best_weights: "/home/johannes/models/pierre_setups/results/otaria3/res152skip_swiss.caffemodel.2"
+best_scores: 0.0
+best_scores: 0.0
+stage: 1
+stage_weights: "/home/johannes/models/pierre_setups/results/otaria3/res152skip_oku.caffemodel.2"
+stage_snapshot: "/home/johannes/models/pierre_setups/fcnResNet-152-skip/swiss/snapshots/train_mirror_crop_iter_40000.solverstate"

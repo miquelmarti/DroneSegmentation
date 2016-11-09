@@ -1,0 +1,14 @@
+name: "gravalanch"
+out_dir: "results/gravalanch"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-101-model.caffemodel"
+
+multi_source {
+    iterations: 1
+    stage {
+        name: "data_resnet101_randcrop"
+        solver_filename: "fcnResNet-101/swiss/solver_randcrop.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}

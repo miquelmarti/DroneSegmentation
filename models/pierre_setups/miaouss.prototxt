@@ -1,0 +1,21 @@
+name: "miaouss"
+out_dir: "results/miaouss"
+init_weights: "/home/shared/data/givenModels/resNet/ResNet-152-model.caffemodel"
+
+multi_source {
+    iterations: 3
+    stage {
+        name: "res152skip_swiss"
+        solver_filename: "fcnResNet-152-skip/swiss/solver.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+    stage {
+        name: "res152skip_hikawa"
+        solver_filename: "fcnResNet-152-skip/hikawa/solver.prototxt"
+        
+        fcn_surgery: true
+        outLayer: "score"
+    }
+}
