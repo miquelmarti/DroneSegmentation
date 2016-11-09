@@ -1,0 +1,14 @@
+name: "init_1s1Ms"
+init_weights: "/home/shared/data/givenModels/fcn-16s-pascal/fcn16s-heavy-pascal.caffemodel"
+
+multi_source {
+    stage {
+        name: "ms1_fcn8"
+        solver_filename: "../train_fcn/fcn8/solver.prototxt"
+        
+        fcn_surgery: true
+        # halt_percentage: 10.5
+        
+        outLayer: "score"
+    }    
+}

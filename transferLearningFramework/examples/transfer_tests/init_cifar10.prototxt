@@ -1,0 +1,37 @@
+name: "init_cifar10"
+out_dir: "snapshots"
+
+multi_source {
+    iterations: 3
+    init_stage {
+        name: "fast_stage"
+        solver_filename: "../cifar10/solver.prototxt"
+        
+        outLayer: "accuracy"
+    }
+    
+    stage {
+        name: "fast_stage"
+        solver_filename: "../cifar10/solver.prototxt"
+        
+        ignore: "ip2"
+        
+        outLayer: "accuracy"
+    }
+    stage {
+        name: "slow_stage"
+        solver_filename: "../cifar10/solver_lr1.prototxt"
+        
+        outLayer: "accuracy"
+    }
+    stage {
+        name: "style_stage"
+        solver_filename: "../cifar10/solver_style.prototxt"
+    
+        freeze: "conv1"
+        freeze: "conv2"
+        ignore: "ip2"
+        
+        outLayer: "accuracy"
+    }
+}

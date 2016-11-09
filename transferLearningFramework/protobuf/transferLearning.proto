@@ -1,0 +1,87 @@
+syntax = "proto2";
+
+package transferLearning;
+
+// Defines a whole transfer learning cycle
+message TransferLearning {
+    // TODO: Turn name optional
+    required string name = 1;
+    // The directory where output weights will be saved.
+    optional string out_dir = 2;
+    // A set of weights to start from instead of initializing from nothing.
+    optional string init_weights = 3;
+    // A series of multi-source procedures to carry out.
+    // Usually there's only one per file, but the sysytem supports more.
+    repeated MultiSource multi_source = 4;
+}
+
+message MultiSource {
+    // The number of times to loop over the stages.
+    optional int32 iterations = 1 [default = 1];
+
+    // For each stage (they're in a list):
+    message Stage {
+        /*
+          Represents a single stage of transfer learning, which corresponds to
+          a single caffe learning session.
+        */
+        required string name = 1;
+        // The solver.prototxt that defines this Caffe stage.
+        required string solver_filename = 2;
+    
+        // Specifies layers to freeze during training, as a list.
+        repeated string freeze = 3;
+        // Specifies layers in the input .caffemodel to ignore in this stage.
+        // Mainly for ignoring layers with the same name but the wrong shape.
+        repeated string ignore = 4;
+        
+        // Indicates whether to pre-configure upscaling layers to perform
+        // bilinear interpolation.
+        optional bool fcn_surgery = 5 [default = false];
+        // If provided, training will halt when the mean IU on the val set
+        // increases by less than this percentage from one run to the next.
+        optional float halt_percentage = 6;
+        
+        // The name of the network's data-input layer.
+        optional string dataLayer = 7 [default = "data"];
+        // The name of the network's loss layer.
+        optional string lossLayer = 8 [default = "loss"];
+        // The name of the network's output layer.
+        optional string outLayer = 9 [default = "out"];
+        // The name of the network's ground-truth-input layer.
+        optional string labelLayer = 10 [default = "label"];
+    }
+
+    // The stages to be run, in order, in each multi-source iteration.
+    repeated Stage stage = 2;
+    enum MetricType {
+        ACCURACY = 0;
+        LOSS = 1;
+        MEAN_IU = 2;
+    }
+    // At this writing, only MEAN_IU is actually supported.
+    optional MetricType score_metric = 3 [default = MEAN_IU];
+    // In some cases, we may wish to ignore or freeze layers from the input
+    // weights, but not from the weights in the final stage that get put back
+    // into the first stage in the next multi-source iteration (or vice versa).
+    optional Stage init_stage = 4;
+}
+
+// Prototxt format for the snapshots
+message Snapshot {
+    // Current ms message to process after the resume
+    required int32 multisource = 1;
+    // Current iteration to process after the resume
+    required int32 iteration = 2;
+    
+    // Current best weights and scores (their number should be equal to the
+    // number of stages in the current ms)
+    repeated string best_weights = 3;
+    repeated float best_scores = 4;
+    
+    // Current stage to process after the resume
+    required int32 stage = 5;
+    // Two ways to resume the stage (weights or solverstate), chose one
+    optional string stage_weights = 6;
+    optional string stage_snapshot = 7;
+}

@@ -1,0 +1,59 @@
+name: "ms_cifar10"
+#out_dir: "snapshots"
+#init_weights: "fast_cifar10.caffemodel"
+
+multi_source {
+    iterations: 3
+    stage {
+        name: "fast_stage"
+        solver_filename: "../cifar10/solver.prototxt"
+        
+        ignore: "ip2"
+        
+        outLayer: "accuracy"
+    }
+#    stage {
+#        name: "slow_stage"
+#        solver_filename: "../cifar10/solver_lr1.prototxt"
+#        
+#        outLayer: "accuracy"
+#    }
+#    stage {
+#        name: "style_stage"
+#        solver_filename: "../cifar10/solver_style.prototxt"
+#    
+#        freeze: "conv1"
+#        freeze: "conv2"
+#        ignore: "ip2"
+#        
+#        outLayer: "accuracy"
+#    }
+}
+
+#multi_source {
+#    iterations: 1
+#    stage {
+#        name: "fast_stage"
+#        solver_filename: "../cifar10/solver.prototxt"
+#        
+#        ignore: "ip2"
+#        
+#        outLayer: "accuracy"
+#    }
+#    stage {
+#        name: "slow_stage"
+#        solver_filename: "../cifar10/solver_lr1.prototxt"
+#        
+#        outLayer: "accuracy"
+#    }
+#    stage {
+#        name: "style_stage"
+#        solver_filename: "../cifar10/solver_style.prototxt"
+#    
+#        freeze: "conv1"
+#        freeze: "conv2"
+#        ignore: "ip2"
+#        
+#        outLayer: "accuracy"
+#    }
+#}

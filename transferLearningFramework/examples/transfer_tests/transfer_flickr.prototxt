@@ -1,0 +1,14 @@
+name: "transfer_flickr"
+#out_dir: "snapshots"
+init_weights: "/home/shared/caffe/models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel"
+
+multi_source {
+    stage {
+        name: "flickr_finetune"
+        solver_filename: "../flickr_finetune/solver.prototxt"
+
+        ignore: "fc8"
+        
+        outLayer: "accuracy"
+    }
+}

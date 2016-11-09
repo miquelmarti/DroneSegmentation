@@ -1,0 +1,46 @@
+name: "zero_iter_ms"
+#out_dir: "snapshots"
+init_weights: "/home/shared/data/givenModels/vgg-16/VGG_ILSVRC_16_layers.caffemodel"
+
+multi_source {
+    iterations: 0
+    init_stage {
+        name: "init"
+        solver_filename: "../train_fcn/fcn32/solver.prototxt"
+        
+        ignore: "fc6"
+        ignore: "fc7"
+        
+        fcn_surgery: true
+        #halt_percentage: 10.0
+        
+        outLayer: "score"
+    }
+    
+    stage {
+        name: "ms6_fcn32"
+        solver_filename: "../train_fcn/fcn32/solver.prototxt"
+        
+        fcn_surgery: true
+        
+        outLayer: "score"
+    }
+    stage {
+        name: "ms6_fcn16"
+        solver_filename: "../train_fcn/fcn16/solver.prototxt"
+        
+        fcn_surgery: true
+        halt_percentage: 50
+        
+        outLayer: "score"
+    }
+    stage {
+        name: "ms6_fcn8"
+        solver_filename: "../train_fcn/fcn8/solver.prototxt"
+        
+        fcn_surgery: true
+        # halt_percentage: 0.01
+        
+        outLayer: "score"
+    }
+}
