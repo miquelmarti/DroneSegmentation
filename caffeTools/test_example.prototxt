@@ -1,0 +1,48 @@
+#Ensemble type is the way of combining the outputs of different models at the end
+#Possible values : 
+# - MAJORITY (majority voting, each model votes for a label)
+# - LOGITARI (arithmetic averaging the raw outputs of networks called logits)
+# - LOGITGEO (geometric averaging the raw outputs of networks called logits)
+# - PROBAGEP (arithmetic averaging the class probabilities, obtained by passing logits through softmax function)
+# - PROBAGEO (geometric averaging the class probabilities, obtained by passing logits through softmax function)
+
+
+ensemble_type: LOGITARI
+
+
+#outputFolder: "/home/johannes/Distilled_Data_VOC/"     #Optional: stores outputs of each image into .npy files in the following directory:
+
+input
+{
+        file: "list.txt"
+        type: IMAGES            #Type of the input file : can be VIDEO (.mp4), IMAGES (.txt) or LABELS (.txt)
+        colours: "/home/shared/data/datasets/Okutama/colours/okutama_colours.png"
+        
+        #Optional : default values are 0
+        mean {
+                r: 104.00698793
+                g: 116.66876762
+                b: 122.67891434
+        }
+        
+        #resize: true #Optional : resizes all input images to size specified by deploy.prototxt
+}
+
+model
+{
+        deploy: "/home/shared/data/learnedModels/pokedex/feunard/deploy.prototxt"
+        weights: "/home/shared/data/learnedModels/pokedex/feunard/train_iter_100000.caffemodel"
+        input: "data" #Optional : name of the input blob [default = "data"]
+        output: "score" #Optional : name of the output blob [default = "score"]
+}
+
+#model
+#{
+#        deploy: "/home/andrew/models/caffe/FCN-8/deploy.prototxt"
+#        weights: "/home/andrew/models/caffe/FCN-8/train_iter_100000.caffemodel"
+#}
+
+
+# If the outputs of networks have already been computed and stored into .npy files, we can include these models into the ensemble. The arrays must have been computed for the same test dataset as inputted now. Specify the folder containing .npy files:
+# modelOutput { folder: "/home/johannes/Outputs_model_1/" }
+# modelOutput { folder: "/home/johannes/Outputs_model_2/" }

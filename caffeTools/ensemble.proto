@@ -1,0 +1,57 @@
+package ensemble;
+
+//MODEL
+message Model {
+  required string deploy = 1;
+  required string weights = 2;
+  optional string input = 3 [default = "data"];
+  optional string output = 4 [default = "score"];
+  optional int32 weighting = 5 [default = 1];
+}
+
+//MODEL OUTPUT
+message LogitFolder {
+  required string folder = 1;
+  optional int32 weighting = 2 [default = 1];
+}
+
+//INPUT
+message Input {
+  optional string file = 1;
+  
+  enum InputType {
+    VIDEO = 1;
+    IMAGES = 2;
+    LABELS = 3;
+    WEBCAM = 4;
+  }
+  
+  message MeanValues {
+  required float r = 1 [default = 0.0];
+  required float g = 2 [default = 0.0];
+  required float b = 3 [default = 0.0];
+  }
+  
+  required InputType type = 2 [default = LABELS];
+  required string colours = 3;
+  optional MeanValues mean = 4;
+  optional bool resize = 5 [default = false];
+}
+
+//ENSEMBLE
+enum EnsembleType { //Which method is used to combine outputs of models?
+  VOTING = 1; // Majority voting of labels
+  LOGITARI = 2; //Arithmetic average of logits
+  LOGITGEO = 3; //Geometric average of logits
+  PROBAARI = 4; //Arithmetic average of probabilities (logits through softmax)
+  PROBAGEO = 5; //Geometric average of probabilities (logits through softmax)
+}
+  
+// MAIN MESSAGE
+message Ensemble {
+  optional EnsembleType ensemble_type = 1 [default = VOTING];
+  repeated Model model = 2;
+  repeated LogitFolder logitFolder = 3;
+  required Input input = 4;
+  optional string outputFolder = 5;
+}
