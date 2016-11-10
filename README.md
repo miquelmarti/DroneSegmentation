@@ -1,7 +1,9 @@
 # DroneSegmentation
-A Caffe model for Semantic Segmentation of drone images
+Tools for training Caffe models for Semantic Segmentation of drone images
 
-# **Development System Architecture**
+*outdated - file kept for future reference*
+
+## Development System Architecture
 
 Prendinger Lab has three Ubuntu servers that are used by the deep learning team for development and training of neural networks.  All three servers reside in the server room on the 15th floor.  se are:
 
@@ -27,7 +29,6 @@ Prendinger Lab has three Ubuntu servers that are used by the deep learning team 
     <td>2 Titan X GPUs</td>
   </tr>
 </table>
-
 
 Various shared resources exist on each server under the directory /home/shared.  You can do an ls to see them all.  At the time of this writing, the most important shared directories are:
 
