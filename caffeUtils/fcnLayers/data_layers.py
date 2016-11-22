@@ -30,7 +30,7 @@ class SemSegDataLayer(caffe.Layer):
         self.mean = np.array(params['mean'])
         self.random = params.get('randomize', False)
         self.seed = params.get('seed', None)
-        
+
         # data augmentation
         mirror, jitter, noise, crop = False, 0, False, (0,0)
         if 'mirror' in params:
@@ -61,7 +61,7 @@ class SemSegDataLayer(caffe.Layer):
         with open(image_list, 'r') as f:
             self.samples = f.read().splitlines()
         self.idx = 0
-            
+
         # randomization: seed and pick
         if self.random:
             random.seed(self.seed)
@@ -86,12 +86,12 @@ class SemSegDataLayer(caffe.Layer):
         # transpose to channel x height x width order
         in_ = in_.transpose((2, 0, 1))
         self.data = in_
-        
+
         self.label = self.load_label(self.samples[self.idx])
         # reshape tops to fit (leading 1 is for batch dimension)
         top[0].reshape(1, *self.data.shape)
         top[1].reshape(1, *self.label.shape)
-        
+
     def forward(self, bottom, top):
         # assign output
         top[0].data[...] = self.data
@@ -123,7 +123,7 @@ class ImgPairFileDataLayer(SemSegDataLayer):
         img = self.load_image_helper(filename)
         self.isLabel = True
         return img
-        
+
     def load_label(self, idx):
         """
         Load label image as 1 x height x width integer array of label indices.
@@ -135,20 +135,19 @@ class ImgPairFileDataLayer(SemSegDataLayer):
         if len(label.shape) > 2:
             label = label[:, :, 0]
         label = label[np.newaxis, ...]
-        
+
         self.isLabel = False
         return label
-        
+
     def load_image_helper(self, filename):
         if self.dataset_dir is not None:
             # treat the filename as relative
-            if os.path.isabs(filename):
-                filename = filename[1:]
-            filename = os.path.join(self.dataset_dir, filename)
+            if not os.path.isabs(filename):
+                filename = os.path.join(self.dataset_dir, filename)
         image = cv2.imread(filename)
         if not self.isLabel:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        
+
         # Data augmentation
         if self.isLabel:
             if self.mirror_param[0]:
@@ -166,15 +165,15 @@ class ImgPairFileDataLayer(SemSegDataLayer):
                 image = self.apply_noise(image)
             if self.crop != (0,0):
                 image = self.do_random_crop(image)
-        
+
         return Image.fromarray(image)
         #return Image.open(filename)
-        
+
     def do_flip(self, image, sense=''):
         if sense != '':
             image = image[:, ::-1, :] if sense == 'h' else image[::-1, :, :]
             return image
-        
+
         if bool(np.random.choice(2)):
             if bool(np.random.choice(2)): # Horizontal flip
                 image = image[:, ::-1, :]
@@ -183,7 +182,7 @@ class ImgPairFileDataLayer(SemSegDataLayer):
                 image = image[::-1, :, :]
                 self.mirror_param = (True, 'v')
         return image
-        
+
     def do_image_jittering(self, image):
         assert image.shape[0] % self.jitter == 0
         assert image.shape[1] % self.jitter == 0
@@ -195,7 +194,7 @@ class ImgPairFileDataLayer(SemSegDataLayer):
                     window = np.array([[rand]*self.jitter]*self.jitter)
                     image[x:x+self.jitter, y:y+self.jitter] = window
         return image
-        
+
     def apply_noise(self, image):
         if bool(np.random.choice(2)):
             noise = np.random.randint(0,50,(image.shape[0], image.shape[1]))
@@ -203,11 +202,11 @@ class ImgPairFileDataLayer(SemSegDataLayer):
             zitter[:,:,1] = noise
             image = cv2.add(image, zitter)
         return image
-        
+
     def do_random_crop(self, image, idxs=None):
         if idxs:
             return image[idxs[0]:idxs[0]+self.crop[0], idxs[1]:idxs[1]+self.crop[1]]
-        
+
         assert self.crop[0] <= image.shape[0]
         assert self.crop[1] <= image.shape[1]
         if True:#bool(np.random.choice(2)):
@@ -285,10 +284,10 @@ class ImageIdxDataLayer(IndexFileDataLayer):
 
 # replaces SBDDSegDataLayer
 class MatIdxDataLayer(IndexFileDataLayer):
-    
+
     """
     """
-    
+
     def load_label(self, idx):
         """
         Load label image as 1 x height x width integer array of label samples.
