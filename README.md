@@ -2,6 +2,9 @@
 
 Tools for training Caffe models for Semantic Segmentation of UAV imagery at PrendingerLab, NII.
 
+Originally developed by Andrew Holliday, Johannes Laurmaa, Pierre Ecarlat, Kim
+Samba and Chetak Kandaswamy.
+
 The work of the Deep Drone team primarily consists of experimenting with convolutional neural network architectures.  We obtain existing architectures from others and develop new ones ourselves.  We train networks with these architectures on a variety of datasets, and then measure the accuracy and time-performance of the networks.  Primarily the networks we work with perform semantic-segmentation - that is, they take an image as input, and output a meaningful label for each pixel of the image (for instance, whether that pixel is part of a cat, a dog, a tree, etc.)
 
 For our work with convolutional neural nets (CNNs), we use the [Caffe](http://caffe.berkeleyvision.org/) framework.  Caffe is unique in that one can define and train a network without having to do any actual programming.  Caffe network architectures and training parameters are all defined in .prototxt configuration files which are fed to the Caffe binary, which trains a network and outputs the weights as a .caffemodel file.  If you’re not familiar with Caffe, it is highly recommended that you work through the below two tutorials to gain some familiarity with the system:
