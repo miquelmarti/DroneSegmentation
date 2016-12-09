@@ -74,7 +74,7 @@ Mainly *caffe* and its own dependencies but *CUDA* and *cuDNN* are essential. A 
   </tr>
   <tr>
     <td>deepserver</td>
-    <td>136.187.100.72</td>
+    <td>136.187.100.114</td>
     <td>1 GTX 960</td>
   </tr>
   <tr>
@@ -82,9 +82,18 @@ Mainly *caffe* and its own dependencies but *CUDA* and *cuDNN* are essential. A 
     <td>N/A</td>
     <td>1 GTX 970M</td>
   </tr>
+  <tr>
+    <td>vm.psyche</td>
+    <td>*ask around for details*</td>
+    <td>2 GTX 980</td>
+  </tr>
+  
+  <tr>
+    <td>vm.selene</td>
+    <td>*ask around for details*</td>
+    <td>2 K40</td>
+  </tr>
 </table>
-
-**Waiting for access to GPU server at UTokyo**
 
 In _deepserver_, the `/home/shared` directory belongs to a special user account called shared, with an associated group to which all deep learning team members belong.
 
