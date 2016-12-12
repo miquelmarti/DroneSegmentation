@@ -176,7 +176,6 @@ class ImgPairFileDataLayer(SemSegDataLayer):
         if sense != '':
             image = image[:, ::-1, :] if sense == 'h' else image[::-1, :, :]
             return image
-
         if bool(np.random.choice(2)):
             if bool(np.random.choice(2)): # Horizontal flip
                 image = image[:, ::-1, :]
@@ -199,13 +198,14 @@ class ImgPairFileDataLayer(SemSegDataLayer):
         return image
 
     def do_contrast(self,image):
-        ranv = np.random.rand()
-        ranv = 0.5-ranv
-        contra = self.constrast-ranv
-        for i in range(0,image.shape[0],self.contrast):
-            for j in range(0,image.shape[1],self.contrast):
-                image[i,j] = image[i,j]*contra
-        return image
+        if boot(np.random.choice(2)):
+            ranv = np.random.rand()
+            ranv = 0.5-ranv
+            contra = self.constrast-ranv
+            for i in range(0,image.shape[0],self.contrast):
+                for j in range(0,image.shape[1],self.contrast):
+                    image[i,j] = image[i,j]*contra
+            return image
 
     def apply_noise(self, image):
         if bool(np.random.choice(2)):
