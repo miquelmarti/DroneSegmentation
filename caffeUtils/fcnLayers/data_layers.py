@@ -41,6 +41,9 @@ class SemSegDataLayer(caffe.Layer):
             noise = params['noise']
         if 'crop' in params:
             crop = params['crop']
+        if 'contrast' in params['contrast']
+            contrast = pramas['contrast']
+        self.contrast = contrast
         self.mirror = mirror
         self.jitter = jitter
         self.noise = noise
@@ -193,6 +196,15 @@ class ImgPairFileDataLayer(SemSegDataLayer):
                     rand = random.choice(random.choice(window))
                     window = np.array([[rand]*self.jitter]*self.jitter)
                     image[x:x+self.jitter, y:y+self.jitter] = window
+        return image
+
+    def do_contrast(self,image):
+        ranv = np.random.rand()
+        ranv = 0.5-ranv
+        contra = self.constrast-ranv
+        for i in range(0,image.shape[0],self.contrast):
+            for j in range(0,image.shape[1],self.contrast):
+                image[i,j] = image[i,j]*contra
         return image
 
     def apply_noise(self, image):

@@ -26,3 +26,11 @@ train.txt
 # ignore temporary files created by the transfer learning framework
 *.tmp
 
+transferLearning_pb2.py
+.ipynb_checkpoints
+
+# dataset zips
+*.tar.gz
+
+# MAC stuff
+.DS_STORE
