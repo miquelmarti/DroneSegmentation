@@ -27,6 +27,7 @@ train.txt
 *.tmp
 
 transferLearning_pb2.py
+
 .ipynb_checkpoints
 
 # dataset zips
@@ -34,3 +35,4 @@ transferLearning_pb2.py
 
 # MAC stuff
 .DS_STORE
+
