@@ -15,6 +15,8 @@ For our work with convolutional neural nets (CNNs), we use the [Caffe](http://ca
 
 To expand on the basic features of Caffe, we have borrowed, altered, and written from-scratch a considerable amount of Python code that makes use of Caffe’s Python bindings.
 
+**Check the [Wiki](https://github.com/miquelmarti/DroneSegmentation/wiki) of this repository for detailed usage explanations.**
+
 ## Repository Structure
 
 ### caffeUtils
@@ -56,13 +58,6 @@ Mainly *caffe* and its own dependencies but *CUDA* and *cuDNN* are essential. A 
 * caffeSegNet - the SegNet project, along with its special modified version of Caffe. #TODO why needed?
 
 * DroneSegmentation - this repository itself, cloned in the host computer whre the code will run.
-
-* data - where all data intensive stuff lands
-⋅⋅* data/datasets - various datasets we use for training our networks.
-
-⋅⋅* data/givenModels - trained CNN models that are provided by outside sources.
-
-⋅⋅* data/learnedModels - trained CNN models that we produce.
 
 ## Available Systems
 
