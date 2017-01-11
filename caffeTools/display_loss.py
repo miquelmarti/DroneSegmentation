@@ -19,7 +19,7 @@ MEAN_IU_TAG = "mean IU"
 FWAVACC_TAG = "fwavacc"
 TRAIN_LOSS_TAGS = [ITER_TAG, TRN_LOSS_TAG]
 
-SEG_TEST_PREFIX = '>>>'
+SEG_TEST_PREFIX = 'INFO:caffeUtils.solve:>>> '
 SEG_TEST_AVOID = '.cpp'
 MS_ITER_START_STR = 'starting multi-source iteration'
 STAGE_START_STR = '-> Execute stage'
@@ -35,7 +35,7 @@ def isTrainLossLine(line):
 
 def isTestStatLine(line):
     return line.startswith(SEG_TEST_PREFIX) and SEG_TEST_AVOID not in line
-    
+
 
 def getIterNum(line):
     '''Returns the iteration number that this line corresponds to.
@@ -77,7 +77,7 @@ def plotXAndY(x, y, title, xlabel='', ylabel=''):
     plt.plot(x, y)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    
+
     #plt.plot(x, np.multiply(y,100)) #For mean IU
     #plt.xlabel(xlabel, fontsize=20)
     #plt.ylabel(ylabel, fontsize=20) #For training loss
@@ -95,7 +95,7 @@ def plotMultiple(xs, ys, labels, title):
     plt.title(title)
     plt.legend(bbox_to_anchor=(0.7, 0.2), loc=2, borderaxespad=0.)
     plt.show()
-    
+
 
 def plotLearningLogs(lossLines, segTestLines, prefix=''):
     # sort the lines by their date stamps
@@ -117,8 +117,8 @@ def plotSegTests(segTestLines, prefix=''):
     testLossIters, testLosses = zip(*testStats[TST_LOSS_TAG])
     plotXAndY(testLossIters, testLosses, prefix + 'test loss', 'Iterations', 'Testing loss')
     del(testStats[TST_LOSS_TAG])
-    
-    
+
+
     iuIters, iuVals = zip(*testStats[MEAN_IU_TAG])
     plotXAndY(iuIters, iuVals, prefix + 'Mean IU', 'Iterations', 'Mean IU')
 
@@ -143,14 +143,14 @@ def plotSmoothedLossCurves(logList, avgOverLast=10, interval=1,
             points = [(getIterNum(l), getTaggedValue(l, TRN_LOSS_TAG))
                       for l in f if isTrainLossLine(l)]
             iters, losses = zip(*points)
-            
+
             # Compute the average loss over the last avgOverLast losses
             allSmoothIters.append(iters[avgOverLast-1::interval])
             sampleIdxs = range(avgOverLast, len(points) + 1, interval)
             smoothLoss = [np.mean(losses[i-avgOverLast:i]) for i in sampleIdxs]
             allSmoothLosses.append(smoothLoss)
             allNames.append(os.path.basename(logFile))
-            
+
     # produce smoothedPlotSequences from lossSequences
     plotMultiple(allSmoothIters, allSmoothLosses, allNames, title)
 
@@ -189,7 +189,7 @@ if __name__ == "__main__":
             elif l.startswith(STAGE_START_STR):
                 stage = l.partition(STAGE_START_STR)[2].strip()
                 prefix = 'MS Iter. ' + str(msIter) + ', ' + stage + ': '
-                
+
             # remaining cases are aggregating data
             elif l.startswith(BEST_SCORE_STR):
                 bestScoreLines.append(l)
