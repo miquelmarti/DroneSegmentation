@@ -27,3 +27,7 @@ train.txt
 *.tmp
 
 transferLearning_pb2.py
+.ipynb_checkpoints
+
+# dataset zips
+*.tar.gz
